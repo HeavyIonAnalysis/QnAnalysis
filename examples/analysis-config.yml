@@ -1,0 +1,75 @@
+
+_layouts:
+  - &layout_cbm_psd44_psd1
+    [18,19,24,25]
+  - &layout_cbm_psd44_psd2
+    [11, 12, 13, 14, 17, 20, 23, 26, 29, 30, 31, 32]
+  - &layout_cbm_psd44_psd3
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 16, 21, 22, 27, 28, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43]
+
+_axes:
+  - &axis_pT
+    name: SimParticles/pT
+    bin-edges: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.5, 3.0]
+  - &axis_rapidity
+    name: SimParticles/rapidity
+    nb: 9
+    lo: -0.6
+    hi: 3.0
+
+test:
+  event-variables:
+    - SimEventHeader/b
+  axes:
+    - { name: SimEventHeader/b, bin-edges: [0., 5.] }
+  q-vectors:
+    - name: mc_proton
+      type: track
+      phi:  SimParticles/phi
+      weight: Ones
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *axis_pT
+        - *axis_rapidity
+      cuts:
+        SimParticles/pid: { equals: 2212 }
+      qa:
+        - {name: SimParticles/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_pT
+        - *axis_rapidity
+        - [*axis_rapidity, *axis_pT]
+    - name: psd1
+      type: channel
+      phi:  PsdModules/phi
+      weight: PsdModules/signal
+      corrections:
+        - recentering
+      qa:
+        - {name: PsdModules/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: PsdModules/signal, nb: 100, lo: 0., hi: 100.}
+      channel-ids: *layout_cbm_psd44_psd1
+    - name: psd2
+      type: channel
+      phi:  PsdModules/phi
+      weight: PsdModules/signal
+      corrections:
+        - recentering
+      qa:
+        - {name: PsdModules/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: PsdModules/signal, nb: 100, lo: 0., hi: 100.}
+      channel-ids: *layout_cbm_psd44_psd2
+    - name: psd3
+      type: channel
+      phi:  PsdModules/phi
+      weight: PsdModules/signal
+      corrections:
+        - recentering
+      qa:
+        - {name: PsdModules/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: PsdModules/signal, nb: 100, lo: 0., hi: 100.}
+      channel-ids: *layout_cbm_psd44_psd3
+#    - name: psi
+#      type: psi
+#      phi: SimEventHeader/psi_RP
