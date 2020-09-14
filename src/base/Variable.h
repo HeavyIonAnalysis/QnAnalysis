@@ -7,9 +7,9 @@
 
 #include <TObject.h>
 
-#include <string>
-#include <memory>
 #include <AnalysisTree/Variable.hpp>
+#include <memory>
+#include <string>
 #include <utility>
 
 namespace Flow::Base {
@@ -18,11 +18,10 @@ struct VariableConfig : public TObject {
   std::string branch;
   std::string field;
 
-  bool operator==(const VariableConfig &Rhs) const {
-    return branch == Rhs.branch &&
-        field == Rhs.field;
+  bool operator==(const VariableConfig& Rhs) const {
+    return branch == Rhs.branch && field == Rhs.field;
   }
-  bool operator!=(const VariableConfig &Rhs) const {
+  bool operator!=(const VariableConfig& Rhs) const {
     return !(Rhs == *this);
   }
 
@@ -45,7 +44,7 @@ struct VariableQnBinding {
 
 struct Variable {
   enum EMappingType {
-    PLAIN, /* mapping as-is, channel by channel (if many) */
+    PLAIN,             /* mapping as-is, channel by channel (if many) */
     SELECTED_CHANNELS, /* map only selected channels */
   };
   VariableConfig config;
@@ -86,9 +85,6 @@ struct Variable {
   }
 };
 
+}// namespace Flow::Base
 
-
-
-}
-
-#endif //FLOW_SRC_BASE_VARIABLE_H
+#endif//FLOW_SRC_BASE_VARIABLE_H

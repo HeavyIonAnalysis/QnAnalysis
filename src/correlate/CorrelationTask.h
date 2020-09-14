@@ -4,27 +4,27 @@
 #include "TChain.h"
 #include "TTreeReader.h"
 
-#include "QnTools/ReSampleHelper.hpp"
-#include "QnTools/DataContainer.hpp"
 #include "QnTools/Axis.hpp"
+#include "QnTools/DataContainer.hpp"
 #include "QnTools/QnDataFrame.hpp"
+#include "QnTools/ReSampleHelper.hpp"
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDataSource.hxx"
 
-#include "QVector.h"
 #include "AnalysisSetup.h"
+#include "QVector.h"
 
 class CorrelationTask {
  public:
-   enum Q1Q1_CORRELATION_TYPES{
-     SCALAR_PRODUCT=0,
-     Q1Q1_EVENT_PLANE,
-     u1Q1_EVENT_PLANE
-   };
+  enum Q1Q1_CORRELATION_TYPES {
+    SCALAR_PRODUCT = 0,
+    Q1Q1_EVENT_PLANE,
+    u1Q1_EVENT_PLANE
+  };
   CorrelationTask() = delete;
   CorrelationTask(const std::string& file, const std::string& treename);
-  void AddQ1Q1Correlation(const std::string&a_name, const std::string&b_name, int type=SCALAR_PRODUCT){
+  void AddQ1Q1Correlation(const std::string& a_name, const std::string& b_name, int type = SCALAR_PRODUCT) {
     AddQ1Q1Correlations(config_->GetQvectorConfig(a_name), config_->GetQvectorConfig(b_name), type);
   }
   void SetNonZeroOnly(bool non_zero_only) { non_zero_only_ = non_zero_only; }
@@ -49,4 +49,4 @@ class CorrelationTask {
   bool non_zero_only_{true};
 };
 
-#endif //CORRELATION_TASK_H
+#endif//CORRELATION_TASK_H

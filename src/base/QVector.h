@@ -1,29 +1,29 @@
 #ifndef QN_QVECTOR_CONFIG_H
 #define QN_QVECTOR_CONFIG_H
 
-#include <utility>
-#include <vector>
+#include <algorithm>
 #include <bitset>
-#include <memory>
-#include <string>
 #include <cstdlib>
 #include <functional>
-#include <algorithm>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <TObject.h>
 
-#include <QnTools/Stats.hpp>
 #include <QnTools/Axis.hpp>
 #include <QnTools/CorrectionOnQnVector.hpp>
+#include <QnTools/Stats.hpp>
 
+#include "AnalysisTree/Constants.hpp"
 #include "AnalysisTree/Variable.hpp"
 #include "Axis.h"
-#include "AnalysisTree/Constants.hpp"
-#include "TTreeReader.h"
 #include "Cut.h"
+#include "TTreeReader.h"
 
-#include "Variable.h"
 #include "Histogram.h"
+#include "Variable.h"
 
 /* forward declarations */
 namespace Flow::Base {
@@ -33,8 +33,7 @@ class QVector;
 class QVectorChannel;
 class QVectorTrack;
 
-}
-
+}// namespace Flow::Base
 
 namespace Flow::Base {
 
@@ -78,7 +77,6 @@ struct QVectorCorrectionConfig {
     result.twist_rescale_apply_twist = true;
     return result;
   }
-
 };
 
 enum class EQVectorType {
@@ -107,15 +105,14 @@ struct QVectorConfig : public TObject {
   std::string harmonics;
 
   ClassDef(Flow::Base::QVectorConfig, 2)
-
 };
 
 class QVector {
 
-public:
+ public:
   typedef std::shared_ptr<Qn::CorrectionOnQnVector> CorrectionPtr;
 
-  enum eCorrSteps{
+  enum eCorrSteps {
     kRecentering = 0,
     kTwist,
     kRescale,
@@ -126,12 +123,10 @@ public:
   QVector(std::string name,
           EQVectorType type,
           AnalysisTree::Variable phi,
-          AnalysisTree::Variable weight) :
-    name_(std::move(name)),
-    type_(type),
-    phi_(std::move(phi)),
-    weight_(std::move(weight))
-  {
+          AnalysisTree::Variable weight) : name_(std::move(name)),
+                                           type_(type),
+                                           phi_(std::move(phi)),
+                                           weight_(std::move(weight)) {
   }
   virtual ~QVector() = default;
 
@@ -142,7 +137,6 @@ public:
   void SetName(const std::string& name) { name_ = name; }
   const AnalysisTree::Variable& GetWeightVar() const { return weight_; }
 
-
   const AnalysisTree::Variable& GetPhiVar() const { return phi_; }
   AnalysisTree::Variable& WeightVar() { return weight_; }
   AnalysisTree::Variable& PhiVar() { return phi_; }
@@ -152,15 +146,15 @@ public:
    * @brief Adds correction to Q-vector, QVector owns the pointer
    * @param correction
    */
-  void AddCorrection(Qn::CorrectionOnQnVector *correction) {
+  void AddCorrection(Qn::CorrectionOnQnVector* correction) {
     corrections_.emplace_back(correction);
   }
   template<typename T>
-  void AddCorrection(T && correction) {
+  void AddCorrection(T&& correction) {
     AddCorrection(new T(correction));
   }
 
-  const std::list<CorrectionPtr> &GetCorrections() const {
+  const std::list<CorrectionPtr>& GetCorrections() const {
     return corrections_;
   }
 
@@ -173,12 +167,11 @@ public:
   std::bitset<8> GetHarmonics() const {
     return harmonics_;
   }
-  void SetHarmonics(const std::bitset<8> &Harmonics) {
+  void SetHarmonics(const std::bitset<8>& Harmonics) {
     harmonics_ = Harmonics;
   }
 
   Qn::Stats::Weights GetWeightsType() const { return weights_type_; }
-
 
   virtual std::vector<AnalysisTree::Variable> GetListOfVariables() const { return {phi_, weight_}; }
 
@@ -186,14 +179,13 @@ public:
 
   void SetVarEntryId(int var_entry_id) { var_entry_id_ = var_entry_id; }
 
-
   /* QA Histograms */
-  void AddQAHistogram(const Axis& axis){
+  void AddQAHistogram(const Axis& axis) {
     Histogram h;
     h.axes.emplace_back(axis);
     qa_histograms_.emplace_back(std::move(h));
   }
-  void AddQAHistogram(const Axis& ax1, const Axis& ax2){
+  void AddQAHistogram(const Axis& ax1, const Axis& ax2) {
     Histogram h;
     h.axes.emplace_back(ax1);
     h.axes.emplace_back(ax2);
@@ -206,7 +198,7 @@ public:
     return qa_histograms_;
   }
 
-  virtual void Print() const{
+  virtual void Print() const {
     std::cout << "Q-vector " << name_ << std::endl;
     std::cout << "Phi variable: " << std::endl;
     phi_.Print();
@@ -215,15 +207,18 @@ public:
   }
 
   std::string GetLastStepName() const {
-    if(corrertions_[kRescale]) { return "RESCALED"; }
-    else if(corrertions_[kTwist]){ return "TWIST"; }
-    else if(corrertions_[kRecentering]){ return "RECENTERED"; }
+    if (corrertions_[kRescale]) {
+      return "RESCALED";
+    } else if (corrertions_[kTwist]) {
+      return "TWIST";
+    } else if (corrertions_[kRecentering]) {
+      return "RECENTERED";
+    }
     return "PLAIN";
   }
 
  protected:
-
-  std::string name_;    ///<  Name of the Q-vector
+  std::string name_;///<  Name of the Q-vector
   EQVectorType type_;
   AnalysisTree::Variable phi_{};
   AnalysisTree::Variable weight_{};
@@ -235,19 +230,14 @@ public:
 
   int var_entry_id_{};
   std::list<Histogram> qa_histograms_;
-
 };
 
-class QVectorChannel : public QVector
-{
-public:
-
+class QVectorChannel : public QVector {
+ public:
   QVectorChannel() : QVector(EQVectorType::CHANNEL) {}
   QVectorChannel(const std::string& name, const AnalysisTree::Variable& phi, const AnalysisTree::Variable& weight,
-                 std::vector<int>  ids) :
-      QVector(name, EQVectorType::CHANNEL, phi, weight),
-      module_ids_(std::move(ids))
-  {
+                 std::vector<int> ids) : QVector(name, EQVectorType::CHANNEL, phi, weight),
+                                         module_ids_(std::move(ids)) {
     phi_.SetSize(module_ids_.size());
     weight_.SetSize(module_ids_.size());
   }
@@ -255,24 +245,21 @@ public:
   size_t GetNumberOfModules() const { return module_ids_.size(); }
   const std::vector<int>& GetModuleIds() const { return module_ids_; }
 
-private:
+ private:
   std::vector<int> module_ids_{};
   short branch_id{-1};
 };
 
+class QVectorTrack : public QVector {
 
-class QVectorTrack : public QVector{
-
-public:
+ public:
   QVectorTrack() : QVector(EQVectorType::TRACK) {}
   QVectorTrack(std::string name, AnalysisTree::Variable phi, AnalysisTree::Variable weight,
-               std::vector<Axis>  axes) :
-      QVector(std::move(name), EQVectorType::TRACK, std::move(phi), std::move(weight)),
-      axes_(std::move(axes))
-    {
-      auto var = AnalysisTree::Variable(*phi_.GetBranches().begin(), "Filled");
-      this->AddCut({var, [](const double is){ return is>0.; }, "is_filled"});
-    }
+               std::vector<Axis> axes) : QVector(std::move(name), EQVectorType::TRACK, std::move(phi), std::move(weight)),
+                                         axes_(std::move(axes)) {
+    auto var = AnalysisTree::Variable(*phi_.GetBranches().begin(), "Filled");
+    this->AddCut({var, [](const double is) { return is > 0.; }, "is_filled"});
+  }
 
   std::vector<Qn::AxisD> GetAxes() const;
 
@@ -281,11 +268,10 @@ public:
   }
 
   std::vector<AnalysisTree::Variable> GetListOfVariables() const override;
-  const std::vector<Cut>& GetCuts() const {return cuts_;};
+  const std::vector<Cut>& GetCuts() const { return cuts_; };
 
  protected:
-
-  static bool EndsWith(std::string const &name, std::string const &ending) {
+  static bool EndsWith(std::string const& name, std::string const& ending) {
 
     if (name.length() >= ending.length()) {
       auto substr = name.substr(name.length() - ending.length(), name.length());
@@ -299,17 +285,13 @@ public:
 };
 
 class QVectorPsi : public QVector {
-public:
+ public:
   QVectorPsi() : QVector(EQVectorType::EVENT_PSI) {}
-  QVectorPsi(const std::string &Name,
-             const AnalysisTree::Variable &Phi,
-             const AnalysisTree::Variable &Weight): QVector(Name, EQVectorType::EVENT_PSI, Phi, Weight) {};
-
+  QVectorPsi(const std::string& Name,
+             const AnalysisTree::Variable& Phi,
+             const AnalysisTree::Variable& Weight) : QVector(Name, EQVectorType::EVENT_PSI, Phi, Weight){};
 };
 
+}// namespace Flow::Base
 
-
-}
-
-
-#endif //QN_QVECTOR_CONFIG_H
+#endif//QN_QVECTOR_CONFIG_H

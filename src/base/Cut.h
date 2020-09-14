@@ -30,15 +30,14 @@ struct CutConfig : public TObject {
   /* named function */
   std::string named_function_name;
 
-  ClassDef(Flow::Base::CutConfig,2)
+  ClassDef(Flow::Base::CutConfig, 2)
 };
 
 struct Cut {
   Cut() = default;
-  Cut(AnalysisTree::Variable var, std::function<bool(double)> function, std::string description) :
-    var_(std::move(var)),
-    function_(std::move(function)),
-    description_(std::move(description)) {}
+  Cut(AnalysisTree::Variable var, std::function<bool(double)> function, std::string description) : var_(std::move(var)),
+                                                                                                   function_(std::move(function)),
+                                                                                                   description_(std::move(description)) {}
 
   const AnalysisTree::Variable& GetVariable() const { return var_; }
   const std::function<bool(double)>& GetFunction() const { return function_; }
@@ -50,7 +49,6 @@ struct Cut {
   std::string description_{};
 };
 
-}
+}// namespace Flow::Base
 
-
-#endif //FLOW_SRC_BASE_CUTCONFIG_H_
+#endif//FLOW_SRC_BASE_CUTCONFIG_H_

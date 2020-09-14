@@ -1,9 +1,9 @@
 #include <string>
 #include <vector>
 
-#include "analyze/ResourceManager.h"
-#include "analyze/Resolution.h"
 #include "analyze/FlowCoefficients.h"
+#include "analyze/Resolution.h"
+#include "analyze/ResourceManager.h"
 #include "analyze/Utils.h"
 
 void DefineResolution3S(ResourceManager& rm);
@@ -14,24 +14,23 @@ void DefineResolutionMC(ResourceManager& rm);
 void DefineV1(ResourceManager& rm, const std::vector<std::string>& particles);
 void DefineV2(ResourceManager& rm, const std::vector<std::string>& particles);
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[]) {
 
-  if(argc < 3) {
+  if (argc < 3) {
     std::cout << "Error! Please use " << std::endl;
     std::cout << " ./analyze input_name output_name" << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  using std::vector;
   using std::string;
+  using std::vector;
 
   std::string input_name = argv[1];
   std::string output_name = argv[2];
 
   std::vector<std::string> particles{
-    "proton",
-    "pion"
-  };
+      "proton",
+      "pion"};
 
   ResourceManager rm;
   rm.LoadFile(input_name);
@@ -42,13 +41,12 @@ int main(int argc, char* argv[]){
   DefineResolutionMC(rm);
 
   DefineV1(rm, particles);
-//  DefineV2(rm, particles);
+  //  DefineV2(rm, particles);
 
   rm.SaveAs(output_name);
 
   return 0;
 }
-
 
 void DefineResolutionMC(ResourceManager& rm) {
   rm.Define("RES_psd1_MC_X", {"psd1_psi_XX"}, ResolutionMC);
@@ -67,30 +65,30 @@ void DefineV1(ResourceManager& rm, const std::vector<std::string>& particles) {
   std::vector<std::string> resolution_methods{"MC"};
 
   // RES_psd1_3S_X
-  const char *R_pattern = "RES_%s_%s_%s";
+  const char* R_pattern = "RES_%s_%s_%s";
 
   // v1_proton_y_psd1_3S_X
-  const char *v1_pattern = "v1_%s_%s_%s_%s_%s";
+  const char* v1_pattern = "v1_%s_%s_%s_%s_%s";
 
   // proton_psd1_XX
-  const char *uQ_pattern = "%s_%s_%s";
+  const char* uQ_pattern = "%s_%s_%s";
   // proton_psd1_XX_pT
-  const char *uQ_pattern_int = "%s_%s_%s_%s";
+  const char* uQ_pattern_int = "%s_%s_%s_%s";
 
   // mc_proton_psi_XX
-  const char *uQ_MC_pattern = "%s_psi_%s";
+  const char* uQ_MC_pattern = "%s_psi_%s";
   // mc_proton_psi_XX_pT
-  const char *uQ_MC_pattern_int = "%s_psi_%s_%s";
+  const char* uQ_MC_pattern_int = "%s_psi_%s_%s";
 
   auto integrate_pT = Selection("pT", 0, 1);
-  auto integrate_rapidity = Selection("rapidity", 1.62179f, 1.62179f+1.0);
+  auto integrate_rapidity = Selection("rapidity", 1.62179f, 1.62179f + 1.0);
 
-  for (const auto &particle : particles) {
-    for (const auto &component_2 : components) {
+  for (const auto& particle : particles) {
+    for (const auto& component_2 : components) {
       std::string uQ_name{fmt::sprintf(uQ_MC_pattern, particle, component_2)};
       rm.Define(uQ_name + "_rapidity", {uQ_name}, integrate_pT);
       rm.Define(uQ_name + "_pT", {uQ_name}, integrate_rapidity);
-      for (const auto &psd : psd_references) {
+      for (const auto& psd : psd_references) {
         std::string uQ_name{fmt::sprintf(uQ_pattern, particle, psd, component_2)};
         rm.Define(uQ_name + "_rapidity", {uQ_name}, integrate_pT);
         rm.Define(uQ_name + "_pT", {uQ_name}, integrate_rapidity);
@@ -98,34 +96,34 @@ void DefineV1(ResourceManager& rm, const std::vector<std::string>& particles) {
     }
   }
 
-  for (const auto &particle : particles) {
-    for (const auto &axis : axes) {
-      for (const auto &psd_reference : psd_references) {
-        for (const auto &component_2 : components) {
-          for (const auto &res_method : resolution_methods) {
+  for (const auto& particle : particles) {
+    for (const auto& axis : axes) {
+      for (const auto& psd_reference : psd_references) {
+        for (const auto& component_2 : components) {
+          for (const auto& res_method : resolution_methods) {
             auto component_1 = component_2.substr(0, 1);
             std::string uQ_name{fmt::sprintf(uQ_pattern_int, particle, psd_reference, component_2, axis)};
             std::string R_name{fmt::sprintf(R_pattern, psd_reference, res_method, component_1)};
             std::string v1_name{fmt::sprintf(v1_pattern, particle, axis, psd_reference, res_method, component_1)};
             rm.Define(v1_name, {uQ_name, R_name}, FlowV1);
-          } // methods
-        } // components
-      } // psd reference
+          }// methods
+        }  // components
+      }    // psd reference
 
-      for (const auto &res_method : resolution_methods) {
+      for (const auto& res_method : resolution_methods) {
         // combine XY
-        for (const auto &psd_reference : psd_references) {
+        for (const auto& psd_reference : psd_references) {
           std::string v1_name{fmt::sprintf("v1_%s_%s_%s_%s_CC", particle, axis, psd_reference, res_method)};
           std::string v1_pattern{fmt::sprintf("v1_%s_%s_%s_%s_(X|Y)", particle, axis, psd_reference, res_method)};
           rm.Define(v1_name, rm.GetMatchingName(v1_pattern), Combine);
         }
 
-//        // combine PSD
-//        for (const auto &component_2 : components) {
-//          std::string v1_name {fmt::sprintf("v1_%s_%s_%s_%s_CR", particle, axis, res_method, component_2.substr(0, 1))};
-//          std::string v1_pattern {fmt::sprintf("v1_%s_%s_psd(1|2|3)_%s_%s", particle, axis, res_method, component_2.substr(0, 1))};
-//          rm.Define(v1_name, rm.GetMatchingName(v1_pattern), Combine);
-//        }
+        //        // combine PSD
+        //        for (const auto &component_2 : components) {
+        //          std::string v1_name {fmt::sprintf("v1_%s_%s_%s_%s_CR", particle, axis, res_method, component_2.substr(0, 1))};
+        //          std::string v1_pattern {fmt::sprintf("v1_%s_%s_psd(1|2|3)_%s_%s", particle, axis, res_method, component_2.substr(0, 1))};
+        //          rm.Define(v1_name, rm.GetMatchingName(v1_pattern), Combine);
+        //        }
       }
 
       // Good combination for 3S method resolution: PSD1 and 3, X component only
@@ -144,41 +142,40 @@ void DefineV1(ResourceManager& rm, const std::vector<std::string>& particles) {
         const std::string v1_pattern{fmt::sprintf("v1_%s_%s_psd(1|3)_4S_(X)", particle, axis)};
         rm.Define(v1_name, rm.GetMatchingName(v1_pattern), Combine);
       }
-    } // axes
-  } // particles
-
+    }// axes
+  }  // particles
 
   // v1_mc_proton_y_psi_X
-  const char *v1_MC_pattern = "v1_%s_%s_psi_%s";
+  const char* v1_MC_pattern = "v1_%s_%s_psi_%s";
 
-  for (const auto &particle : particles) {
-    for (const auto &component_2 : components) {
-      for (const auto &axis : axes) {
+  for (const auto& particle : particles) {
+    for (const auto& component_2 : components) {
+      for (const auto& axis : axes) {
         auto component_1 = component_2.substr(0, 1);
         std::string uQ_name{fmt::sprintf(uQ_MC_pattern_int, particle, component_2, axis)};
         std::string v1_name{fmt::sprintf(v1_MC_pattern, particle, axis, component_1)};
         rm.Define(v1_name, {uQ_name}, FlowV1MC);
-      } // components
-    } // axes
-  } // particles
+      }// components
+    }  // axes
+  }    // particles
 }
 
-void DefineV2(ResourceManager& rm, const std::vector<std::string>& particles){
+void DefineV2(ResourceManager& rm, const std::vector<std::string>& particles) {
 
   std::vector<std::string> axes{"pT", "y"};
   std::vector<std::string> components{"X", "Y"};
   std::vector<std::string> refPsd{"psd1", "psd2", "psd3"};
   std::vector<std::string> refComponents{"XX", "YY", "XY", "YX"};
 
-  for (const auto &particle : particles) {
-    for (const auto &axis : axes) {
-      for (const auto &refPSD1 : refPsd) {
-        for (const auto &refPSD2 : refPsd) {
+  for (const auto& particle : particles) {
+    for (const auto& axis : axes) {
+      for (const auto& refPSD1 : refPsd) {
+        for (const auto& refPSD2 : refPsd) {
           if (refPSD1 == refPSD2) continue;
 
-          for (const auto &component : components) {
+          for (const auto& component : components) {
 
-            for (const auto &ref_component : refComponents) {
+            for (const auto& ref_component : refComponents) {
               /*********** opt 1 ***********/
               // this option is relevant for all combinations
               // let this to be default
@@ -187,8 +184,7 @@ void DefineV2(ResourceManager& rm, const std::vector<std::string>& particles){
                 auto uQQ_name{fmt::sprintf("%s_%s_%s_%s_%s2%s", particle, axis, refPSD1, refPSD2, component, ref_component)};
 
                 auto R1_name{fmt::sprintf("RES_%s_3S_%s", refPSD1, std::string(ref_component.begin(), ref_component.begin() + 1))};
-                auto R2_name{fmt::sprintf("RES_%s_3S_%s", refPSD2, std::string(ref_component.begin() + 1, ref_component.begin() + 2)
-                )};
+                auto R2_name{fmt::sprintf("RES_%s_3S_%s", refPSD2, std::string(ref_component.begin() + 1, ref_component.begin() + 2))};
 
                 rm.Define(v2_name, {uQQ_name, R1_name, R2_name}, FlowV2Opt1);
               }
@@ -203,11 +199,10 @@ void DefineV2(ResourceManager& rm, const std::vector<std::string>& particles){
                                             refPSD1,
                                             refPSD2,
                                             component,
-                                            std::string(ref_component.rbegin(), ref_component.rend())
-                )};
+                                            std::string(ref_component.rbegin(), ref_component.rend()))};
                 auto QQ1_name{fmt::sprintf("%s_%s_XX", refPSD1, refPSD2)};
                 auto QQ2_name{fmt::sprintf("%s_%s_YY", refPSD1, refPSD2)};
-//                  rm.Define(v2_name, {uQQ1_name, uQQ2_name, QQ1_name, QQ2_name}, FlowV2Opt2);
+                //                  rm.Define(v2_name, {uQQ1_name, uQQ2_name, QQ1_name, QQ2_name}, FlowV2Opt2);
               }
               /*********** opt 3 ***********/
               if (ref_component == "XX" || ref_component == "YY") {
@@ -215,13 +210,11 @@ void DefineV2(ResourceManager& rm, const std::vector<std::string>& particles){
                 auto uQQ_name{fmt::sprintf("%s_%s_%s_%s_%s2%s", particle, axis, refPSD1, refPSD2, component, ref_component)};
                 auto QQ_name{fmt::sprintf("%s_%s_%s", refPSD1, refPSD2, ref_component)};
                 rm.Define(v2_name, {uQQ_name, QQ_name}, FlowV2Opt3);
-
               }
 
-            } // ref components
+            }// ref components
 
-          } // component
-
+          }// component
 
           // combine non-zero components
           {
@@ -229,11 +222,11 @@ void DefineV2(ResourceManager& rm, const std::vector<std::string>& particles){
             auto v2_name{fmt::sprintf("v2_%s_%s_%s_%s_CC", particle, axis, refPSD1, refPSD2)};
             rm.Define(v2_name, rm.GetMatchingName(v2_pattern), Combine);
           }
-        } // ref PSD2
-      } // ref PSD1
+        }// ref PSD2
+      }  // ref PSD1
 
       // combine reference PSD
-      for (const auto &component : {"X2XX", "X2YY", "Y2YX", "Y2XY"}) {
+      for (const auto& component : {"X2XX", "X2YY", "Y2YX", "Y2XY"}) {
         auto v2_pattern{fmt::sprintf("v2_%s_%s_psd(1|2|3)_psd(1|2|3)_%s", particle, axis, component)};
         auto v2_name{fmt::sprintf("v2_%s_%s_%s_CR", particle, axis, component)};
         rm.Define(v2_name, rm.GetMatchingName(v2_pattern), Combine);
@@ -246,14 +239,13 @@ void DefineV2(ResourceManager& rm, const std::vector<std::string>& particles){
         rm.Define(v2_name, rm.GetMatchingName(v2_pattern), Combine);
       }
 
-    } // axes
-  } // particles
+    }// axes
+  }  // particles
 }
-
 
 void DefineResolution4S(ResourceManager& rm) {
   using namespace std::placeholders;
-  const float y_cuts[] = {0.0+1.62179, 0.8+1.62179};
+  const float y_cuts[] = {0.0 + 1.62179, 0.8 + 1.62179};
 
   auto resolutionTrack_fct = std::bind(&ResolutionTrack, _1, _2, y_cuts[0], y_cuts[1]);
   auto resolution4S_fct = std::bind(&Resolution4S, _1, _2, y_cuts[0], y_cuts[1]);
@@ -272,43 +264,58 @@ void DefineResolution4S(ResourceManager& rm) {
 
 void DefineResolutionMH(ResourceManager& rm) {
   /** Mixed-harmonics **/
-  ResolutionMH resolutionMH{-0.6+1.62179, 0+1.62179};
+  ResolutionMH resolutionMH{-0.6 + 1.62179, 0 + 1.62179};
   std::vector<std::string> ref_particles{"proton", "pion", "pion_neg"};
 
-  for(const auto& particle : ref_particles){
+  for (const auto& particle : ref_particles) {
 
-    rm.Define("RES_psd1_MH_X1_"+particle ,
-              {particle +"_psd1_psd2_X2XX", "psd3_psd1_XX", particle +"_psd2_psd3_X2XX"},
+    rm.Define("RES_psd1_MH_X1_" + particle,
+              {particle + "_psd1_psd2_X2XX", "psd3_psd1_XX", particle + "_psd2_psd3_X2XX"},
               resolutionMH);
-    rm.Define("RES_psd1_MH_X2_"+particle ,
-              {particle +"_psd1_psd2_Y2XY", "psd3_psd1_XX", particle +"_psd2_psd3_Y2YX"},
+    rm.Define("RES_psd1_MH_X2_" + particle,
+              {particle + "_psd1_psd2_Y2XY", "psd3_psd1_XX", particle + "_psd2_psd3_Y2YX"},
               resolutionMH);
-    rm.Define("RES_psd1_MH_X_"+particle , {"RES_psd1_MH_X1_"+particle , "RES_psd1_MH_X2_"+particle ,}, Combine);
+    rm.Define("RES_psd1_MH_X_" + particle, {
+                                               "RES_psd1_MH_X1_" + particle,
+                                               "RES_psd1_MH_X2_" + particle,
+                                           },
+              Combine);
 
-    rm.Define("RES_psd1_MH_Y1_"+particle ,
-              {particle +"_psd1_psd2_X2YY", "psd3_psd1_YY", particle +"_psd2_psd3_Y2XY"},
+    rm.Define("RES_psd1_MH_Y1_" + particle,
+              {particle + "_psd1_psd2_X2YY", "psd3_psd1_YY", particle + "_psd2_psd3_Y2XY"},
               resolutionMH);
-    rm.Define("RES_psd1_MH_Y2_"+particle ,
-              {particle +"_psd1_psd2_Y2YX", "psd3_psd1_YY", particle +"_psd2_psd3_Y2XY"},
+    rm.Define("RES_psd1_MH_Y2_" + particle,
+              {particle + "_psd1_psd2_Y2YX", "psd3_psd1_YY", particle + "_psd2_psd3_Y2XY"},
               resolutionMH);
-    rm.Define("RES_psd1_MH_Y_"+particle , {"RES_psd1_MH_Y1_"+particle , "RES_psd1_MH_Y2_"+particle ,}, Combine);
+    rm.Define("RES_psd1_MH_Y_" + particle, {
+                                               "RES_psd1_MH_Y1_" + particle,
+                                               "RES_psd1_MH_Y2_" + particle,
+                                           },
+              Combine);
 
-    rm.Define("RES_psd3_MH_X1_"+particle ,
-              {particle +"_psd2_psd3_X2XX", "psd3_psd1_XX", particle +"_psd1_psd2_X2XX"},
+    rm.Define("RES_psd3_MH_X1_" + particle,
+              {particle + "_psd2_psd3_X2XX", "psd3_psd1_XX", particle + "_psd1_psd2_X2XX"},
               resolutionMH);
-    rm.Define("RES_psd3_MH_X2_"+particle ,
-              {particle +"_psd2_psd3_Y2YX", "psd3_psd1_XX", particle +"_psd1_psd2_Y2XY"},
+    rm.Define("RES_psd3_MH_X2_" + particle,
+              {particle + "_psd2_psd3_Y2YX", "psd3_psd1_XX", particle + "_psd1_psd2_Y2XY"},
               resolutionMH);
-    rm.Define("RES_psd3_MH_X_"+particle , {"RES_psd3_MH_X1_"+particle , "RES_psd3_MH_X2_"+particle ,}, Combine);
+    rm.Define("RES_psd3_MH_X_" + particle, {
+                                               "RES_psd3_MH_X1_" + particle,
+                                               "RES_psd3_MH_X2_" + particle,
+                                           },
+              Combine);
 
-    rm.Define("RES_psd3_MH_Y1_"+particle ,
-              {particle +"_psd2_psd3_Y2YX", "psd3_psd1_YY", particle +"_psd1_psd2_Y2YX"},
+    rm.Define("RES_psd3_MH_Y1_" + particle,
+              {particle + "_psd2_psd3_Y2YX", "psd3_psd1_YY", particle + "_psd1_psd2_Y2YX"},
               resolutionMH);
-    rm.Define("RES_psd3_MH_Y2_"+particle ,
-              {particle +"_psd2_psd3_X2YY", "psd3_psd1_YY", particle +"_psd1_psd2_X2YY"},
+    rm.Define("RES_psd3_MH_Y2_" + particle,
+              {particle + "_psd2_psd3_X2YY", "psd3_psd1_YY", particle + "_psd1_psd2_X2YY"},
               resolutionMH);
-    rm.Define("RES_psd3_MH_Y_"+particle , {"RES_psd3_MH_Y1_"+particle , "RES_psd3_MH_Y2_"+particle ,}, Combine);
-
+    rm.Define("RES_psd3_MH_Y_" + particle, {
+                                               "RES_psd3_MH_Y1_" + particle,
+                                               "RES_psd3_MH_Y2_" + particle,
+                                           },
+              Combine);
   }
 }
 

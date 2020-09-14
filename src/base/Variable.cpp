@@ -5,6 +5,3 @@
 #include "Variable.h"
 
 ClassImp(Flow::Base::VariableConfig)
-
-
-

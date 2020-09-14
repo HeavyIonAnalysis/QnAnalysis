@@ -11,7 +11,7 @@ void ResourceManager::LoadFile(const std::string& fileName) {
   auto keys = ff.GetListOfKeys();
 
   for (auto o : *keys) {
-    auto key = dynamic_cast<TKey *>(o);
+    auto key = dynamic_cast<TKey*>(o);
 
     std::string objName{key->GetName()};
 
@@ -34,7 +34,7 @@ void ResourceManager::SaveAs(const std::string& filename) {
   TFile ff(filename.c_str(), "recreate");
 
   ff.cd();
-  for (auto &entry : resourceMap) {
+  for (auto& entry : resourceMap) {
     entry.second->Write(entry.first.c_str());
   }
 
@@ -46,7 +46,7 @@ void ResourceManager::ForMatchingExec(const std::string& pattern,
                                       const std::function<void(const std::string&, Result)>& fct) const {
   int i_m = 0;
   std::regex re(pattern);
-  for (const auto &entry : resourceMap) {
+  for (const auto& entry : resourceMap) {
     auto name = entry.first;
     if (std::regex_match(name, re)) {
       fct(name, *entry.second);
@@ -59,7 +59,7 @@ std::vector<std::string> ResourceManager::GetMatchingName(const std::string& pat
   std::vector<std::string> result{};
 
   std::regex re(pattern);
-  for (const auto &entry : resourceMap) {
+  for (const auto& entry : resourceMap) {
     auto name = entry.first;
     if (std::regex_match(name, re)) {
       result.push_back(name);
@@ -68,4 +68,3 @@ std::vector<std::string> ResourceManager::GetMatchingName(const std::string& pat
 
   return result;
 }
-

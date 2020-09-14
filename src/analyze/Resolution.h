@@ -3,7 +3,7 @@
 
 #include "Utils.h"
 
-[[maybe_unused]] static Result Resolution3Sub(std::vector<Result> args, const std::vector<std::string> &) {
+[[maybe_unused]] static Result Resolution3Sub(std::vector<Result> args, const std::vector<std::string>&) {
   assert(args.size() == 3);
 
   const auto& nom1 = args[0];
@@ -12,23 +12,22 @@
   return Qn::Sqrt(nom1 * nom2 / denom);
 }
 
-[[maybe_unused]] static Result ResolutionMC(std::vector<Result> args, const std::vector<std::string> &) {
+[[maybe_unused]] static Result ResolutionMC(std::vector<Result> args, const std::vector<std::string>&) {
   assert(args.size() == 1);
-  const auto& nom1= args[0];
+  const auto& nom1 = args[0];
   return nom1;
 }
 
-Result ResolutionTrack(std::vector<Result> args, const std::vector<std::string> &, float y_lo, float y_hi);
+Result ResolutionTrack(std::vector<Result> args, const std::vector<std::string>&, float y_lo, float y_hi);
 
-Result Resolution4S(std::vector<Result> args, const std::vector<std::string> &, float y_lo, float y_hi);
+Result Resolution4S(std::vector<Result> args, const std::vector<std::string>&, float y_lo, float y_hi);
 
 class ResolutionMH {
  public:
-  ResolutionMH () = delete;
-  ResolutionMH (float y_min, float y_max) :
-    y_min_(y_min), y_max_(y_max) {};
+  ResolutionMH() = delete;
+  ResolutionMH(float y_min, float y_max) : y_min_(y_min), y_max_(y_max){};
 
-  Result operator()(std::vector<Result> args, const std::vector<std::string> &argNames) const {
+  Result operator()(std::vector<Result> args, const std::vector<std::string>& argNames) const {
     assert(args.size() == 3);
 
     auto& nom1 = args[0];
@@ -50,9 +49,10 @@ class ResolutionMH {
 
     return Qn::Sqrt(nom1 * nom2 / denom);
   }
+
  private:
   float y_min_{0};
   float y_max_{0};
 };
 
-#endif //FLOW_PROCESSING__RESOLUTION_H_
+#endif//FLOW_PROCESSING__RESOLUTION_H_

@@ -9,21 +9,15 @@
 
 #include "ConfigUtils.h"
 
-#include <base/Variable.h>
+#include <base/AnalysisSetup.h>
 #include <base/Axis.h>
 #include <base/Cut.h>
 #include <base/QVector.h>
-#include <base/AnalysisSetup.h>
+#include <base/Variable.h>
 
 namespace Flow::Config {
 
-
 Base::AnalysisSetup ReadSetupFromFile(const std::string& filename, const std::string& config_name);
-
-
-
-
-
 
 }
 
@@ -33,7 +27,7 @@ namespace YAML {
 template<>
 struct convert<Flow::Base::VariableConfig> {
 
-  static bool decode(const Node &node, Flow::Base::VariableConfig &var) {
+  static bool decode(const Node& node, Flow::Base::VariableConfig& var) {
     using Flow::Config::Utils::TokenizeString;
     if (node.IsScalar()) {
       if (node.Scalar() == "Ones" || node.Scalar() == "ones" || node.Scalar() == "ONES") {
@@ -57,13 +51,12 @@ struct convert<Flow::Base::VariableConfig> {
     /* todo warning */
     return false;
   }
-
 };
 
 template<>
 struct convert<Flow::Base::AxisConfig> {
 
-  static bool decode(const Node &node, Flow::Base::AxisConfig &axis_config) {
+  static bool decode(const Node& node, Flow::Base::AxisConfig& axis_config) {
     using namespace Flow::Base;
     if (node.IsMap()) {
       axis_config.variable = node["name"].as<VariableConfig>();
@@ -85,13 +78,12 @@ struct convert<Flow::Base::AxisConfig> {
 
     return false;
   }
-
 };
 
 template<>
 struct convert<Flow::Base::CutConfig> {
 
-  static bool decode(const Node &node, Flow::Base::CutConfig &cut_config) {
+  static bool decode(const Node& node, Flow::Base::CutConfig& cut_config) {
     using namespace Flow::Base;
     if (node.IsMap()) {
       cut_config.variable = node["variable"].as<VariableConfig>(VariableConfig());
@@ -122,13 +114,12 @@ struct convert<Flow::Base::CutConfig> {
 
     return false;
   }
-
 };
 
 template<>
 struct convert<Flow::Base::HistogramConfig> {
 
-  static bool decode(const Node &node, Flow::Base::HistogramConfig &config) {
+  static bool decode(const Node& node, Flow::Base::HistogramConfig& config) {
     using namespace Flow::Base;
     if (node.IsMap()) {
       /* it could be one axis */
@@ -136,24 +127,24 @@ struct convert<Flow::Base::HistogramConfig> {
         auto ax = node.as<AxisConfig>();
         config.axes.emplace_back(std::move(ax));
         return true;
-      } catch (std::exception &e) { /* ignore */ }
+      } catch (std::exception& e) { /* ignore */
+      }
 
       config.axes = node["axes"].as<std::vector<AxisConfig>>();
       return true;
     } else if (node.IsSequence()) {
       config.axes = node.as<std::vector<AxisConfig>>();
       return true;
-    } // IsSequence
+    }// IsSequence
 
     return false;
   }
-
 };
 
 template<>
 struct convert<Flow::Base::QVectorCorrectionConfig> {
 
-  static bool decode(const Node &node, Flow::Base::QVectorCorrectionConfig &config) {
+  static bool decode(const Node& node, Flow::Base::QVectorCorrectionConfig& config) {
     using namespace Flow::Base;
     using namespace Flow::Config::Utils;
 
@@ -188,7 +179,7 @@ struct convert<Flow::Base::QVectorCorrectionConfig> {
 
       assert(false);
     }
-      /* presets */
+    /* presets */
     else if (node.IsScalar()) {
 
       if (node.Scalar() == "recentering") {
@@ -205,13 +196,12 @@ struct convert<Flow::Base::QVectorCorrectionConfig> {
 
     return false;
   }
-
 };
 
 template<>
 struct convert<Flow::Base::QVectorConfig> {
 
-  static bool decode(const Node &node, Flow::Base::QVectorConfig &config) {
+  static bool decode(const Node& node, Flow::Base::QVectorConfig& config) {
     using namespace Flow::Base;
     using namespace Flow::Config::Utils;
 
@@ -240,14 +230,13 @@ struct convert<Flow::Base::QVectorConfig> {
         config.qa = node["qa"].as<std::vector<HistogramConfig>>();
       }
 
-
       if (config.type == EQVectorType::TRACK) {
         /* axes */
         config.axes = node["axes"].as<std::vector<AxisConfig>>(EmptyVector<AxisConfig>());
         /* cuts */
         if (node["cuts"] && node["cuts"].IsMap()) {
           /* Shortcut: KEY = Variable, VALUE = Cut with empty target */
-          for (auto &map_element : node["cuts"]) {
+          for (auto& map_element : node["cuts"]) {
             auto cut_variable = map_element.first.as<VariableConfig>();
             auto cut_config = map_element.second.as<CutConfig>();
             cut_config.variable = cut_variable;
@@ -260,16 +249,15 @@ struct convert<Flow::Base::QVectorConfig> {
         config.channel_ids = node["channel-ids"].as<std::vector<int>>(EmptyVector<int>());
       }
       return true;
-    } // IsMap
+    }// IsMap
 
     return false;
   }
-
 };
 
 template<>
 struct convert<Flow::Base::AnalysisSetupConfig> {
-  static bool decode(const Node &node, Flow::Base::AnalysisSetupConfig &config) {
+  static bool decode(const Node& node, Flow::Base::AnalysisSetupConfig& config) {
     using namespace Flow::Base;
     using namespace Flow::Config::Utils;
     if (node.IsMap()) {
@@ -277,13 +265,12 @@ struct convert<Flow::Base::AnalysisSetupConfig> {
       config.event_variables = node["event-variables"].as<std::vector<VariableConfig>>(EmptyVector<VariableConfig>());
       config.q_vectors = node["q-vectors"].as<std::vector<QVectorConfig>>();
       return true;
-    } // IsMap
+    }// IsMap
 
     return false;
   }
-
 };
 
-}
+}// namespace YAML
 
-#endif //FLOW_SRC_CONFIG_CONFIG_H
+#endif//FLOW_SRC_CONFIG_CONFIG_H

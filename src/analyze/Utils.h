@@ -1,17 +1,17 @@
 #ifndef DATATREEFLOW_UTILS_H
 #define DATATREEFLOW_UTILS_H
 
-#include <utility>
-#include <vector>
+#include <functional>
 #include <memory>
 #include <regex>
-#include <functional>
+#include <utility>
+#include <vector>
 
 #include <Rtypes.h>
 #include <TDirectory.h>
+#include <TFile.h>
 #include <TKey.h>
 #include <TPaveText.h>
-#include <TFile.h>
 
 #include <QnTools/DataContainer.hpp>
 
@@ -23,20 +23,20 @@
 using Result = Qn::DataContainerStats;
 using ResultPtr = std::shared_ptr<Result>;
 
-static TPaveText *MakePaveText(const std::vector<std::string> &lines, std::vector<Double_t> position) {
-  auto *pave = new TPaveText;
+static TPaveText* MakePaveText(const std::vector<std::string>& lines, std::vector<Double_t> position) {
+  auto* pave = new TPaveText;
   pave->SetX1NDC(position.at(0));
   pave->SetY1NDC(position.at(1));
   pave->SetX2NDC(position.at(2));
   pave->SetY2NDC(position.at(3));
 
-  for (const auto &line : lines) {
+  for (const auto& line : lines) {
     pave->AddText(line.c_str());
   }
 
   pave->SetBorderSize(0);
   pave->SetFillColor(kWhite);
-  pave->SetFillStyle(0); // transparent
+  pave->SetFillStyle(0);// transparent
   pave->SetTextAlign(11);
   return pave;
 }
@@ -47,20 +47,18 @@ struct Selection {
   float max_{0};
 
   Selection() = delete;
-  Selection (const std::string& name, float min, float max) :
-    axis_(name), min_(min), max_(max) {};
+  Selection(const std::string& name, float min, float max) : axis_(name), min_(min), max_(max){};
 
-  Result operator()(std::vector<Result> args, const std::vector<std::string> &) const {
+  Result operator()(std::vector<Result> args, const std::vector<std::string>&) const {
     assert(args.size() == 1);
     const auto& r = args[0];
 
     std::string axis_name{};
     std::vector<std::string> axis_names{};
-    for (const Qn::AxisD &ax : r.GetAxes()) {
+    for (const Qn::AxisD& ax : r.GetAxes()) {
       if (ax.Name().find(axis_) < ax.Name().size()) {
         axis_name = ax.Name();
-      }
-      else{
+      } else {
         axis_names.emplace_back(ax.Name());
       }
     }
@@ -72,8 +70,8 @@ struct Selection {
   }
 };
 
-static Result Select(const Result &r, std::string axis, float min, float max) {
-  for (const Qn::AxisD &ax : r.GetAxes()) {
+static Result Select(const Result& r, std::string axis, float min, float max) {
+  for (const Qn::AxisD& ax : r.GetAxes()) {
     if (ax.Name().find(axis) < ax.Name().size()) {
       axis = ax.Name();
       break;
@@ -86,11 +84,10 @@ static Result Select(const Result &r, std::string axis, float min, float max) {
   return r.Select(newAxis);
 }
 
-
-static Result RebinRapidity(const Result &r, const std::vector<double> &binEdges) {
+static Result RebinRapidity(const Result& r, const std::vector<double>& binEdges) {
   std::string axRapidityName;
   // find rapidity axis
-  for (const Qn::AxisD &ax : r.GetAxes()) {
+  for (const Qn::AxisD& ax : r.GetAxes()) {
     if (ax.Name().find("rapidity") < ax.Name().size()) {
       axRapidityName = ax.Name();
       break;
@@ -106,10 +103,10 @@ static Result RebinRapidity(const Result &r, const std::vector<double> &binEdges
   return r.Rebin(newRapidityAxis);
 }
 
-static Result SetReference(const Result &r) {
+static Result SetReference(const Result& r) {
   Result rNew{r};
 
-  for (Qn::Stats &stats : rNew) {
+  for (Qn::Stats& stats : rNew) {
     stats.SetWeights(Qn::Stats::Weights::REFERENCE);
   }
 
@@ -117,8 +114,8 @@ static Result SetReference(const Result &r) {
 }
 
 template<class T>
-static bool GetResource(TDirectory *d, const std::string &name, std::shared_ptr<T> &container) {
-  auto obj = dynamic_cast<T *>(d->Get(name.c_str()));
+static bool GetResource(TDirectory* d, const std::string& name, std::shared_ptr<T>& container) {
+  auto obj = dynamic_cast<T*>(d->Get(name.c_str()));
   if (!obj) {
     container.reset();
     return false;
@@ -133,16 +130,16 @@ static bool GetResource(TDirectory *d, const std::string &name, std::shared_ptr<
  * @param mg
  * @param dX
  */
-static void ShiftGraphsX(TMultiGraph &mg, double dX = 0.0) {
+static void ShiftGraphsX(TMultiGraph& mg, double dX = 0.0) {
 
   for (int ig = 0; ig < mg.GetListOfGraphs()->GetEntries(); ++ig) {
     double xShift = ig * dX;
     if (xShift == 0.) continue;
 
-    auto graph = dynamic_cast<TGraph *>(mg.GetListOfGraphs()->At(ig));
+    auto graph = dynamic_cast<TGraph*>(mg.GetListOfGraphs()->At(ig));
 
     int n = graph->GetN();
-    double *xx = graph->GetX();
+    double* xx = graph->GetX();
 
     // populate new xx array
     double xx_new[n];
@@ -153,7 +150,6 @@ static void ShiftGraphsX(TMultiGraph &mg, double dX = 0.0) {
     // replace xx with contents of xx_new
     std::memcpy(xx, xx_new, sizeof(double) * n);
   }
-
 }
 
 /**
@@ -166,14 +162,15 @@ static void ShiftGraphsX(TMultiGraph &mg, double dX = 0.0) {
  */
 template<class T>
 static std::vector<std::tuple<std::string,
-                       std::vector<std::string>,
-                       std::shared_ptr<T> > > GetResourcesMatchingName(TDirectory *d, const std::string &pattern) {
+                              std::vector<std::string>,
+                              std::shared_ptr<T>>>
+GetResourcesMatchingName(TDirectory* d, const std::string& pattern) {
   std::regex re(pattern);
-  std::vector<std::tuple<std::string, std::vector<std::string>, std::shared_ptr<T> > > result{};
+  std::vector<std::tuple<std::string, std::vector<std::string>, std::shared_ptr<T>>> result{};
 
   auto keys = d->GetListOfKeys();
   for (auto objPtr : *keys) {
-    auto key = dynamic_cast<TKey *>(objPtr);
+    auto key = dynamic_cast<TKey*>(objPtr);
     std::string name{key->GetName()};
     std::smatch match;
 
@@ -183,7 +180,7 @@ static std::vector<std::tuple<std::string,
         matches.push_back(match[i].str());
       }
 
-      auto objTPtr = std::shared_ptr<T>(dynamic_cast<T *> (key->ReadObj()));
+      auto objTPtr = std::shared_ptr<T>(dynamic_cast<T*>(key->ReadObj()));
       if (objTPtr) {
         result.push_back({std::move(name), std::move(matches), objTPtr});
       } else {
@@ -202,40 +199,40 @@ struct ProfileExporter {
 
   ProfileExporter() = default;
 
-  explicit ProfileExporter(const std::string &outputFileName) {
+  explicit ProfileExporter(const std::string& outputFileName) {
     SaveTo(outputFileName);
   }
 
-  ProfileExporter &SaveTo(const std::string &outputFileName) {
+  ProfileExporter& SaveTo(const std::string& outputFileName) {
     this->ouputFileName_ = outputFileName;
     return *this;
   }
 
   std::string saveFolder{""};
 
-  ProfileExporter &Folder(const std::string &_saveFolder = "") {
+  ProfileExporter& Folder(const std::string& _saveFolder = "") {
     saveFolder = _saveFolder;
     return *this;
   }
 
   std::shared_ptr<Qn::AxisD> rebinAxisPtr{};
-  ProfileExporter &Rebin(const Qn::AxisD &_axis) {
+  ProfileExporter& Rebin(const Qn::AxisD& _axis) {
     rebinAxisPtr = std::make_shared<Qn::AxisD>(_axis);
     return *this;
   }
-  ProfileExporter &Rebin() {
+  ProfileExporter& Rebin() {
     rebinAxisPtr.reset();
     return *this;
   }
 
   bool isCorrelatedErrors{false};
-  ProfileExporter &CorrelatedErrors(bool _correlatedErrors = true) {
+  ProfileExporter& CorrelatedErrors(bool _correlatedErrors = true) {
     isCorrelatedErrors = _correlatedErrors;
     return *this;
   }
 
   bool isUnfold{false};
-  ProfileExporter &Unfold(bool _unfold = true) {
+  ProfileExporter& Unfold(bool _unfold = true) {
     isUnfold = _unfold;
     return *this;
   }
@@ -254,7 +251,7 @@ struct ProfileExporter {
     return bool(outputFile_);
   }
 
-  void operator()(const std::string &resourceName, Result result) {
+  void operator()(const std::string& resourceName, Result result) {
     using std::string;
 
     // prepare result for exporting
@@ -280,7 +277,7 @@ struct ProfileExporter {
       throw std::runtime_error("No output file");
     }
 
-    TDirectory *exportDir = outputFile_.get();
+    TDirectory* exportDir = outputFile_.get();
     if (!saveFolder.empty()) {
       outputFile_->GetObject(saveFolder.c_str(), exportDir);
 
@@ -293,8 +290,10 @@ struct ProfileExporter {
       std::string axisname{"Centrality"};
       auto profileMultigraph = new TMultiGraph();
       Qn::AxisD axis;
-      try { axis = result.GetAxis(axisname); } // TODO
-      catch (std::exception &) {
+      try {
+        axis = result.GetAxis(axisname);
+      }// TODO
+      catch (std::exception&) {
         // TODO return?
         throw std::logic_error("axis not found");
       }
@@ -325,10 +324,7 @@ struct ProfileExporter {
       exportDir->WriteObject(profileGraph, profileExportName.c_str());
       Info(__func__, "Graph '%s' is exported as '%s'", resourceName.c_str(), profileExportName.c_str());
     }
-
   }
-
 };
 
-
-#endif //DATATREEFLOW_UTILS_H
+#endif//DATATREEFLOW_UTILS_H

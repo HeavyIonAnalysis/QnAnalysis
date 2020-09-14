@@ -11,7 +11,6 @@ Else()
             GIT_SHALLOW	ON
             GIT_TAG yaml-cpp-0.6.3
     )
-
     FetchContent_GetProperties(yaml-cpp)
     if(NOT yaml-cpp_POPULATED)
         message(STATUS "Populating yaml-cpp...")

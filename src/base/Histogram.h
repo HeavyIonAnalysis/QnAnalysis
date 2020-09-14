@@ -5,12 +5,11 @@
 #ifndef FLOW_SRC_BASE_HISTOGRAM_H
 #define FLOW_SRC_BASE_HISTOGRAM_H
 
-#include <vector>
-#include <algorithm>
 #include "Axis.h"
+#include <algorithm>
+#include <vector>
 
 namespace Flow::Base {
-
 
 struct HistogramConfig {
   std::vector<AxisConfig> axes;
@@ -22,11 +21,10 @@ struct Histogram {
 
 namespace Utils {
 
-Histogram Convert(const HistogramConfig &histogram_config);
-
-
-}
+Histogram Convert(const HistogramConfig& histogram_config);
 
 }
 
-#endif //FLOW_SRC_BASE_HISTOGRAM_H
+}// namespace Flow::Base
+
+#endif//FLOW_SRC_BASE_HISTOGRAM_H

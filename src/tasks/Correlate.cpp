@@ -1,13 +1,13 @@
-#include <iostream>
 #include <chrono>
+#include <iostream>
 #include <string>
 
 #include "correlate/CorrelationTask.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   using namespace std;
 
-  if(argc < 2){
+  if (argc < 2) {
     std::cout << "Error! Please use " << std::endl;
     std::cout << " ./correlate file.root" << std::endl;
     exit(EXIT_FAILURE);
