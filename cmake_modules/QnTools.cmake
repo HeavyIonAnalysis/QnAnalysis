@@ -12,6 +12,7 @@ ExternalProject_Add(QnTools_Ext
         CMAKE_ARGS
             "-DCMAKE_INSTALL_PREFIX=${QnTools_INSTALL_DIR}"
             "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+            "-DROOT_DIR=${ROOT_DIR}"
             "-DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}"
 )
 
