@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(Flow CXX)
+project(QnAnalysis CXX)
 set(CMAKE_CXX_STANDARD 17)
 #set(CMAKE_BUILD_TYPE RELEASE)
 set(PROJECT_VERSION 1.0)
@@ -28,7 +28,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ftree-vectorize -ffast-math -DNODEBUG")
 message(STATUS "Using CXX flags for ${CMAKE_BUILD_TYPE}: ${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}}")
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 
-SET(QN_PATH             "" CACHE STRING "Path to Flow")
+SET(QN_PATH             "" CACHE STRING "Path to QnAnalysis")
 list(APPEND CMAKE_PREFIX_PATH ${QN_PATH})
 list(APPEND CMAKE_PREFIX_PATH $ENV{QN_PATH})
 
@@ -49,37 +49,37 @@ add_subdirectory(src)
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
-        "${CMAKE_CURRENT_BINARY_DIR}/Flow/FlowConfigVersion.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/QnAnalysis/QnAnalysisConfigVersion.cmake"
         VERSION ${PROJECT_VERSION}
         COMPATIBILITY AnyNewerVersion
 )
 
-export(EXPORT FlowTargets
-        FILE "${CMAKE_CURRENT_BINARY_DIR}/Flow/FlowTargets.cmake")
+export(EXPORT QnAnalysisTargets
+        FILE "${CMAKE_CURRENT_BINARY_DIR}/QnAnalysis/QnAnalysisTargets.cmake")
 
-message(STATUS "FlowTargets: ${FlowTargets}")
+message(STATUS "QnAnalysisTargets: ${QnAnalysisTargets}")
         
-set(ConfigPackageLocation lib/cmake/Flow)
+set(ConfigPackageLocation lib/cmake/QnAnalysis)
 
-set(Flow_INCLUDE_DIR "include")
-set(Flow_LIBRARY_DIR "lib")
+set(QnAnalysis_INCLUDE_DIR "include")
+set(QnAnalysis_LIBRARY_DIR "lib")
 
 configure_package_config_file(
-        FlowConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/Flow/FlowConfig.cmake
+        QnAnalysisConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/QnAnalysis/QnAnalysisConfig.cmake
         INSTALL_DESTINATION ${ConfigPackageLocation}
-        PATH_VARS Flow_INCLUDE_DIR Flow_LIBRARY_DIR
+        PATH_VARS QnAnalysis_INCLUDE_DIR QnAnalysis_LIBRARY_DIR
 )
 
-install(EXPORT FlowTargets
+install(EXPORT QnAnalysisTargets
         FILE
-        FlowTargets.cmake
+        QnAnalysisTargets.cmake
         DESTINATION
         ${ConfigPackageLocation}
         )
 
 install(FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/Flow/FlowConfig.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/Flow/FlowConfigVersion.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/QnAnalysis/QnAnalysisConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/QnAnalysis/QnAnalysisConfigVersion.cmake"
         DESTINATION
         ${ConfigPackageLocation}
         COMPONENT

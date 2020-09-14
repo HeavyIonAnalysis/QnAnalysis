@@ -5,15 +5,15 @@ set(SOURCES
 
 string(REPLACE ".cpp" ".h" HEADERS "${SOURCES}")
 
-add_library(FlowCorrect SHARED ${SOURCES} G__FlowCorrect.cxx)
+add_library(QnAnalysisCorrect SHARED ${SOURCES} G__QnAnalysisCorrect.cxx)
 link_directories(${PROJECT_LINK_DIRECTORIES})
-add_dependencies(FlowCorrect ${PROJECT_DEPENDENCIES} FlowBase)
+add_dependencies(QnAnalysisCorrect ${PROJECT_DEPENDENCIES} QnAnalysisBase)
 include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${CMAKE_CURRENT_SOURCE_DIR})
 
-ROOT_GENERATE_DICTIONARY(G__FlowCorrect ${HEADERS} LINKDEF FlowCorrectLinkDef.h)
-target_link_libraries(FlowCorrect FlowBase FlowConfig AnalysisTreeBase AnalysisTreeInfra ${ROOT_LIBRARIES} )
+ROOT_GENERATE_DICTIONARY(G__QnAnalysisCorrect ${HEADERS} LINKDEF QnAnalysisCorrectLinkDef.h)
+target_link_libraries(QnAnalysisCorrect QnAnalysisBase QnAnalysisConfig AnalysisTreeBase AnalysisTreeInfra ${ROOT_LIBRARIES} )
 
-install(TARGETS FlowCorrect EXPORT FlowCorrectTargets
+install(TARGETS QnAnalysisCorrect EXPORT QnAnalysisCorrectTargets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION bin
@@ -29,7 +29,7 @@ install(
         Devel
 )
 
-set(PCM_FILE_NAME libFlowCorrect)
+set(PCM_FILE_NAME libQnAnalysisCorrect)
 
 install(
         FILES

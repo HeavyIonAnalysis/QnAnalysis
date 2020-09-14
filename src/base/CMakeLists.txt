@@ -8,23 +8,23 @@ set(SOURCES
 
 string(REPLACE ".cpp" ".h" HEADERS "${SOURCES}")
 
-add_library(FlowBase SHARED ${SOURCES} G__FlowBase.cxx)
-target_include_directories(FlowBase PUBLIC
+add_library(QnAnalysisBase SHARED ${SOURCES} G__QnAnalysisBase.cxx)
+target_include_directories(QnAnalysisBase PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>/src
         )
 message(${PROJECT_LINK_DIRECTORIES})
 link_directories(${PROJECT_LINK_DIRECTORIES})
-add_dependencies(FlowBase ${PROJECT_DEPENDENCIES})
+add_dependencies(QnAnalysisBase ${PROJECT_DEPENDENCIES})
 include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${CMAKE_CURRENT_SOURCE_DIR})
 
-ROOT_GENERATE_DICTIONARY(G__FlowBase ${HEADERS} LINKDEF FlowBaseLinkDef.h)
-target_link_libraries(FlowBase PUBLIC AnalysisTreeBase AnalysisTreeInfra ROOT::Core
+ROOT_GENERATE_DICTIONARY(G__QnAnalysisBase ${HEADERS} LINKDEF QnAnalysisBaseLinkDef.h)
+target_link_libraries(QnAnalysisBase PUBLIC AnalysisTreeBase AnalysisTreeInfra ROOT::Core
         QnToolsBase
         QnToolsCorrection
         )
 
-install(TARGETS FlowBase EXPORT FlowTargets
+install(TARGETS QnAnalysisBase EXPORT QnAnalysisTargets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION bin
@@ -40,7 +40,7 @@ install(
         Devel
 )
 
-set(PCM_FILE_NAME libFlowBase)
+set(PCM_FILE_NAME libQnAnalysisBase)
 
 install(
         FILES
