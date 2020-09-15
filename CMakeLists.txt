@@ -19,39 +19,24 @@ if (CMAKE_BUILD_TYPE MATCHES DEBUG)
     set(CMAKE_VERBOSE_MAKEFILE ON)
 endif ()
 
-find_package(AnalysisTree QUIET)
-find_package(ROOT REQUIRED RIO)
 
 set(EXTERNAL_DIR ${CMAKE_BINARY_DIR}/external)
 set(EXTERNAL_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/external)
 
+include(cmake_modules/Root.cmake)
 include(cmake_modules/Cuts.cmake)
 include(cmake_modules/QnTools.cmake)
+include(cmake_modules/AnalysisTree.cmake)
 
-if(AnalysisTree_FOUND)
-    Message("AnalysisTree found")
-    include_directories(${AnalysisTree_INCLUDE_DIR})
-Else()
-    Message("AnalysisTree is not found. It will be installed as external package")
-    include(cmake_modules/AnalysisTree.cmake)
-    include_directories(${PROJECT_INCLUDE_DIRECTORIES})
-EndIf()
 
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb -g -DDEBUG -D__DEBUG -Wall")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE} -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ftree-vectorize -ffast-math -DNODEBUG")
 message(STATUS "Using CXX flags for ${CMAKE_BUILD_TYPE}: ${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}}")
-list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 
 SET(QN_PATH             "" CACHE STRING "Path to QnAnalysis")
 list(APPEND CMAKE_PREFIX_PATH ${QN_PATH})
 list(APPEND CMAKE_PREFIX_PATH $ENV{QN_PATH})
-
-if (ROOT_FOUND)
-    message(STATUS "Using ROOT: ${ROOT_VERSION} <${ROOT_CONFIG}>")
-    include_directories(${ROOT_INCLUDE_DIR} ${ROOT_INCLUDE_DIRS})
-    include(${ROOT_USE_FILE})
-endif (ROOT_FOUND)
 
 include_directories(${CMAKE_SOURCE_DIR}/src/base ${AnalysisTree_INCLUDE_DIR} ${PROJECT_INCLUDE_DIRECTORIES})
 add_subdirectory(src)

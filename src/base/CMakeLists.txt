@@ -13,19 +13,16 @@ target_include_directories(QnAnalysisBase PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>/src
         )
-message(${PROJECT_LINK_DIRECTORIES})
 include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${CMAKE_CURRENT_SOURCE_DIR})
-ROOT_GENERATE_DICTIONARY(G__QnAnalysisBase
-        ${HEADERS}
-        LINKDEF QnAnalysisBaseLinkDef.h
-        )
+message("${PROJECT_INCLUDE_DIRECTORIES}")
+ROOT_GENERATE_DICTIONARY(G__QnAnalysisBase ${HEADERS} LINKDEF QnAnalysisBaseLinkDef.h)
 target_link_libraries(QnAnalysisBase
         PUBLIC
-            AnalysisTreeBase
-            AnalysisTreeInfra
-            ROOT::Core
-            QnToolsBase
-            QnToolsCorrection
+        AnalysisTreeInfra
+        AnalysisTreeBase
+        QnToolsBase
+        QnToolsCorrection
+        ROOT::Core
         )
 
 install(TARGETS QnAnalysisBase EXPORT QnAnalysisTargets
