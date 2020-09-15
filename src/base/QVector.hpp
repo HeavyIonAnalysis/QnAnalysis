@@ -14,6 +14,7 @@
 #include "TTreeReader.h"
 
 #include <QnTools/Axis.hpp>
+#include <QnTools/QVector.hpp>
 #include <QnTools/CorrectionOnQnVector.hpp>
 #include <QnTools/Stats.hpp>
 

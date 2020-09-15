@@ -2,7 +2,6 @@
 find_package(AnalysisTree QUIET)
 
 
-if(NOT AnalysisTree_FOUND)
 set(AnalysisTree_BUILD_EXAMPLES OFF)
 
 include(FetchContent)
@@ -11,9 +10,12 @@ FetchContent_Declare(AnalysisTree
         GIT_TAG         "master"
         UPDATE_DISCONNECTED ${UPDATE_DISCONNECTED}
         )
-FetchContent_MakeAvailable(AnalysisTree)
-endif(NOT AnalysisTree_FOUND)
 
+FetchContent_GetProperties(AnalysisTree)
+if(NOT analysistree_POPULATED)
+    FetchContent_Populate(AnalysisTree)
+    add_subdirectory(${analysistree_SOURCE_DIR} ${analysistree_BINARY_DIR})
+endif()
 
 get_target_property(AnalysisTreeBase_INCLUDE_DIR AnalysisTreeBase INCLUDE_DIRECTORIES)
 list(APPEND PROJECT_INCLUDE_DIRECTORIES ${AnalysisTreeBase_INCLUDE_DIR})
