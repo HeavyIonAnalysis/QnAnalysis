@@ -2,6 +2,6 @@
 
 #pragma link C++ namespace Qn;
 
-#pragma link C++ class Qn::CorrectionTask + ;
+#pragma link C++ class Qn::Task + ;
 
 #endif

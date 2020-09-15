@@ -4,23 +4,25 @@
 
 #include "Convert.h"
 
+#include <string>
+
 #include <QnTools/CorrectionHistogramSparse.hpp>
 #include <QnTools/CorrectionProfileComponents.hpp>
 #include <QnTools/Recentering.hpp>
 #include <QnTools/TwistAndRescale.hpp>
 
-AnalysisTree::Variable Flow::Config::Utils::Convert(const Flow::Base::VariableConfig& variable) {
+AnalysisTree::Variable Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::VariableConfig& variable) {
   return AnalysisTree::Variable(variable.branch, variable.field);
 }
 
-Flow::Base::Variable Flow::Config::Utils::Convert1(const Flow::Base::VariableConfig& variable) {
+Qn::Analysis::Base::Variable Qn::Analysis::Config::Utils::Convert1(const Qn::Analysis::Base::VariableConfig& variable) {
   Base::Variable result;
   result.config = variable;
   return result;
 }
 
-Flow::Base::QVector* Flow::Config::Utils::Convert(const Flow::Base::QVectorConfig& config) {
-  using namespace Flow::Base;
+Qn::Analysis::Base::QVector* Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::QVectorConfig& config) {
+  using namespace Qn::Analysis::Base;
   auto name = config.name;
   auto type = config.type;
   auto phi = Convert(config.phi);
@@ -97,7 +99,7 @@ Flow::Base::QVector* Flow::Config::Utils::Convert(const Flow::Base::QVectorConfi
   throw std::runtime_error("Invalid QVector type");
 }
 
-Flow::Base::Axis Flow::Config::Utils::Convert(const Flow::Base::AxisConfig& axis_config) {
+Qn::Analysis::Base::Axis Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::AxisConfig& axis_config) {
   Base::Axis result;
   result.var_ = Convert(axis_config.variable);
 
@@ -110,7 +112,7 @@ Flow::Base::Axis Flow::Config::Utils::Convert(const Flow::Base::AxisConfig& axis
   return result;
 }
 
-Flow::Base::Cut Flow::Config::Utils::Convert(const Flow::Base::CutConfig& config) {
+Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::CutConfig& config) {
   auto var = Convert(config.variable);
   std::function<bool(const double&)> function;
   std::string description;
@@ -135,7 +137,7 @@ Flow::Base::Cut Flow::Config::Utils::Convert(const Flow::Base::CutConfig& config
   return Base::Cut(var, function, description);
 }
 
-Flow::Base::AnalysisSetup Flow::Config::Utils::Convert(const Flow::Base::AnalysisSetupConfig& config) {
+Qn::Analysis::Base::AnalysisSetup Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::AnalysisSetupConfig& config) {
   Base::AnalysisSetup setup;
 
   for (auto& config_variable : config.event_variables) {
@@ -154,21 +156,21 @@ Flow::Base::AnalysisSetup Flow::Config::Utils::Convert(const Flow::Base::Analysi
   return setup;
 }
 
-Flow::Base::Histogram Flow::Config::Utils::Convert(const Flow::Base::HistogramConfig& histogram_config) {
+Qn::Analysis::Base::Histogram Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::HistogramConfig& histogram_config) {
   Base::Histogram result;
   result.axes.resize(histogram_config.axes.size());
   std::transform(histogram_config.axes.begin(), histogram_config.axes.end(), result.axes.begin(),
                  [](const Base::AxisConfig& ax_config) { return Convert(ax_config); });
   return result;
 }
-Qn::CorrectionOnQnVector* Flow::Config::Utils::Convert(const Flow::Base::QVectorCorrectionConfig& config) {
-  using Flow::Base::ETwistRescaleMethod;
-  if (config.type == Flow::Base::EQVectorCorrectionType::RECENTERING) {
+Qn::CorrectionOnQnVector* Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::QVectorCorrectionConfig& config) {
+  using Qn::Analysis::Base::ETwistRescaleMethod;
+  if (config.type == Qn::Analysis::Base::EQVectorCorrectionType::RECENTERING) {
     auto correction = new Qn::Recentering;
     correction->SetApplyWidthEqualization(config.recentering_width_equalization);
     correction->SetNoOfEntriesThreshold(config.no_of_entries);
     return correction;
-  } else if (config.type == Flow::Base::EQVectorCorrectionType::TWIST_AND_RESCALE) {
+  } else if (config.type == Qn::Analysis::Base::EQVectorCorrectionType::TWIST_AND_RESCALE) {
     auto correction = new Qn::TwistAndRescale;
     correction->SetApplyTwist(config.twist_rescale_apply_twist);
     correction->SetApplyRescale(config.twist_rescale_apply_rescale);

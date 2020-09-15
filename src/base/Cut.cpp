@@ -1,3 +1,3 @@
 #include "Cut.h"
 
-ClassImp(Flow::Base::CutConfig)
+ClassImp(Qn::Analysis::Base::CutConfig)

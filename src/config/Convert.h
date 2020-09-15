@@ -14,7 +14,7 @@
 
 #include <QnTools/CorrectionOnQnVector.hpp>
 
-namespace Flow::Config::Utils {
+namespace Qn::Analysis::Config::Utils {
 
 AnalysisTree::Variable Convert(const Base::VariableConfig& variable);
 
@@ -32,6 +32,6 @@ Base::AnalysisSetup Convert(const Base::AnalysisSetupConfig& config);
 
 Base::Histogram Convert(const Base::HistogramConfig& histogram_config);
 
-}// namespace Flow::Config::Utils
+}// namespace Qn::Analysis::Config::Utils
 
 #endif//FLOW_SRC_CONFIG_CONVERT_H

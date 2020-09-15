@@ -4,4 +4,4 @@
 
 #include "Variable.h"
 
-ClassImp(Flow::Base::VariableConfig)
+ClassImp(Qn::Analysis::Base::VariableConfig)

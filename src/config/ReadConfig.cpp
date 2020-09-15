@@ -10,10 +10,10 @@
 
 int main() {
 
-  using namespace Flow::Base;
+  using namespace Qn::Analysis::Base;
   auto node = YAML::LoadFile("analysis-config.yml");
   auto setup_config = node["test"].as<AnalysisSetupConfig>();
-  auto setup = Flow::Config::Utils::Convert(setup_config);
+  auto setup = Qn::Analysis::Config::Utils::Convert(setup_config);
   for (auto& qv : setup.GetQvectorsConfig()) {
     qv.Print();
   }

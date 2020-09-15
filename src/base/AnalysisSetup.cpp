@@ -1,8 +1,8 @@
 #include "AnalysisSetup.h"
 
-ClassImp(Flow::Base::AnalysisSetupConfig)
+ClassImp(Qn::Analysis::Base::AnalysisSetupConfig)
 
-    [[maybe_unused]] void Flow::Base::AnalysisSetup::Print() const {
+    [[maybe_unused]] void Qn::Analysis::Base::AnalysisSetup::Print() const {
   std::cout << " ***** Tracking detectors ***** :" << std::endl;
   for (const auto& det : track_qvectors_) {
     det.Print();

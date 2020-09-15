@@ -1,6 +1,6 @@
 set(SOURCES
-        CorrectTaskManager.cpp
-        CorrectionTask.cpp
+        TaskManager.cpp
+        Task.cpp
         )
 
 string(REPLACE ".cpp" ".h" HEADERS "${SOURCES}")

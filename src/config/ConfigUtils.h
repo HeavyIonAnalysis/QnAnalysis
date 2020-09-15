@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace Flow::Config::Utils {
+namespace Qn::Analysis::Config::Utils {
 
 inline std::vector<std::string> TokenizeString(const std::string& s, char delim) {
   using namespace std;
@@ -27,6 +27,6 @@ inline std::vector<std::string> TokenizeString(const std::string& s, char delim)
 template<typename T>
 inline std::vector<T> EmptyVector() { return std::vector<T>(); }
 
-}// namespace Flow::Config::Utils
+}// namespace Qn::Analysis::Config::Utils
 
 #endif//FLOW_SRC_CONFIG_CONFIGUTILS_H

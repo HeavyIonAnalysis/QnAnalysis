@@ -15,7 +15,7 @@
 #include <base/QVector.h>
 #include <base/Variable.h>
 
-namespace Flow::Config {
+namespace Qn::Analysis::Config {
 
 Base::AnalysisSetup ReadSetupFromFile(const std::string& filename, const std::string& config_name);
 
@@ -25,13 +25,13 @@ namespace YAML {
 
 /* VARIABLE */
 template<>
-struct convert<Flow::Base::VariableConfig> {
+struct convert<Qn::Analysis::Base::VariableConfig> {
 
-  static bool decode(const Node& node, Flow::Base::VariableConfig& var) {
-    using Flow::Config::Utils::TokenizeString;
+  static bool decode(const Node& node, Qn::Analysis::Base::VariableConfig& var) {
+    using Qn::Analysis::Config::Utils::TokenizeString;
     if (node.IsScalar()) {
       if (node.Scalar() == "Ones" || node.Scalar() == "ones" || node.Scalar() == "ONES") {
-        var = Flow::Base::VariableConfig::Ones();
+        var = Qn::Analysis::Base::VariableConfig::Ones();
         return true;
       }
 
@@ -54,10 +54,10 @@ struct convert<Flow::Base::VariableConfig> {
 };
 
 template<>
-struct convert<Flow::Base::AxisConfig> {
+struct convert<Qn::Analysis::Base::AxisConfig> {
 
-  static bool decode(const Node& node, Flow::Base::AxisConfig& axis_config) {
-    using namespace Flow::Base;
+  static bool decode(const Node& node, Qn::Analysis::Base::AxisConfig& axis_config) {
+    using namespace Qn::Analysis::Base;
     if (node.IsMap()) {
       axis_config.variable = node["name"].as<VariableConfig>();
 
@@ -81,10 +81,10 @@ struct convert<Flow::Base::AxisConfig> {
 };
 
 template<>
-struct convert<Flow::Base::CutConfig> {
+struct convert<Qn::Analysis::Base::CutConfig> {
 
-  static bool decode(const Node& node, Flow::Base::CutConfig& cut_config) {
-    using namespace Flow::Base;
+  static bool decode(const Node& node, Qn::Analysis::Base::CutConfig& cut_config) {
+    using namespace Qn::Analysis::Base;
     if (node.IsMap()) {
       cut_config.variable = node["variable"].as<VariableConfig>(VariableConfig());
 
@@ -117,10 +117,10 @@ struct convert<Flow::Base::CutConfig> {
 };
 
 template<>
-struct convert<Flow::Base::HistogramConfig> {
+struct convert<Qn::Analysis::Base::HistogramConfig> {
 
-  static bool decode(const Node& node, Flow::Base::HistogramConfig& config) {
-    using namespace Flow::Base;
+  static bool decode(const Node& node, Qn::Analysis::Base::HistogramConfig& config) {
+    using namespace Qn::Analysis::Base;
     if (node.IsMap()) {
       /* it could be one axis */
       try {
@@ -142,11 +142,11 @@ struct convert<Flow::Base::HistogramConfig> {
 };
 
 template<>
-struct convert<Flow::Base::QVectorCorrectionConfig> {
+struct convert<Qn::Analysis::Base::QVectorCorrectionConfig> {
 
-  static bool decode(const Node& node, Flow::Base::QVectorCorrectionConfig& config) {
-    using namespace Flow::Base;
-    using namespace Flow::Config::Utils;
+  static bool decode(const Node& node, Qn::Analysis::Base::QVectorCorrectionConfig& config) {
+    using namespace Qn::Analysis::Base;
+    using namespace Qn::Analysis::Config::Utils;
 
     if (node.IsMap()) {
       auto type_str = node["type"].Scalar();
@@ -199,11 +199,11 @@ struct convert<Flow::Base::QVectorCorrectionConfig> {
 };
 
 template<>
-struct convert<Flow::Base::QVectorConfig> {
+struct convert<Qn::Analysis::Base::QVectorConfig> {
 
-  static bool decode(const Node& node, Flow::Base::QVectorConfig& config) {
-    using namespace Flow::Base;
-    using namespace Flow::Config::Utils;
+  static bool decode(const Node& node, Qn::Analysis::Base::QVectorConfig& config) {
+    using namespace Qn::Analysis::Base;
+    using namespace Qn::Analysis::Config::Utils;
 
     if (node.IsMap()) {
       config.name = node["name"].Scalar();
@@ -256,10 +256,10 @@ struct convert<Flow::Base::QVectorConfig> {
 };
 
 template<>
-struct convert<Flow::Base::AnalysisSetupConfig> {
-  static bool decode(const Node& node, Flow::Base::AnalysisSetupConfig& config) {
-    using namespace Flow::Base;
-    using namespace Flow::Config::Utils;
+struct convert<Qn::Analysis::Base::AnalysisSetupConfig> {
+  static bool decode(const Node& node, Qn::Analysis::Base::AnalysisSetupConfig& config) {
+    using namespace Qn::Analysis::Base;
+    using namespace Qn::Analysis::Config::Utils;
     if (node.IsMap()) {
       config.event_axes = node["axes"].as<std::vector<AxisConfig>>(EmptyVector<AxisConfig>());
       config.event_variables = node["event-variables"].as<std::vector<VariableConfig>>(EmptyVector<VariableConfig>());

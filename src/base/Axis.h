@@ -8,7 +8,7 @@
 
 #include "Variable.h"
 
-namespace Flow::Base {
+namespace Qn::Analysis::Base {
 
 struct AxisConfig : public TObject {
   enum EAxisType { RANGE,
@@ -23,7 +23,7 @@ struct AxisConfig : public TObject {
 
   std::vector<double> bin_edges;
 
-  ClassDef(Flow::Base::AxisConfig, 2);
+  ClassDef(Qn::Analysis::Base::AxisConfig, 2);
 };
 
 struct Axis {
@@ -41,6 +41,6 @@ struct Axis {
   Qn::AxisD axis_{};
 };
 
-}// namespace Flow::Base
+}// namespace Qn::Analysis::Base
 
 #endif//FLOW_SRC_BASE_AXISCONFIG_H_

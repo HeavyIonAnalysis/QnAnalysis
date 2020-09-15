@@ -7,7 +7,7 @@
 
 #include "Variable.h"
 
-namespace Flow::Base {
+namespace Qn::Analysis::Base {
 
 struct CutConfig : public TObject {
   enum ECutType {
@@ -30,7 +30,7 @@ struct CutConfig : public TObject {
   /* named function */
   std::string named_function_name;
 
-  ClassDef(Flow::Base::CutConfig, 2)
+  ClassDef(Qn::Analysis::Base::CutConfig, 2)
 };
 
 struct Cut {
@@ -49,6 +49,6 @@ struct Cut {
   std::string description_{};
 };
 
-}// namespace Flow::Base
+}// namespace Qn::Analysis::Base
 
 #endif//FLOW_SRC_BASE_CUTCONFIG_H_
