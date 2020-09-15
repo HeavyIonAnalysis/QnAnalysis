@@ -5,16 +5,16 @@
 #ifndef FLOW_SRC_CONFIG_CONVERT_H
 #define FLOW_SRC_CONFIG_CONVERT_H
 
-#include <AnalysisSetup.h>
+#include <AnalysisSetup.hpp>
 #include <AnalysisTree/Variable.hpp>
-#include <Histogram.h>
-#include <base/QVector.h>
-#include <base/Variable.h>
+#include <Histogram.hpp>
+#include <base/QVector.hpp>
+#include <base/Variable.hpp>
 #include <bitset>
 
 #include <QnTools/CorrectionOnQnVector.hpp>
 
-namespace Flow::Config::Utils {
+namespace Qn::Analysis::Config::Utils {
 
 AnalysisTree::Variable Convert(const Base::VariableConfig& variable);
 
@@ -32,6 +32,6 @@ Base::AnalysisSetup Convert(const Base::AnalysisSetupConfig& config);
 
 Base::Histogram Convert(const Base::HistogramConfig& histogram_config);
 
-}// namespace Flow::Config::Utils
+}// namespace Qn::Analysis::Config::Utils
 
 #endif//FLOW_SRC_CONFIG_CONVERT_H

@@ -2,6 +2,6 @@
 // Created by eugene on 12/08/2020.
 //
 
-#include "Variable.h"
+#include "Variable.hpp"
 
-ClassImp(Flow::Base::VariableConfig)
+ClassImp(Qn::Analysis::Base::VariableConfig)

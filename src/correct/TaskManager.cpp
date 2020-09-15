@@ -1,6 +1,8 @@
-#include "CorrectTaskManager.h"
+#include "TaskManager.hpp"
 
-void Qn::CorrectTaskManager::AddTask(Qn::CorrectionTask* task) {
+namespace Qn::Analysis::Correction{
+
+void TaskManager::AddTask(Task* task) {
   assert(tasks_.empty());// For the moment one task per Manager
 
   auto* var_task = new AnalysisTree::VarManager();
@@ -28,4 +30,6 @@ void Qn::CorrectTaskManager::AddTask(Qn::CorrectionTask* task) {
 
   tasks_.emplace_back(var_task);//Needs to be executed first
   tasks_.emplace_back(task);
+}
+
 }

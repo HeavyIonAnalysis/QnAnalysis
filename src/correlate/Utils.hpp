@@ -6,8 +6,8 @@
 
 #include "QnTools/ReSampleHelper.hpp"
 
-#include "Functions.h"
-#include "QVector.h"
+#include "Functions.hpp"
+#include "QVector.hpp"
 
 namespace Qn {
 

@@ -11,9 +11,9 @@
 
 #include <QnTools/Axis.hpp>
 
-#include "QVector.h"
+#include "QVector.hpp"
 
-namespace Flow::Base {
+namespace Qn::Analysis::Base {
 
 struct AnalysisSetupConfig : public TObject {
 
@@ -21,7 +21,7 @@ struct AnalysisSetupConfig : public TObject {
   std::vector<AxisConfig> event_axes;
   std::vector<VariableConfig> event_variables;
 
-  ClassDef(Flow::Base::AnalysisSetupConfig, 2);
+  ClassDef(Qn::Analysis::Base::AnalysisSetupConfig, 2);
 };
 
 struct AnalysisSetup {
@@ -107,7 +107,7 @@ struct AnalysisSetup {
   std::vector<QVectorChannel> channel_qvectors_{};
   QVectorPsi psi_qvector_;
 
-  std::vector<Qn::AxisD> correction_axes_{};// fixme it should be Flow::Base::Axis
+  std::vector<Qn::AxisD> correction_axes_{};// fixme it should be Qn::Analysis::Base::Axis
   std::vector<AnalysisTree::Variable> event_vars_{};
 
   std::vector<std::shared_ptr<QVector>> q_vectors;
@@ -125,6 +125,6 @@ AnalysisSetup Convert(const AnalysisSetupConfig& config);
 
 }
 
-}// namespace Flow::Base
+}// namespace Qn::Analysis::Base
 
 #endif//DATATREEFLOW_GLOBALCONFIG_H
