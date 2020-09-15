@@ -1,13 +1,13 @@
-#include "Task.h"
+#include "Task.hpp"
 
 #include <iostream>
 #include <memory>
 
 #include "AnalysisTree/DataHeader.hpp"
 #include "AnalysisTree/TreeReader.hpp"
-#include "QVector.h"
 
-#include <config/Config.h>
+#include "QVector.hpp"
+#include <config/Config.hpp>
 
 namespace Qn::Analysis::Correction {
 

@@ -2,9 +2,9 @@
 // Created by eugene on 13/08/2020.
 //
 
-#include "Config.h"
-#include "Convert.h"
-#include <base/AnalysisSetup.h>
+#include "Config.hpp"
+#include "Convert.hpp"
+#include <base/AnalysisSetup.hpp>
 
 #include <yaml-cpp/yaml.h>
 

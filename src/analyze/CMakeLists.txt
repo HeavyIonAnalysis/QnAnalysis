@@ -12,7 +12,7 @@ link_directories(${PROJECT_LINK_DIRECTORIES})
 add_dependencies(FlowAna ${PROJECT_DEPENDENCIES})
 include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${CMAKE_CURRENT_SOURCE_DIR})
 
-ROOT_GENERATE_DICTIONARY(G__FlowAna ${HEADERS} LINKDEF FlowAnaLinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__FlowAna ${HEADERS} LINKDEF FlowAnaLinkDef.hpp)
 target_link_libraries(FlowAna ${ROOT_LIBRARIES} )
 
 install(TARGETS FlowAna EXPORT FlowAnaTargets

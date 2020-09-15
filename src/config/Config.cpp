@@ -1,8 +1,8 @@
 //
 // Created by eugene on 13/08/2020.
 //
-#include "Config.h"
-#include "Convert.h"
+#include "Config.hpp"
+#include "Convert.hpp"
 
 #include <yaml-cpp/yaml.h>
 

@@ -1,9 +1,9 @@
 set(SOURCES CorrelationTask.cpp)
 
 set(HEADERS
-    CorrelationTask.h
-    Utils.h
-    Functions.h
+    CorrelationTask.hpp
+    Utils.hpp
+    Functions.hpp
         )
 
 add_library(QnAnalysisCorrelate SHARED ${SOURCES} G__QnAnalysisCorrelate.cxx)
@@ -11,7 +11,7 @@ link_directories(${PROJECT_LINK_DIRECTORIES})
 add_dependencies(QnAnalysisCorrelate ${PROJECT_DEPENDENCIES})
 include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${CMAKE_CURRENT_SOURCE_DIR})
 
-ROOT_GENERATE_DICTIONARY(G__QnAnalysisCorrelate ${HEADERS} LINKDEF QnAnalysisCorrelateLinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__QnAnalysisCorrelate ${HEADERS} LINKDEF QnAnalysisCorrelateLinkDef.hpp)
 target_link_libraries(QnAnalysisCorrelate ${ROOT_LIBRARIES})
 
 install(TARGETS QnAnalysisCorrelate EXPORT QnAnalysisTargets

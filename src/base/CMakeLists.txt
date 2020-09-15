@@ -6,7 +6,7 @@ set(SOURCES
         Variable.cpp
         Histogram.cpp)
 
-string(REPLACE ".cpp" ".h" HEADERS "${SOURCES}")
+string(REPLACE ".cpp" ".hpp" HEADERS "${SOURCES}")
 
 add_library(QnAnalysisBase SHARED ${SOURCES} G__QnAnalysisBase.cxx)
 target_include_directories(QnAnalysisBase PUBLIC
@@ -18,7 +18,7 @@ link_directories(${PROJECT_LINK_DIRECTORIES})
 add_dependencies(QnAnalysisBase ${PROJECT_DEPENDENCIES})
 include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${CMAKE_CURRENT_SOURCE_DIR})
 
-ROOT_GENERATE_DICTIONARY(G__QnAnalysisBase ${HEADERS} LINKDEF QnAnalysisBaseLinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__QnAnalysisBase ${HEADERS} LINKDEF QnAnalysisBaseLinkDef.hpp)
 target_link_libraries(QnAnalysisBase PUBLIC AnalysisTreeBase AnalysisTreeInfra ROOT::Core
         QnToolsBase
         QnToolsCorrection

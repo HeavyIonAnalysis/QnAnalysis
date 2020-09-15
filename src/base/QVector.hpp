@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <TObject.h>
+#include "TTreeReader.h"
 
 #include <QnTools/Axis.hpp>
 #include <QnTools/CorrectionOnQnVector.hpp>
@@ -18,12 +19,11 @@
 
 #include "AnalysisTree/Constants.hpp"
 #include "AnalysisTree/Variable.hpp"
-#include "Axis.h"
-#include "Cut.h"
-#include "TTreeReader.h"
+#include "Axis.hpp"
+#include "Cut.hpp"
 
-#include "Histogram.h"
-#include "Variable.h"
+#include "Histogram.hpp"
+#include "Variable.hpp"
 
 /* forward declarations */
 namespace Qn::Analysis::Base {

@@ -16,8 +16,8 @@
 #include "AnalysisTree/VarManager.hpp"
 #include <AnalysisTree/DataHeader.hpp>
 
-#include "AnalysisSetup.h"
-#include "QVector.h"
+#include "AnalysisSetup.hpp"
+#include "QVector.hpp"
 
 namespace Qn::Analysis::Correction {
 /**

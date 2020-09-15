@@ -1,4 +1,4 @@
-#include "QVector.h"
+#include "QVector.hpp"
 
 ClassImp(Qn::Analysis::Base::QVectorConfig)
 

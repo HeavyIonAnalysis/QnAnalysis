@@ -1,4 +1,4 @@
-#include "AnalysisSetup.h"
+#include "AnalysisSetup.hpp"
 
 ClassImp(Qn::Analysis::Base::AnalysisSetupConfig)
 

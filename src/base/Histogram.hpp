@@ -5,7 +5,7 @@
 #ifndef FLOW_SRC_BASE_HISTOGRAM_H
 #define FLOW_SRC_BASE_HISTOGRAM_H
 
-#include "Axis.h"
+#include "Axis.hpp"
 #include <algorithm>
 #include <vector>
 

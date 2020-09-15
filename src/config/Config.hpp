@@ -7,13 +7,13 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include "ConfigUtils.h"
+#include "ConfigUtils.hpp"
 
-#include <base/AnalysisSetup.h>
-#include <base/Axis.h>
-#include <base/Cut.h>
-#include <base/QVector.h>
-#include <base/Variable.h>
+#include <base/AnalysisSetup.hpp>
+#include <base/Axis.hpp>
+#include <base/Cut.hpp>
+#include <base/QVector.hpp>
+#include <base/Variable.hpp>
 
 namespace Qn::Analysis::Config {
 
