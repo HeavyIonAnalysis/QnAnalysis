@@ -123,7 +123,7 @@ Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis:
     function = [equal_val, equal_tol](const double& v) -> bool {
       return std::abs(v - equal_val) <= equal_tol;
     };
-    description = var.GetName() + " == " + std::__cxx11::to_string(equal_val);
+    description = var.GetName() + " == " + std::to_string(equal_val);
   } else if (config.type == Base::CutConfig::RANGE) {
     auto range_lo = config.range_lo;
     auto range_hi = config.range_hi;
@@ -131,7 +131,7 @@ Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis:
       return range_lo <= v && v <= range_hi;
     };
     description =
-        var.GetName() + " in [" + std::__cxx11::to_string(range_lo) + ";" + std::__cxx11::to_string(range_hi) + "]";
+        var.GetName() + " in [" + std::to_string(range_lo) + ";" + std::to_string(range_hi) + "]";
     throw std::runtime_error("Not yet implemented");
   }
   return Base::Cut(var, function, description);
