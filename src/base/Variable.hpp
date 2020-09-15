@@ -12,7 +12,7 @@
 #include <string>
 #include <utility>
 
-namespace Flow::Base {
+namespace Qn::Analysis::Base {
 
 struct VariableConfig : public TObject {
   std::string branch;
@@ -32,7 +32,7 @@ struct VariableConfig : public TObject {
     return result;
   }
 
-  ClassDef(Flow::Base::VariableConfig, 2)
+  ClassDef(Qn::Analysis::Base::VariableConfig, 2)
 };
 
 struct VariableQnBinding {
@@ -85,6 +85,6 @@ struct Variable {
   }
 };
 
-}// namespace Flow::Base
+}// namespace Qn::Analysis::Base
 
 #endif//FLOW_SRC_BASE_VARIABLE_H

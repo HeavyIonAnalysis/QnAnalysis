@@ -1,8 +1,8 @@
-#include "QVector.h"
+#include "QVector.hpp"
 
-ClassImp(Flow::Base::QVectorConfig)
+ClassImp(Qn::Analysis::Base::QVectorConfig)
 
-    namespace Flow::Base {
+    namespace Qn::Analysis::Base {
 
   std::vector<AnalysisTree::Variable> QVectorTrack::GetListOfVariables() const {
     std::vector<AnalysisTree::Variable> vars{phi_, weight_};

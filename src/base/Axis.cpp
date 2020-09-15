@@ -1,3 +1,3 @@
-#include "Axis.h"
+#include "Axis.hpp"
 
-ClassImp(Flow::Base::AxisConfig)
+ClassImp(Qn::Analysis::Base::AxisConfig)

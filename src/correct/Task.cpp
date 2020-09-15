@@ -1,20 +1,20 @@
-#include "CorrectionTask.h"
+#include "Task.hpp"
 
 #include <iostream>
 #include <memory>
 
 #include "AnalysisTree/DataHeader.hpp"
 #include "AnalysisTree/TreeReader.hpp"
-#include "QVector.h"
 
-#include <config/Config.h>
+#include "QVector.hpp"
+#include <config/Config.hpp>
 
-namespace Qn {
+namespace Qn::Analysis::Correction {
 
 using std::string;
 using std::vector;
 
-void CorrectionTask::InitVariables() {
+void Task::InitVariables() {
   // Add all needed variables
   short ivar{0}, ibranch{0};
 
@@ -63,7 +63,7 @@ void CorrectionTask::InitVariables() {
   }
 }
 
-void CorrectionTask::Init(std::map<std::string, void*>&) {
+void Task::Init(std::map<std::string, void*>&) {
   out_file_ = static_cast<std::shared_ptr<TFile>>(TFile::Open("correction_out.root", "recreate"));
   out_file_->cd();
   out_tree_ = new TTree("tree", "tree");
@@ -80,8 +80,8 @@ void CorrectionTask::Init(std::map<std::string, void*>&) {
   }
 
   for (const auto& qvec_ptr : global_config_->q_vectors) {
-    if (qvec_ptr->GetType() == Flow::Base::EQVectorType::TRACK) {
-      auto track_qv = std::dynamic_pointer_cast<Flow::Base::QVectorTrack>(qvec_ptr);
+    if (qvec_ptr->GetType() == Base::EQVectorType::TRACK) {
+      auto track_qv = std::dynamic_pointer_cast<Base::QVectorTrack>(qvec_ptr);
       const string& name = track_qv->GetName();
       auto qn_weight = track_qv->GetWeightVar().GetName() == "_Ones" ? "Ones" : track_qv->GetWeightVar().GetName();
       manager_.AddDetector(name, DetectorType::TRACK, track_qv->GetPhiVar().GetName(), qn_weight, track_qv->GetAxes(), {1, 2});
@@ -90,15 +90,15 @@ void CorrectionTask::Init(std::map<std::string, void*>&) {
       for (const auto& cut : track_qv->GetCuts()) {//NOTE cannot apply cuts on more than 1 variable
         manager_.AddCutOnDetector(name, {cut.GetVariable().GetName().c_str()}, cut.GetFunction(), cut.GetDescription());
       }
-    } else if (qvec_ptr->GetType() == Flow::Base::EQVectorType::CHANNEL) {
-      auto channel_qv = std::dynamic_pointer_cast<Flow::Base::QVectorChannel>(qvec_ptr);
+    } else if (qvec_ptr->GetType() == Base::EQVectorType::CHANNEL) {
+      auto channel_qv = std::dynamic_pointer_cast<Base::QVectorChannel>(qvec_ptr);
       const string name = channel_qv->GetName();
       auto qn_phi = name + "_" + channel_qv->GetPhiVar().GetName();
       auto qn_weight = channel_qv->GetWeightVar().GetName() == "_Ones" ? "Ones" : name + "_" + channel_qv->GetWeightVar().GetName();
       manager_.AddDetector(name, DetectorType::CHANNEL, qn_phi, qn_weight, {/* no axes to be passed */}, {1});
       Info(__func__, "Add channel detector '%s'", name.c_str());
       SetCorrectionSteps(channel_qv.operator*());
-    } else if (qvec_ptr->GetType() == Flow::Base::EQVectorType::EVENT_PSI) {
+    } else if (qvec_ptr->GetType() == Base::EQVectorType::EVENT_PSI) {
       const string name = qvec_ptr->GetName();
       auto qn_weight = qvec_ptr->GetWeightVar().GetName() == "_Ones" ? "Ones" : qvec_ptr->GetWeightVar().GetName();
       manager_.AddDetector(qvec_ptr->GetName(), DetectorType::CHANNEL, qvec_ptr->GetPhiVar().GetName(), qn_weight, {}, {1, 2});
@@ -123,7 +123,7 @@ void CorrectionTask::Init(std::map<std::string, void*>&) {
 /**
 * Main method. Executed every event
 */
-void CorrectionTask::Exec() {
+void Task::Exec() {
   manager_.Reset();
   double* container = manager_.GetVariableContainer();
 
@@ -162,7 +162,7 @@ void CorrectionTask::Exec() {
 * Fill the information from Tracks, Particles and Hits. We assume that Tracking Q-vectors are not constructed from
 * Modules. Information from EventHeaders and Modules should be filled before.
 */
-void CorrectionTask::FillTracksQvectors() {
+void Task::FillTracksQvectors() {
   double* container = manager_.GetVariableContainer();
   short ibranch{0};
   for (const auto& entry : var_manager_->GetVarEntries()) {
@@ -192,7 +192,7 @@ void CorrectionTask::FillTracksQvectors() {
 * Adding QA histograms to CorrectionManager
 */
 
-void CorrectionTask::AddQAHisto() {
+void Task::AddQAHisto() {
   for (const auto& qvec : global_config_->GetQvectorsConfig()) {
     for (const auto& qa : qvec.GetQAHistograms()) {
       if (qa.axes.size() == 1) {
@@ -226,7 +226,7 @@ void CorrectionTask::AddQAHisto() {
   //  }
 }
 
-void CorrectionTask::Finish() {
+void Task::Finish() {
   manager_.Finalize();
 
   out_file_->cd();
@@ -249,7 +249,7 @@ void CorrectionTask::Finish() {
 /**
 * Set correction steps in a CorrectionManager for a given Q-vector
 */
-void CorrectionTask::SetCorrectionSteps(const Flow::Base::QVector& qvec) {
+void Task::SetCorrectionSteps(const Base::QVector& qvec) {
   std::vector<Qn::QVector::CorrectionStep> correction_steps = {Qn::QVector::CorrectionStep::PLAIN};
   const std::string& name = qvec.GetName();
 

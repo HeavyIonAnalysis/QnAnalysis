@@ -1,6 +1,6 @@
 #include "CbmCuts.h"
 #include "QnTools/Axis.hpp"
-#include "correct/CorrectTaskManager.h"
+#include "correct/TaskManager.h"
 
 #include "AnalysisSetup.h"
 #include "AnalysisTree/DataHeader.hpp"

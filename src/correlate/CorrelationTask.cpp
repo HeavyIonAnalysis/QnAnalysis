@@ -3,10 +3,10 @@
 
 #include <QnTools/QnDataFrame.hpp>
 
-#include "AnalysisSetup.h"
-#include "CorrelationTask.h"
-#include "QVector.h"
-#include "Utils.h"
+#include "AnalysisSetup.hpp"
+#include "CorrelationTask.hpp"
+#include "QVector.hpp"
+#include "Utils.hpp"
 
 constexpr auto obs = Qn::Stats::Weights::OBSERVABLE;
 constexpr auto ref = Qn::Stats::Weights::REFERENCE;

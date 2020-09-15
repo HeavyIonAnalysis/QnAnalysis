@@ -16,19 +16,19 @@
 #include "AnalysisTree/VarManager.hpp"
 #include <AnalysisTree/DataHeader.hpp>
 
-#include "AnalysisSetup.h"
-#include "QVector.h"
+#include "AnalysisSetup.hpp"
+#include "QVector.hpp"
 
-namespace Qn {
+namespace Qn::Analysis::Correction {
 /**
  * Qn vector analysis TestTask. It is to be configured by the user.
  * @brief TestTask for analysing qn vectors
  */
 
-class CorrectionTask : public AnalysisTree::FillTask {
+class Task : public AnalysisTree::FillTask {
  public:
-  CorrectionTask() = delete;
-  explicit CorrectionTask(Flow::Base::AnalysisSetup* global_config) : global_config_(global_config) {}
+  Task() = delete;
+  explicit Task(Base::AnalysisSetup* global_config) : global_config_(global_config) {}
 
   void AddQAHistogram(const std::string& qvec_name, const std::vector<AxisD>& axis) {
     qa_histos_.emplace_back(qvec_name, axis);
@@ -40,11 +40,11 @@ class CorrectionTask : public AnalysisTree::FillTask {
 
   void SetPointerToVarManager(AnalysisTree::VarManager* ptr) { var_manager_ = ptr; }
 
-  Flow::Base::AnalysisSetup* GetConfig() { return global_config_; }
+  Base::AnalysisSetup* GetConfig() { return global_config_; }
 
  protected:
   void FillTracksQvectors();
-  void SetCorrectionSteps(const Flow::Base::QVector& qvec);
+  void SetCorrectionSteps(const Base::QVector& qvec);
   void InitVariables();
   void AddQAHisto();
 
@@ -54,7 +54,7 @@ class CorrectionTask : public AnalysisTree::FillTask {
   TTree* out_tree_{nullptr};
   Qn::CorrectionManager manager_;
 
-  Flow::Base::AnalysisSetup* global_config_{nullptr};
+  Base::AnalysisSetup* global_config_{nullptr};
   AnalysisTree::VarManager* var_manager_{nullptr};
   std::vector<std::tuple<std::string, std::vector<AxisD>>> qa_histos_;
   std::map<int, int> is_filled_{};

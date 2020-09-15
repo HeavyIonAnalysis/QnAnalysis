@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <TObject.h>
+#include "TTreeReader.h"
 
 #include <QnTools/Axis.hpp>
 #include <QnTools/CorrectionOnQnVector.hpp>
@@ -18,24 +19,23 @@
 
 #include "AnalysisTree/Constants.hpp"
 #include "AnalysisTree/Variable.hpp"
-#include "Axis.h"
-#include "Cut.h"
-#include "TTreeReader.h"
+#include "Axis.hpp"
+#include "Cut.hpp"
 
-#include "Histogram.h"
-#include "Variable.h"
+#include "Histogram.hpp"
+#include "Variable.hpp"
 
 /* forward declarations */
-namespace Flow::Base {
+namespace Qn::Analysis::Base {
 
 struct QVectorConfig;
 class QVector;
 class QVectorChannel;
 class QVectorTrack;
 
-}// namespace Flow::Base
+}// namespace Qn::Analysis::Base
 
-namespace Flow::Base {
+namespace Qn::Analysis::Base {
 
 enum class EQVectorCorrectionType {
   NONE,
@@ -104,7 +104,7 @@ struct QVectorConfig : public TObject {
 
   std::string harmonics;
 
-  ClassDef(Flow::Base::QVectorConfig, 2)
+  ClassDef(Qn::Analysis::Base::QVectorConfig, 2)
 };
 
 class QVector {
@@ -292,6 +292,6 @@ class QVectorPsi : public QVector {
              const AnalysisTree::Variable& Weight) : QVector(Name, EQVectorType::EVENT_PSI, Phi, Weight){};
 };
 
-}// namespace Flow::Base
+}// namespace Qn::Analysis::Base
 
 #endif//QN_QVECTOR_CONFIG_H

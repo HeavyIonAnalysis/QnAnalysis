@@ -12,8 +12,8 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDataSource.hxx"
 
-#include "AnalysisSetup.h"
-#include "QVector.h"
+#include "AnalysisSetup.hpp"
+#include "QVector.hpp"
 
 class CorrelationTask {
  public:
