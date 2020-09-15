@@ -12,3 +12,9 @@ if (NOT QnTools_FOUND)
     )
     FetchContent_MakeAvailable(QnTools)
 endif(NOT QnTools_FOUND)
+
+get_target_property(QnToolsBase_INCLUDE_DIR QnToolsBase INCLUDE_DIRECTORIES)
+get_target_property(QnToolsCorrection_INCLUDE_DIR QnToolsCorrection INCLUDE_DIRECTORIES)
+
+list(APPEND PROJECT_INCLUDE_DIRECTORIES ${QnToolsBase_INCLUDE_DIR})
+list(APPEND PROJECT_INCLUDE_DIRECTORIES ${QnToolsCorrection_INCLUDE_DIR})
