@@ -5,8 +5,8 @@ find_package(QnTools QUIET)
 include(FetchContent)
 set(QnTools_BUILD_TESTS OFF)
 FetchContent_Declare(QnTools
-        GIT_REPOSITORY https://github.com/eugene274/QnTools.git
-        GIT_TAG issue-33
+        GIT_REPOSITORY https://github.com/HeavyIonAnalysis/QnTools.git
+        GIT_TAG master
         UPDATE_DISCONNECTED ${UPDATE_DISCONNECTED}
         )
 
