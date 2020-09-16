@@ -6,7 +6,7 @@
 #include <AnalysisTree/Variable.hpp>
 #include <QnTools/Axis.hpp>
 
-#include "Variable.hpp"
+#include <QnAnalysisBase/Variable.hpp>
 
 namespace Qn::Analysis::Base {
 

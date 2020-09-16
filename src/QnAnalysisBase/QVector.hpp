@@ -18,13 +18,13 @@
 #include <QnTools/CorrectionOnQnVector.hpp>
 #include <QnTools/Stats.hpp>
 
-#include "AnalysisTree/Constants.hpp"
-#include "AnalysisTree/Variable.hpp"
-#include "Axis.hpp"
-#include "Cut.hpp"
+#include <AnalysisTree/Constants.hpp>
+#include <AnalysisTree/Variable.hpp>
 
-#include "Histogram.hpp"
-#include "Variable.hpp"
+#include <QnAnalysisBase/Axis.hpp>
+#include <QnAnalysisBase/Cut.hpp>
+#include <QnAnalysisBase/Histogram.hpp>
+#include <QnAnalysisBase/Variable.hpp>
 
 /* forward declarations */
 namespace Qn::Analysis::Base {

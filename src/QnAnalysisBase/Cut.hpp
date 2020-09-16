@@ -5,7 +5,7 @@
 
 #include "AnalysisTree/Variable.hpp"
 
-#include "Variable.hpp"
+#include <QnAnalysisBase/Variable.hpp>
 
 namespace Qn::Analysis::Base {
 

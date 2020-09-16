@@ -23,6 +23,8 @@ endif ()
 set(EXTERNAL_DIR ${CMAKE_BINARY_DIR}/external)
 set(EXTERNAL_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/external)
 
+set(QnAnalysis_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
 include(cmake_modules/Root.cmake)
 include(cmake_modules/Cuts.cmake)
 include(cmake_modules/QnTools.cmake)

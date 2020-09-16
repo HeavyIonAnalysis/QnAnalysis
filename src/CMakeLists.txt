@@ -1,4 +1,4 @@
-add_subdirectory(base)
+add_subdirectory(QnAnalysisBase)
 add_subdirectory(config)
 add_subdirectory(correct)
 #add_subdirectory(correlate)

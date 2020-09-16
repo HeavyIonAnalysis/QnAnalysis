@@ -5,11 +5,11 @@
 #ifndef FLOW_SRC_CONFIG_CONVERT_H
 #define FLOW_SRC_CONFIG_CONVERT_H
 
-#include <AnalysisSetup.hpp>
+#include <QnAnalysisBase/AnalysisSetup.hpp>
 #include <AnalysisTree/Variable.hpp>
-#include <Histogram.hpp>
-#include <base/QVector.hpp>
-#include <base/Variable.hpp>
+#include <QnAnalysisBase/Histogram.hpp>
+#include <QnAnalysisBase/QVector.hpp>
+#include <QnAnalysisBase/Variable.hpp>
 #include <bitset>
 
 #include <QnTools/CorrectionOnQnVector.hpp>
