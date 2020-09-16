@@ -11,7 +11,7 @@
 
 #include <QnTools/Axis.hpp>
 
-#include "QVector.hpp"
+#include <QnAnalysisBase/QVector.hpp>
 
 namespace Qn::Analysis::Base {
 

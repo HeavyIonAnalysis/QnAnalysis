@@ -15,6 +15,7 @@ ExternalProject_Add(Cuts_Ext
         INSTALL_DIR     "${Cuts_INSTALL_DIR}"
         CMAKE_ARGS
         "-DCMAKE_INSTALL_PREFIX=${Cuts_INSTALL_DIR}"
+        "-DROOT_DIR=${ROOT_DIR}"
         "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
         )
 

@@ -6,18 +6,18 @@
 #include <string>
 #include <vector>
 
-#include "TFile.h"
-#include "TTree.h"
-#include "TTreeReader.h"
+#include <TFile.h>
+#include <TTree.h>
+#include <TTreeReader.h>
 #include <TChain.h>
 
-#include "QnTools/CorrectionManager.hpp"
+#include <QnTools/CorrectionManager.hpp>
 
-#include "AnalysisTree/VarManager.hpp"
+#include <AnalysisTree/VarManager.hpp>
 #include <AnalysisTree/DataHeader.hpp>
 
-#include "AnalysisSetup.hpp"
-#include "QVector.hpp"
+#include <QnAnalysisBase/AnalysisSetup.hpp>
+#include <QnAnalysisBase/QVector.hpp>
 
 namespace Qn::Analysis::Correction {
 /**

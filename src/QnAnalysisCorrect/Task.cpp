@@ -3,11 +3,11 @@
 #include <iostream>
 #include <memory>
 
-#include "AnalysisTree/DataHeader.hpp"
-#include "AnalysisTree/TreeReader.hpp"
+#include <AnalysisTree/DataHeader.hpp>
+#include <AnalysisTree/TreeReader.hpp>
 
-#include "QVector.hpp"
-#include <config/Config.hpp>
+#include <QnAnalysisBase/QVector.hpp>
+#include <QnAnalysisConfig/Config.hpp>
 
 namespace Qn::Analysis::Correction {
 

@@ -6,22 +6,22 @@ set(SOURCES
         Variable.cpp
         Histogram.cpp)
 
-string(REPLACE ".cpp" ".hpp" HEADERS "${SOURCES}")
 
 add_library(QnAnalysisBase SHARED ${SOURCES} G__QnAnalysisBase.cxx)
-target_include_directories(QnAnalysisBase PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>/src
-        )
-message(${PROJECT_LINK_DIRECTORIES})
-link_directories(${PROJECT_LINK_DIRECTORIES})
-add_dependencies(QnAnalysisBase ${PROJECT_DEPENDENCIES})
-include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(QnAnalysisBase PUBLIC $<BUILD_INTERFACE:${QnAnalysis_SOURCE_DIR}>)
+include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${QnAnalysis_SOURCE_DIR})
 
+string(REPLACE ".cpp" ".hpp" HEADERS "${SOURCES}")
+list(TRANSFORM HEADERS PREPEND QnAnalysisBase/)
 ROOT_GENERATE_DICTIONARY(G__QnAnalysisBase ${HEADERS} LINKDEF QnAnalysisBaseLinkDef.hpp)
-target_link_libraries(QnAnalysisBase PUBLIC AnalysisTreeBase AnalysisTreeInfra ROOT::Core
+
+target_link_libraries(QnAnalysisBase
+        PUBLIC
+        AnalysisTreeInfra
+        AnalysisTreeBase
         QnToolsBase
         QnToolsCorrection
+        ROOT::Core
         )
 
 install(TARGETS QnAnalysisBase EXPORT QnAnalysisTargets

@@ -9,11 +9,11 @@
 
 #include "ConfigUtils.hpp"
 
-#include <base/AnalysisSetup.hpp>
-#include <base/Axis.hpp>
-#include <base/Cut.hpp>
-#include <base/QVector.hpp>
-#include <base/Variable.hpp>
+#include <QnAnalysisBase/AnalysisSetup.hpp>
+#include <QnAnalysisBase/Axis.hpp>
+#include <QnAnalysisBase/Cut.hpp>
+#include <QnAnalysisBase/QVector.hpp>
+#include <QnAnalysisBase/Variable.hpp>
 
 namespace Qn::Analysis::Config {
 
