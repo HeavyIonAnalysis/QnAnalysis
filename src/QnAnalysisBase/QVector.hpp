@@ -16,7 +16,7 @@
 #include <QnTools/Axis.hpp>
 #include <QnTools/QVector.hpp>
 #include <QnTools/CorrectionOnQnVector.hpp>
-#include <QnTools/Stats.hpp>
+#include <QnTools/Stat.hpp>
 
 #include <AnalysisTree/Constants.hpp>
 #include <AnalysisTree/Variable.hpp>
@@ -141,7 +141,7 @@ class QVector {
   const AnalysisTree::Variable& GetPhiVar() const { return phi_; }
   AnalysisTree::Variable& WeightVar() { return weight_; }
   AnalysisTree::Variable& PhiVar() { return phi_; }
-  void SetWeightsType(Qn::Stats::Weights type) { weights_type_ = type; }
+  void SetWeightsType(Qn::Stat::WeightType type) { weights_type_ = type; }
 
   /**
    * @brief Adds correction to Q-vector, QVector owns the pointer
@@ -172,7 +172,7 @@ class QVector {
     harmonics_ = Harmonics;
   }
 
-  Qn::Stats::Weights GetWeightsType() const { return weights_type_; }
+  Qn::Stat::WeightType GetWeightsType() const { return weights_type_; }
 
   virtual std::vector<AnalysisTree::Variable> GetListOfVariables() const { return {phi_, weight_}; }
 
@@ -225,7 +225,7 @@ class QVector {
   AnalysisTree::Variable weight_{};
   std::array<bool, nSteps> corrertions_{false, false, false};
   std::list<CorrectionPtr> corrections_;
-  Qn::Stats::Weights weights_type_ = Qn::Stats::Weights::OBSERVABLE;
+  Qn::Stat::WeightType weights_type_ = Qn::Stat::WeightType::OBSERVABLE;
 
   std::bitset<8> harmonics_;
 

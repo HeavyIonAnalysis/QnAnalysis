@@ -3,7 +3,6 @@
 find_package(QnTools QUIET)
 
 include(FetchContent)
-set(QnTools_BUILD_TESTS OFF)
 FetchContent_Declare(QnTools
         GIT_REPOSITORY https://github.com/HeavyIonAnalysis/QnTools.git
         GIT_TAG master
@@ -13,6 +12,7 @@ FetchContent_Declare(QnTools
 FetchContent_GetProperties(QnTools)
 if(NOT qntools_POPULATED)
     FetchContent_Populate(QnTools)
+    set(QnTools_BUILD_TESTS OFF)
     add_subdirectory(${qntools_SOURCE_DIR} ${qntools_BINARY_DIR})
 endif()
 
