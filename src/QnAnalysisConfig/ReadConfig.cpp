@@ -4,7 +4,7 @@
 
 #include "Config.hpp"
 #include "Convert.hpp"
-#include <base/AnalysisSetup.hpp>
+#include <QnAnalysisBase/AnalysisSetup.hpp>
 
 #include <yaml-cpp/yaml.h>
 
