@@ -220,7 +220,7 @@ void QnCorrectionTask::PreInit() {
   at_vm_task->FillBranchNames();
 //  at_vm_task->SetCutsMap(cuts_map_); FIXME
 
-  this->SetPointerToVarManager(at_vm_task.operator->());
+  var_manager_ = at_vm_task.operator->();
 }
 
 
@@ -228,6 +228,7 @@ boost::program_options::options_description QnCorrectionTask::GetBoostOptions() 
   using namespace boost::program_options;
   options_description desc(GetName() + " options");
   desc.add_options()
+      ("calibration-input-file", value(&in_calibration_file_name_)->default_value("correction_in.root"), "Input calibration file")
       ("yaml-config-file", value(&yaml_config_file_)->default_value("analysis-config.yml"), "Path to YAML config")
       ("yaml-config-name", value(&yaml_config_node_)->required(), "Name of YAML node");
   return desc;
