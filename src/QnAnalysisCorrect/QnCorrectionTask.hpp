@@ -30,7 +30,7 @@ namespace Qn::Analysis::Correction {
 class QnCorrectionTask : public UserTask {
  public:
   QnCorrectionTask() = default;
-  explicit QnCorrectionTask(Base::AnalysisSetup* global_config) : global_config_(global_config) {}
+  explicit QnCorrectionTask(Base::AnalysisSetup* global_config) : analysis_setup_(global_config) {}
 
   void AddQAHistogram(const std::string& qvec_name, const std::vector<AxisD>& axis) {
     qa_histos_.emplace_back(qvec_name, axis);
@@ -43,7 +43,7 @@ class QnCorrectionTask : public UserTask {
 
   void SetPointerToVarManager(AnalysisTree::VarManager* ptr) { var_manager_ = ptr; }
 
-  Base::AnalysisSetup* GetConfig() { return global_config_; }
+  Base::AnalysisSetup* GetConfig() { return analysis_setup_; }
 
  protected:
   void FillTracksQvectors();
@@ -51,13 +51,16 @@ class QnCorrectionTask : public UserTask {
   void InitVariables();
   void AddQAHisto();
 
+  std::string yaml_config_file_;
+  std::string yaml_config_node_;
+
   std::shared_ptr<TFile> out_file_{nullptr};
   std::string in_calibration_file_name_{"correction_in.root"};
 
   TTree* out_tree_{nullptr};
   Qn::CorrectionManager manager_;
 
-  Base::AnalysisSetup* global_config_{nullptr};
+  Base::AnalysisSetup* analysis_setup_{nullptr};
   AnalysisTree::VarManager* var_manager_{nullptr};
   std::vector<std::tuple<std::string, std::vector<AxisD>>> qa_histos_;
   std::map<int, int> is_filled_{};

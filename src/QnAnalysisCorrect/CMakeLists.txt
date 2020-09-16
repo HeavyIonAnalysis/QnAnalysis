@@ -1,5 +1,4 @@
 set(SOURCES
-        TaskManager.cpp
         QnCorrectionTask.cpp
         ATVarManagerTask.cpp ATVarManagerTask.h)
 

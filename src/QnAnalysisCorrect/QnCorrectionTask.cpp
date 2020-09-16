@@ -7,6 +7,7 @@
 #include <AnalysisTree/TreeReader.hpp>
 
 #include <QnAnalysisBase/QVector.hpp>
+#include <QnAnalysisBase/AnalysisSetup.hpp>
 #include <QnAnalysisConfig/Config.hpp>
 
 #include <QnAnalysisCorrect/ATVarManagerTask.h>
@@ -49,7 +50,7 @@ void QnCorrectionTask::InitVariables() {
     ibranch++;
   }
 
-  for (auto& qvec : global_config_->ChannelConfig()) {
+  for (auto& qvec : analysis_setup_->ChannelConfig()) {
     auto& phi = qvec.PhiVar();
     phi.SetId(ivar);
     manager_.AddVariable(qvec.GetName() + "_" + phi.GetName(), phi.GetId(), phi.GetSize());
@@ -62,7 +63,7 @@ void QnCorrectionTask::InitVariables() {
     ivar += weight.GetSize();
   }
 
-  for (const auto& event_var : global_config_->GetEventVars()) {
+  for (const auto& event_var : analysis_setup_->GetEventVars()) {
     manager_.AddEventVariable(event_var.GetName());
   }
 }
@@ -79,11 +80,11 @@ void QnCorrectionTask::Init(std::map<std::string, void*>&) {
 
   InitVariables();
 
-  for (const auto& axis : global_config_->GetCorrectionAxes()) {
+  for (const auto& axis : analysis_setup_->GetCorrectionAxes()) {
     manager_.AddCorrectionAxis(axis);
   }
 
-  for (const auto& qvec_ptr : global_config_->q_vectors) {
+  for (const auto& qvec_ptr : analysis_setup_->q_vectors) {
     if (qvec_ptr->GetType() == Base::EQVectorType::TRACK) {
       auto track_qv = std::dynamic_pointer_cast<Base::QVectorTrack>(qvec_ptr);
       const string& name = track_qv->GetName();
@@ -111,8 +112,8 @@ void QnCorrectionTask::Init(std::map<std::string, void*>&) {
   }
 
   // Add Psi_RP
-  if (global_config_->IsSimulation()) {
-    const auto& qvec = global_config_->GetPsiQvector();
+  if (analysis_setup_->IsSimulation()) {
+    const auto& qvec = analysis_setup_->GetPsiQvector();
     manager_.AddDetector(qvec.GetName(), DetectorType::CHANNEL, qvec.GetPhiVar().GetName(), qvec.GetWeightVar().GetName(), {}, {1, 2});
     SetCorrectionSteps(qvec);
   }
@@ -140,7 +141,7 @@ void QnCorrectionTask::Exec() {
       }
     }
   }
-  for (const auto& qvec : global_config_->GetChannelConfig()) {
+  for (const auto& qvec : analysis_setup_->GetChannelConfig()) {
     const auto& phi = qvec.GetPhiVar();
     const auto& weight = qvec.GetWeightVar();
     const auto& branch = var_manager_->GetVarEntries().at(qvec.GetVarEntryId());
@@ -198,6 +199,8 @@ void QnCorrectionTask::PreInit() {
     throw std::runtime_error("Keep ATVarManagerTask enabled");
   }
 
+  this->analysis_setup_ = new Base::AnalysisSetup(Qn::Analysis::Config::ReadSetupFromFile(yaml_config_file_, yaml_config_node_));
+
   // Variables used by tracking Q-vectors
   for (auto& qvec : this->GetConfig()->QvectorsConfig()) {
     const auto& vars = qvec.GetListOfVariables();
@@ -222,7 +225,12 @@ void QnCorrectionTask::PreInit() {
 
 
 boost::program_options::options_description QnCorrectionTask::GetBoostOptions() {
-  return UserTask::GetBoostOptions();
+  using namespace boost::program_options;
+  options_description desc(GetName() + " options");
+  desc.add_options()
+      ("yaml-config-file", value(&yaml_config_file_)->default_value("analysis-config.yml"), "Path to YAML config")
+      ("yaml-config-name", value(&yaml_config_node_)->required(), "Name of YAML node");
+  return desc;
 }
 
 /**
@@ -230,7 +238,7 @@ boost::program_options::options_description QnCorrectionTask::GetBoostOptions() 
 */
 
 void QnCorrectionTask::AddQAHisto() {
-  for (const auto& qvec : global_config_->GetQvectorsConfig()) {
+  for (const auto& qvec : analysis_setup_->GetQvectorsConfig()) {
     for (const auto& qa : qvec.GetQAHistograms()) {
       if (qa.axes.size() == 1) {
         manager_.AddHisto1D(qvec.GetName(), qa.axes.at(0).GetQnAxis());
@@ -242,7 +250,7 @@ void QnCorrectionTask::AddQAHisto() {
     }
   }
 
-  for (const auto& qvec : global_config_->GetChannelConfig()) {
+  for (const auto& qvec : analysis_setup_->GetChannelConfig()) {
     for (const auto& qa : qvec.GetQAHistograms()) {
       if (qa.axes.size() == 1) {
         auto axis = qa.axes.at(0).GetQnAxis();
