@@ -20,16 +20,14 @@ Else()
         add_subdirectory(${yaml-cpp_SOURCE_DIR} ${yaml-cpp_BINARY_DIR})
         message(STATUS "Done.")
     endif()
-    include_directories(BEFORE SYSTEM ${yaml-cpp_SOURCE_DIR} ${yaml-cpp_BINARY_DIR}/include)
 EndIf()
 
 add_library(QnAnalysisConfig STATIC Convert.cpp Config.cpp)
 target_include_directories(QnAnalysisConfig PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>/src>
+        $<BUILD_INTERFACE:${QnAnalysis_SOURCE_DIR}>>
         )
 target_link_libraries(QnAnalysisConfig PUBLIC
         QnAnalysisBase
-        QnToolsCorrection
         yaml-cpp
         )
 
