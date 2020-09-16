@@ -1,4 +1,4 @@
-#include "Task.hpp"
+#include "QnCorrectionTask.hpp"
 
 #include <iostream>
 #include <memory>
@@ -9,14 +9,16 @@
 #include <QnAnalysisBase/QVector.hpp>
 #include <QnAnalysisConfig/Config.hpp>
 
+#include <QnAnalysisCorrect/ATVarManagerTask.h>
+
 namespace Qn::Analysis::Correction {
 
-TASK_IMPL(Task)
+TASK_IMPL(QnCorrectionTask)
 
 using std::string;
 using std::vector;
 
-void Task::InitVariables() {
+void QnCorrectionTask::InitVariables() {
   // Add all needed variables
   short ivar{0}, ibranch{0};
 
@@ -65,7 +67,7 @@ void Task::InitVariables() {
   }
 }
 
-void Task::Init(std::map<std::string, void*>&) {
+void QnCorrectionTask::Init(std::map<std::string, void*>&) {
   out_file_ = static_cast<std::shared_ptr<TFile>>(TFile::Open("correction_out.root", "recreate"));
   out_file_->cd();
   out_tree_ = new TTree("tree", "tree");
@@ -125,7 +127,7 @@ void Task::Init(std::map<std::string, void*>&) {
 /**
 * Main method. Executed every event
 */
-void Task::Exec() {
+void QnCorrectionTask::Exec() {
   manager_.Reset();
   double* container = manager_.GetVariableContainer();
 
@@ -164,7 +166,7 @@ void Task::Exec() {
 * Fill the information from Tracks, Particles and Hits. We assume that Tracking Q-vectors are not constructed from
 * Modules. Information from EventHeaders and Modules should be filled before.
 */
-void Task::FillTracksQvectors() {
+void QnCorrectionTask::FillTracksQvectors() {
   double* container = manager_.GetVariableContainer();
   short ibranch{0};
   for (const auto& entry : var_manager_->GetVarEntries()) {
@@ -190,11 +192,44 @@ void Task::FillTracksQvectors() {
   }
 }
 
+void QnCorrectionTask::PreInit() {
+  auto at_vm_task  = GetTaskPtr<ATVarManagerTask>();
+  if (!at_vm_task->IsEnabled()) {
+    throw std::runtime_error("Keep ATVarManagerTask enabled");
+  }
+
+  // Variables used by tracking Q-vectors
+  for (auto& qvec : this->GetConfig()->QvectorsConfig()) {
+    const auto& vars = qvec.GetListOfVariables();
+    qvec.SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(vars)).first);
+  }
+  // Variables used by channelized Q-vectors
+  for (auto& channel : this->GetConfig()->ChannelConfig()) {
+    channel.SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry({channel.GetWeightVar()})).first);
+  }
+  // Psi variable
+  if (this->GetConfig()->IsSimulation()) {
+    auto& qvec = this->GetConfig()->PsiQvector();
+    qvec.SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry({qvec.GetPhiVar()})).first);
+  }
+  auto event_var_id = at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(this->GetConfig()->GetEventVars())).first;
+
+  at_vm_task->FillBranchNames();
+//  at_vm_task->SetCutsMap(cuts_map_); FIXME
+
+  this->SetPointerToVarManager(at_vm_task.operator->());
+}
+
+
+boost::program_options::options_description QnCorrectionTask::GetBoostOptions() {
+  return UserTask::GetBoostOptions();
+}
+
 /**
 * Adding QA histograms to CorrectionManager
 */
 
-void Task::AddQAHisto() {
+void QnCorrectionTask::AddQAHisto() {
   for (const auto& qvec : global_config_->GetQvectorsConfig()) {
     for (const auto& qa : qvec.GetQAHistograms()) {
       if (qa.axes.size() == 1) {
@@ -228,7 +263,7 @@ void Task::AddQAHisto() {
   //  }
 }
 
-void Task::Finish() {
+void QnCorrectionTask::Finish() {
   manager_.Finalize();
 
   out_file_->cd();
@@ -242,16 +277,10 @@ void Task::Finish() {
 
   out_file_->Close();
 }
-
-/**
-* Fill list of variables needed to construct all Q-vectors and event information.
-* This vector is passed to VarManager later
-*/
-
 /**
 * Set correction steps in a CorrectionManager for a given Q-vector
 */
-void Task::SetCorrectionSteps(const Base::QVector& qvec) {
+void QnCorrectionTask::SetCorrectionSteps(const Base::QVector& qvec) {
   std::vector<Qn::QVector::CorrectionStep> correction_steps = {Qn::QVector::CorrectionStep::PLAIN};
   const std::string& name = qvec.GetName();
 

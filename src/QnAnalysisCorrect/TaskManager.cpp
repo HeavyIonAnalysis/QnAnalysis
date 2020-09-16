@@ -2,7 +2,7 @@
 
 namespace Qn::Analysis::Correction{
 
-void TaskManager::AddTask(Task* task) {
+void TaskManager::AddTask(QnCorrectionTask* task) {
   assert(tasks_.empty());// For the moment one task per Manager
 
   auto* var_task = new AnalysisTree::VarManager();

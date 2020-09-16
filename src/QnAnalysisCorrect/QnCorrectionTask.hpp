@@ -27,15 +27,16 @@ namespace Qn::Analysis::Correction {
  * @brief TestTask for analysing qn vectors
  */
 
-class Task : public UserTask {
+class QnCorrectionTask : public UserTask {
  public:
-  Task() = default;
-  explicit Task(Base::AnalysisSetup* global_config) : global_config_(global_config) {}
+  QnCorrectionTask() = default;
+  explicit QnCorrectionTask(Base::AnalysisSetup* global_config) : global_config_(global_config) {}
 
   void AddQAHistogram(const std::string& qvec_name, const std::vector<AxisD>& axis) {
     qa_histos_.emplace_back(qvec_name, axis);
   }
-
+  boost::program_options::options_description GetBoostOptions() override;
+  void PreInit() override;
   void Init(std::map<std::string, void*>&) override;
   void Exec() override;
   void Finish() override;
@@ -61,7 +62,7 @@ class Task : public UserTask {
   std::vector<std::tuple<std::string, std::vector<AxisD>>> qa_histos_;
   std::map<int, int> is_filled_{};
 
-  TASK_DEF(Qn::Analysis::Correction::Task, 2)
+  TASK_DEF(QnCorrectionTask, 2)
 };
 }// namespace Qn
 #endif//CORRECTION_TASK_H
