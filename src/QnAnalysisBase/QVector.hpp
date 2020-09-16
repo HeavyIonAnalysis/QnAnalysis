@@ -42,6 +42,7 @@ enum class EQVectorCorrectionType {
   NONE,
   RECENTERING,
   TWIST_AND_RESCALE,
+  ALIGNMENT
 };
 
 enum class ETwistRescaleMethod {
@@ -60,6 +61,9 @@ struct QVectorCorrectionConfig {
   ETwistRescaleMethod twist_rescale_method{ETwistRescaleMethod::DOUBLE_HARMONIC};
   bool twist_rescale_apply_twist{true};
   bool twist_rescale_apply_rescale{true};
+
+  /* alignment options */
+  int alignment_harmonic{-1};
 
   static QVectorCorrectionConfig RecenteringDefault() {
     QVectorCorrectionConfig result;
