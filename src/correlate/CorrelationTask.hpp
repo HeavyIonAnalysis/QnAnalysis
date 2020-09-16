@@ -15,6 +15,8 @@
 #include "AnalysisSetup.hpp"
 #include "QVector.hpp"
 
+namespace Qn::Analysis::Correlation{
+
 class CorrelationTask {
  public:
   enum Q1Q1_CORRELATION_TYPES {
@@ -32,11 +34,11 @@ class CorrelationTask {
 
  private:
   void FillCorrelations();
-  void AddQ1Q1Correlations(const Flow::Base::QVector& a, const Flow::Base::QVector& b, int type);
-  void AddQ2Q1Q1Correlations(const Flow::Base::QVectorTrack& t, const Flow::Base::QVector& a, const Flow::Base::QVector& b);
+  void AddQ1Q1Correlations(const Base::QVector& a, const Base::QVector& b, int type);
+  void AddQ2Q1Q1Correlations(const Base::QVectorTrack& t, const Base::QVector& a, const Base::QVector& b);
 
   TFile* in_file_{nullptr};
-  Flow::Base::AnalysisSetup* config_{nullptr};
+  Base::AnalysisSetup* config_{nullptr};
   TTree* in_tree_{nullptr};
   TTreeReader reader_;
   ROOT::RDataFrame df_;
@@ -48,5 +50,7 @@ class CorrelationTask {
   int verbosity_{2};
   bool non_zero_only_{true};
 };
+
+}
 
 #endif//CORRELATION_TASK_H
