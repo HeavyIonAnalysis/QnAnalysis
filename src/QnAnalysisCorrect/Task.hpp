@@ -19,15 +19,17 @@
 #include <QnAnalysisBase/AnalysisSetup.hpp>
 #include <QnAnalysisBase/QVector.hpp>
 
+#include <at_task/Task.h>
+
 namespace Qn::Analysis::Correction {
 /**
  * Qn vector analysis TestTask. It is to be configured by the user.
  * @brief TestTask for analysing qn vectors
  */
 
-class Task : public AnalysisTree::FillTask {
+class Task : public UserTask {
  public:
-  Task() = delete;
+  Task() = default;
   explicit Task(Base::AnalysisSetup* global_config) : global_config_(global_config) {}
 
   void AddQAHistogram(const std::string& qvec_name, const std::vector<AxisD>& axis) {
@@ -58,6 +60,8 @@ class Task : public AnalysisTree::FillTask {
   AnalysisTree::VarManager* var_manager_{nullptr};
   std::vector<std::tuple<std::string, std::vector<AxisD>>> qa_histos_;
   std::map<int, int> is_filled_{};
+
+  TASK_DEF(Qn::Analysis::Correction::Task, 2)
 };
 }// namespace Qn
 #endif//CORRECTION_TASK_H

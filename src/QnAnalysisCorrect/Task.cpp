@@ -11,6 +11,8 @@
 
 namespace Qn::Analysis::Correction {
 
+TASK_IMPL(Task)
+
 using std::string;
 using std::vector;
 

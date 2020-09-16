@@ -5,7 +5,7 @@ set(SOURCES
 
 string(REPLACE ".cpp" ".hpp" HEADERS "${SOURCES}")
 
-add_library(QnAnalysisCorrect SHARED ${SOURCES}
+add_library(QnAnalysisCorrect STATIC ${SOURCES}
 #        G__QnAnalysisCorrect.cxx
         )
 include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${QnAnalysis_SOURCE_DIR})
@@ -13,7 +13,7 @@ message("${PROJECT_INCLUDE_DIRECTORIES}")
 
 #ROOT_GENERATE_DICTIONARY(G__QnAnalysisCorrect ${HEADERS}
 #        LINKDEF QnAnalysisCorrectLinkDef.hpp)
-target_link_libraries(QnAnalysisCorrect PUBLIC QnAnalysisBase QnAnalysisConfig)
+target_link_libraries(QnAnalysisCorrect PUBLIC QnAnalysisBase QnAnalysisConfig at_task)
 
 install(TARGETS QnAnalysisCorrect EXPORT QnAnalysisCorrectTargets
         LIBRARY DESTINATION lib
