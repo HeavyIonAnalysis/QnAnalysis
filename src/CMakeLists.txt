@@ -1,6 +1,6 @@
 add_subdirectory(QnAnalysisBase)
 add_subdirectory(QnAnalysisConfig)
-add_subdirectory(correct)
+add_subdirectory(QnAnalysisCorrect)
 #add_subdirectory(correlate)
 #add_subdirectory(tasks)
 #add_subdirectory(analyze)

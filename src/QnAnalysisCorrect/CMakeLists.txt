@@ -5,12 +5,15 @@ set(SOURCES
 
 string(REPLACE ".cpp" ".hpp" HEADERS "${SOURCES}")
 
-add_library(QnAnalysisCorrect SHARED ${SOURCES} G__QnAnalysisCorrect.cxx)
-add_dependencies(QnAnalysisCorrect ${PROJECT_DEPENDENCIES} QnAnalysisBase)
-include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(QnAnalysisCorrect SHARED ${SOURCES}
+#        G__QnAnalysisCorrect.cxx
+        )
+include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${QnAnalysis_SOURCE_DIR})
+message("${PROJECT_INCLUDE_DIRECTORIES}")
 
-ROOT_GENERATE_DICTIONARY(G__QnAnalysisCorrect ${HEADERS} LINKDEF QnAnalysisCorrectLinkDef.hpp)
-target_link_libraries(QnAnalysisCorrect QnAnalysisBase QnAnalysisConfig AnalysisTreeBase AnalysisTreeInfra ${ROOT_LIBRARIES} )
+#ROOT_GENERATE_DICTIONARY(G__QnAnalysisCorrect ${HEADERS}
+#        LINKDEF QnAnalysisCorrectLinkDef.hpp)
+target_link_libraries(QnAnalysisCorrect PUBLIC QnAnalysisBase QnAnalysisConfig)
 
 install(TARGETS QnAnalysisCorrect EXPORT QnAnalysisCorrectTargets
         LIBRARY DESTINATION lib
