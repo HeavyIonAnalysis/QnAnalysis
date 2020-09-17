@@ -154,6 +154,8 @@ struct convert<Qn::Analysis::Base::QVectorCorrectionConfig> {
         config.type = EQVectorCorrectionType::RECENTERING;
       } else if (type_str == "twist-and-rescale" || type_str == "twist_and_rescale") {
         config.type = EQVectorCorrectionType::TWIST_AND_RESCALE;
+      } else if (type_str == "alignment") {
+        config.type = EQVectorCorrectionType::ALIGNMENT;
       } else {
         return false;
       }
@@ -174,6 +176,9 @@ struct convert<Qn::Analysis::Base::QVectorCorrectionConfig> {
         }
         config.twist_rescale_apply_twist = node["apply-twist"].as<bool>();
         config.twist_rescale_apply_rescale = node["apply-rescale"].as<bool>();
+        return true;
+      } else if (config.type == EQVectorCorrectionType::ALIGNMENT) {
+        config.alignment_harmonic = node["alignment-harmonic"].as<int>(1);
         return true;
       }
 

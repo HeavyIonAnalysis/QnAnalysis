@@ -2,14 +2,16 @@
 // Created by eugene on 13/08/2020.
 //
 
-#include "Convert.hpp"
-
 #include <string>
 
 #include <QnTools/CorrectionHistogramSparse.hpp>
+
 #include <QnTools/CorrectionProfileComponents.hpp>
 #include <QnTools/Recentering.hpp>
 #include <QnTools/TwistAndRescale.hpp>
+#include <QnTools/Alignment.hpp>
+
+#include "Convert.hpp"
 
 AnalysisTree::Variable Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::VariableConfig& variable) {
   return AnalysisTree::Variable(variable.branch, variable.field);
@@ -177,6 +179,10 @@ Qn::CorrectionOnQnVector* Qn::Analysis::Config::Utils::Convert(const Qn::Analysi
     auto method = (config.twist_rescale_method == ETwistRescaleMethod::CORRELATIONS) ? Qn::TwistAndRescale::Method::CORRELATIONS : Qn::TwistAndRescale::Method::DOUBLE_HARMONIC;
     correction->SetTwistAndRescaleMethod(method);
     correction->SetNoOfEntriesThreshold(config.no_of_entries);
+    return correction;
+  } else if (config.type == Qn::Analysis::Base::EQVectorCorrectionType::ALIGNMENT) {
+    auto correction = new Qn::Alignment;
+    correction->SetHarmonicNumberForAlignment(config.alignment_harmonic);
     return correction;
   }
 

@@ -1,4 +1,4 @@
-#include "Task.hpp"
+#include "QnCorrectionTask.hpp"
 
 #include <iostream>
 #include <memory>
@@ -7,14 +7,19 @@
 #include <AnalysisTree/TreeReader.hpp>
 
 #include <QnAnalysisBase/QVector.hpp>
+#include <QnAnalysisBase/AnalysisSetup.hpp>
 #include <QnAnalysisConfig/Config.hpp>
 
+#include <QnAnalysisCorrect/ATVarManagerTask.h>
+
 namespace Qn::Analysis::Correction {
+
+TASK_IMPL(QnCorrectionTask)
 
 using std::string;
 using std::vector;
 
-void Task::InitVariables() {
+void QnCorrectionTask::InitVariables() {
   // Add all needed variables
   short ivar{0}, ibranch{0};
 
@@ -45,7 +50,7 @@ void Task::InitVariables() {
     ibranch++;
   }
 
-  for (auto& qvec : global_config_->ChannelConfig()) {
+  for (auto& qvec : analysis_setup_->ChannelConfig()) {
     auto& phi = qvec.PhiVar();
     phi.SetId(ivar);
     manager_.AddVariable(qvec.GetName() + "_" + phi.GetName(), phi.GetId(), phi.GetSize());
@@ -58,12 +63,12 @@ void Task::InitVariables() {
     ivar += weight.GetSize();
   }
 
-  for (const auto& event_var : global_config_->GetEventVars()) {
+  for (const auto& event_var : analysis_setup_->GetEventVars()) {
     manager_.AddEventVariable(event_var.GetName());
   }
 }
 
-void Task::Init(std::map<std::string, void*>&) {
+void QnCorrectionTask::Init(std::map<std::string, void*>&) {
   out_file_ = static_cast<std::shared_ptr<TFile>>(TFile::Open("correction_out.root", "recreate"));
   out_file_->cd();
   out_tree_ = new TTree("tree", "tree");
@@ -75,11 +80,11 @@ void Task::Init(std::map<std::string, void*>&) {
 
   InitVariables();
 
-  for (const auto& axis : global_config_->GetCorrectionAxes()) {
+  for (const auto& axis : analysis_setup_->GetCorrectionAxes()) {
     manager_.AddCorrectionAxis(axis);
   }
 
-  for (const auto& qvec_ptr : global_config_->q_vectors) {
+  for (const auto& qvec_ptr : analysis_setup_->q_vectors) {
     if (qvec_ptr->GetType() == Base::EQVectorType::TRACK) {
       auto track_qv = std::dynamic_pointer_cast<Base::QVectorTrack>(qvec_ptr);
       const string& name = track_qv->GetName();
@@ -107,8 +112,8 @@ void Task::Init(std::map<std::string, void*>&) {
   }
 
   // Add Psi_RP
-  if (global_config_->IsSimulation()) {
-    const auto& qvec = global_config_->GetPsiQvector();
+  if (analysis_setup_->IsSimulation()) {
+    const auto& qvec = analysis_setup_->GetPsiQvector();
     manager_.AddDetector(qvec.GetName(), DetectorType::CHANNEL, qvec.GetPhiVar().GetName(), qvec.GetWeightVar().GetName(), {}, {1, 2});
     SetCorrectionSteps(qvec);
   }
@@ -123,7 +128,7 @@ void Task::Init(std::map<std::string, void*>&) {
 /**
 * Main method. Executed every event
 */
-void Task::Exec() {
+void QnCorrectionTask::Exec() {
   manager_.Reset();
   double* container = manager_.GetVariableContainer();
 
@@ -136,7 +141,7 @@ void Task::Exec() {
       }
     }
   }
-  for (const auto& qvec : global_config_->GetChannelConfig()) {
+  for (const auto& qvec : analysis_setup_->GetChannelConfig()) {
     const auto& phi = qvec.GetPhiVar();
     const auto& weight = qvec.GetWeightVar();
     const auto& branch = var_manager_->GetVarEntries().at(qvec.GetVarEntryId());
@@ -162,7 +167,7 @@ void Task::Exec() {
 * Fill the information from Tracks, Particles and Hits. We assume that Tracking Q-vectors are not constructed from
 * Modules. Information from EventHeaders and Modules should be filled before.
 */
-void Task::FillTracksQvectors() {
+void QnCorrectionTask::FillTracksQvectors() {
   double* container = manager_.GetVariableContainer();
   short ibranch{0};
   for (const auto& entry : var_manager_->GetVarEntries()) {
@@ -188,12 +193,53 @@ void Task::FillTracksQvectors() {
   }
 }
 
+void QnCorrectionTask::PreInit() {
+  auto at_vm_task  = GetTaskPtr<ATVarManagerTask>();
+  if (!at_vm_task->IsEnabled()) {
+    throw std::runtime_error("Keep ATVarManagerTask enabled");
+  }
+
+  this->analysis_setup_ = new Base::AnalysisSetup(Qn::Analysis::Config::ReadSetupFromFile(yaml_config_file_, yaml_config_node_));
+
+  // Variables used by tracking Q-vectors
+  for (auto& qvec : this->GetConfig()->QvectorsConfig()) {
+    const auto& vars = qvec.GetListOfVariables();
+    qvec.SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(vars)).first);
+  }
+  // Variables used by channelized Q-vectors
+  for (auto& channel : this->GetConfig()->ChannelConfig()) {
+    channel.SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry({channel.GetWeightVar()})).first);
+  }
+  // Psi variable
+  if (this->GetConfig()->IsSimulation()) {
+    auto& qvec = this->GetConfig()->PsiQvector();
+    qvec.SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry({qvec.GetPhiVar()})).first);
+  }
+  auto event_var_id = at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(this->GetConfig()->GetEventVars())).first;
+
+  at_vm_task->FillBranchNames();
+//  at_vm_task->SetCutsMap(cuts_map_); FIXME
+
+  var_manager_ = at_vm_task.operator->();
+}
+
+
+boost::program_options::options_description QnCorrectionTask::GetBoostOptions() {
+  using namespace boost::program_options;
+  options_description desc(GetName() + " options");
+  desc.add_options()
+      ("calibration-input-file", value(&in_calibration_file_name_)->default_value("correction_in.root"), "Input calibration file")
+      ("yaml-config-file", value(&yaml_config_file_)->default_value("analysis-config.yml"), "Path to YAML config")
+      ("yaml-config-name", value(&yaml_config_node_)->required(), "Name of YAML node");
+  return desc;
+}
+
 /**
 * Adding QA histograms to CorrectionManager
 */
 
-void Task::AddQAHisto() {
-  for (const auto& qvec : global_config_->GetQvectorsConfig()) {
+void QnCorrectionTask::AddQAHisto() {
+  for (const auto& qvec : analysis_setup_->GetQvectorsConfig()) {
     for (const auto& qa : qvec.GetQAHistograms()) {
       if (qa.axes.size() == 1) {
         manager_.AddHisto1D(qvec.GetName(), qa.axes.at(0).GetQnAxis());
@@ -205,7 +251,7 @@ void Task::AddQAHisto() {
     }
   }
 
-  for (const auto& qvec : global_config_->GetChannelConfig()) {
+  for (const auto& qvec : analysis_setup_->GetChannelConfig()) {
     for (const auto& qa : qvec.GetQAHistograms()) {
       if (qa.axes.size() == 1) {
         auto axis = qa.axes.at(0).GetQnAxis();
@@ -226,7 +272,7 @@ void Task::AddQAHisto() {
   //  }
 }
 
-void Task::Finish() {
+void QnCorrectionTask::Finish() {
   manager_.Finalize();
 
   out_file_->cd();
@@ -240,16 +286,10 @@ void Task::Finish() {
 
   out_file_->Close();
 }
-
-/**
-* Fill list of variables needed to construct all Q-vectors and event information.
-* This vector is passed to VarManager later
-*/
-
 /**
 * Set correction steps in a CorrectionManager for a given Q-vector
 */
-void Task::SetCorrectionSteps(const Base::QVector& qvec) {
+void QnCorrectionTask::SetCorrectionSteps(const Base::QVector& qvec) {
   std::vector<Qn::QVector::CorrectionStep> correction_steps = {Qn::QVector::CorrectionStep::PLAIN};
   const std::string& name = qvec.GetName();
 
