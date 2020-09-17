@@ -29,6 +29,7 @@ include(cmake_modules/Root.cmake)
 include(cmake_modules/Cuts.cmake)
 include(cmake_modules/QnTools.cmake)
 include(cmake_modules/AnalysisTree.cmake)
+include(cmake_modules/AnalysisTreeTaskSkeleton.cmake)
 
 
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb -g -DDEBUG -D__DEBUG -Wall")
