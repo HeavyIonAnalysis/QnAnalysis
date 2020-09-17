@@ -2,8 +2,11 @@ language: cpp
 services:
   - docker
 
+before_install:
+  docker build  --network host -t eugene274/rootcpp17_custom -f docker/Dockerfile docker
+
 script: |
-  docker run --rm -it -v ${TRAVIS_BUILD_DIR}:/QnAnalysis kreisl/rootcpp17:v6.20.04 /bin/bash -c '
+  docker run --rm -it -v ${TRAVIS_BUILD_DIR}:/QnAnalysis eugene274/rootcpp17_custom /bin/bash -c '
   set -e # exit on failure
   set -x # trace for debug
   source /opt/rh/devtoolset-8/enable
