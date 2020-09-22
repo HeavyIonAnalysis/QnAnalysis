@@ -5,7 +5,7 @@ find_package(QnTools QUIET)
 include(FetchContent)
 FetchContent_Declare(QnTools
         GIT_REPOSITORY https://github.com/HeavyIonAnalysis/QnTools.git
-        GIT_TAG master
+        GIT_TAG "v0.0.1"
         UPDATE_DISCONNECTED ${UPDATE_DISCONNECTED}
         )
 
