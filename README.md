@@ -1,5 +1,5 @@
 # QnAnalysis
-[![Build Status](https://travis-ci.com/HeavyIonAnalysis/QnAnalysis.svg?branch=master)](https://travis-ci.com/HeavyIonAnalysis/AnalysisTreeQA)
+[![Build Status](https://travis-ci.com/HeavyIonAnalysis/QnAnalysis.svg?branch=master)](https://travis-ci.com/HeavyIonAnalysis/QnAnalysis)
 
 Package for any Q-vector-based analysis. Using [QnTools](https://github.com/HeavyIonAnalysis/QnTools/) framework for Q-vector multidimentional corrections and operations. 
 Input data are expected to be in [AnalysisTree](https://github.com/HeavyIonAnalysis/AnalysisTree/) format.
