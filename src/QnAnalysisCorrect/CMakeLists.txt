@@ -1,6 +1,6 @@
 set(SOURCES
         QnCorrectionTask.cpp
-        ATVarManagerTask.cpp ATVarManagerTask.h)
+        ATVarManagerTask.cpp)
 
 string(REPLACE ".cpp" ".hpp" HEADERS "${SOURCES}")
 
@@ -12,9 +12,8 @@ include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${QnAnalysis_SOURCE_DIR})
 #ROOT_GENERATE_DICTIONARY(G__QnAnalysisCorrect ${HEADERS}
 #        LINKDEF QnAnalysisCorrectLinkDef.hpp)
 target_include_directories(QnAnalysisCorrect
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${QnAnalysis_SOURCE_DIR})
-target_link_libraries(QnAnalysisCorrect PUBLIC QnAnalysisBase QnAnalysisConfig at_task_main)
-
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${QnAnalysis_SOURCE_DIR} ${PROJECT_INCLUDE_DIRECTORIES})
+target_link_libraries(QnAnalysisCorrect PUBLIC QnAnalysisBase QnAnalysisConfig QnToolsBase at_task_main)
 
 install(TARGETS QnAnalysisCorrect EXPORT QnAnalysisCorrectTargets
         LIBRARY DESTINATION lib

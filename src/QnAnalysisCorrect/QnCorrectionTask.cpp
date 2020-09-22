@@ -10,7 +10,7 @@
 #include <QnAnalysisBase/AnalysisSetup.hpp>
 #include <QnAnalysisConfig/Config.hpp>
 
-#include <QnAnalysisCorrect/ATVarManagerTask.h>
+#include <QnAnalysisCorrect/ATVarManagerTask.hpp>
 
 namespace Qn::Analysis::Correction {
 
