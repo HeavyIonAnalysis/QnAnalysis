@@ -7,7 +7,7 @@ set(AnalysisTree_BUILD_EXAMPLES OFF)
 include(FetchContent)
 FetchContent_Declare(AnalysisTree
         GIT_REPOSITORY  "https://github.com/HeavyIonAnalysis/AnalysisTree.git"
-        GIT_TAG         "master"
+        GIT_TAG         "v1.0.2"
         UPDATE_DISCONNECTED ${UPDATE_DISCONNECTED}
         )
 
