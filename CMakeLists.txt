@@ -43,6 +43,7 @@ list(APPEND CMAKE_PREFIX_PATH $ENV{QN_PATH})
 
 include_directories(${CMAKE_SOURCE_DIR}/src/base ${AnalysisTree_INCLUDE_DIR} ${PROJECT_INCLUDE_DIRECTORIES})
 add_subdirectory(src)
+add_subdirectory(test)
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
