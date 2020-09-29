@@ -134,7 +134,6 @@ Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis:
     };
     description =
         var.GetName() + " in [" + std::to_string(range_lo) + ";" + std::to_string(range_hi) + "]";
-    throw std::runtime_error("Not yet implemented");
   }
   return Base::Cut(var, function, description);
 }
