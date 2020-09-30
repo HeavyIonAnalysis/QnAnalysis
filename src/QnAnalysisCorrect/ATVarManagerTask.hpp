@@ -16,6 +16,9 @@ ATVarManagerTask :
     public UserTask {
 
 public:
+  FillTask *FillTaskPtr() final {
+    return this;
+  }
   void Init(std::map<std::string, void *> &Map) override;
   void Exec() override;
   void Finish() override;
