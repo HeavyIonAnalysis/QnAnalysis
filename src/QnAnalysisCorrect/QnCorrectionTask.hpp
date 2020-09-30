@@ -27,7 +27,7 @@ namespace Qn::Analysis::Correction {
  * @brief TestTask for analysing qn vectors
  */
 
-class QnCorrectionTask : public UserTask {
+class QnCorrectionTask : public UserFillTask {
  public:
   QnCorrectionTask() = default;
   explicit QnCorrectionTask(Base::AnalysisSetup* global_config) : analysis_setup_(global_config) {}
