@@ -7,7 +7,7 @@
 
 #include <functional>
 
-#include <QnTools/QnDataFrame.hpp>
+#include <QnDataFrame.hpp>
 
 #include "StaticRegistry.h"
 

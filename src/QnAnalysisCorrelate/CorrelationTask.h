@@ -8,18 +8,18 @@
 #include <algorithm>
 #include <utility>
 
-#include <QnTools/QnDataFrame.hpp>
+#include <QnDataFrame.hpp>
 #include <TFile.h>
 #include <TTree.h>
 #include <TTreeReader.h>
 #include <TTreeReaderValue.h>
 #include <boost/program_options.hpp>
-#include <config/AnalysisTask.h>
-#include <core/Utils.h>
 
 #include "CorrelationAction.h"
 #include "TensorIndex.h"
 #include <yaml-cpp/yaml.h>
+
+#include "AnalysisTask.h"
 
 class CorrelationTask {
  public:

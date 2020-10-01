@@ -1,0 +1,4 @@
+
+
+add_executable(QnAnalysisCorrelate Correlation.cpp CorrelationTask.cpp)
+target_link_libraries(QnAnalysisCorrelate PUBLIC QnToolsDataFrame)
