@@ -51,4 +51,13 @@ TEST(Config, YAMLSequenceQuery) {
   EXPECT_NO_THROW(node["_queries"].as<std::vector<YAMLSequenceQuery>>());
 }
 
+TEST(Config, CorrelationTaskArgument) {
+  auto node = LoadFile(Qn::Analysis::GetSetupsDir() + "/" + "correlation/example.yml");
+  EXPECT_NO_THROW(node["_task_args"].as<std::vector<CorrelationTaskArgument>>());
+
+  auto result = node["_task_args"].as<std::vector<CorrelationTaskArgument>>();
+  result.size();
+
+}
+
 }

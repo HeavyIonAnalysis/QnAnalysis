@@ -1,6 +1,6 @@
 
 
-_detectors:
+_detectors: &detectors
   - name: detectorA
     tags: [observable]
     correction-step: rescaled
@@ -13,8 +13,20 @@ _detectors:
 
 _queries:
   # queries in the form of map: field - predicate
-  - name: { equals: detectorA }
-  - tags: { any-in: [reference] }
-  - name: { regex-match: "detector.*" }
-  # queries in the form of sequence [predicate1, predicate2, etc]
-  - [{target-field: name, equals: detectorA }]
+  - &q0
+    name: { equals: detectorA }
+  - &q1
+    tags: { any-in: [reference] }
+  - &q2
+    name: { regex-match: "detector.*" }
+
+_task_args:
+  - query: *q0
+    query-list: *detectors
+    weight: observable
+  - query: *q1
+    query-list: *detectors
+    weight: reference
+  - query: *q2
+    query-list: *detectors
+    weight: reference

@@ -19,17 +19,19 @@ struct YAMLQueryPredicate {
   std::string target_field;
   EYAMLQueryPredicateType type{EYAMLQueryPredicateType::EQUALS};
 
-  /* EQUALS options: scalars only */
+  /* EQUALS options: target field must be scalar */
   std::string equals_value;
 
-  /* ANY_IN, ALL_IN options: scalars only */
+  /* ANY_IN, ALL_IN options: target field must be scalar or sequence */
   std::vector<std::string> in_list;
 
-  /* REGEX_MATCH options: scalars only */
+  /* REGEX_MATCH options: target field must be scalar */
   std::string regex_pattern;
 };
 
 struct YAMLSequenceQuery {
+  std::string _file;
+  std::string _node_path;
   std::vector<YAMLQueryPredicate> predicates;
 };
 
@@ -126,7 +128,8 @@ struct QVectorTagged {
 
 struct CorrelationTaskArgument {
   YAMLHelper::YAMLSequenceQuery query;
-  EQnWeight weight;
+  std::vector<QVectorTagged> query_result;
+  EQnWeight weight{EQnWeight::OBSERVABLE};
 };
 
 /* list of arguments, list of actions to apply */
@@ -227,24 +230,39 @@ struct convert<YAMLHelper::YAMLSequenceQuery> {
   static bool decode(const Node &node, YAMLHelper::YAMLSequenceQuery &qv) {
     using namespace YAMLHelper;
     if (node.IsMap()) {
-      for (auto element : node) {
-       std::string target_field = element.first.Scalar();
-       auto predicate = element.second.as<YAMLQueryPredicate>();
-       if (!predicate.target_field.empty()) {
-         return false;
-       }
-       predicate.target_field = target_field;
-       qv.predicates.emplace_back(std::move(predicate));
+      qv._file = node["_file"].as<std::string>("");
+      qv._node_path = node["_node_path"].as<std::string>("");
+      if (node["predicates"] && node["predicates"].IsSequence()) {
+        qv.predicates = node.as<std::vector<YAMLQueryPredicate>>();
+      } else {
+        for (auto element : node) {
+          std::string target_field = element.first.Scalar();
+          auto predicate = element.second.as<YAMLQueryPredicate>();
+          if (!predicate.target_field.empty()) {
+            return false;
+          }
+          predicate.target_field = target_field;
+          qv.predicates.emplace_back(std::move(predicate));
+        }
+        return true;
       }
-      return true;
     } // IsMap
-    else if (node.IsSequence()) {
-      qv.predicates = node.as<std::vector<YAMLQueryPredicate>>();
-      return true;
-    }
 
     return false;
   }
+};
+
+template<>
+struct convert<Qn::Analysis::Correlate::CorrelationTaskArgument> {
+
+  static bool decode(const Node& node, Qn::Analysis::Correlate::CorrelationTaskArgument& arg) {
+    using namespace Qn::Analysis::Correlate;
+    arg.query = node["query"].as<YAMLHelper::YAMLSequenceQuery>();
+    arg.weight = node["weight"].as<Enum<EQnWeight>>();
+    arg.query_result = YAMLHelper::QuerySequence(node["query-list"], arg.query).as<std::vector<QVectorTagged>>();
+    return true;
+  }
+
 };
 
 }
