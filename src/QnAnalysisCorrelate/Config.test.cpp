@@ -3,6 +3,7 @@
 //
 
 #include "Config.hpp"
+#include <BuildOptions.hpp>
 #include <gtest/gtest.h>
 
 namespace {
@@ -23,9 +24,16 @@ TEST(Config, BetterEnumsConversion) {
   n = Enum<EQnWeight>(EQnWeight::REFERENCE);
   EXPECT_EQ(n.Scalar(), "REFERENCE");
 
+}
 
+TEST(Config, QVectorTagged) {
+  auto node = LoadFile(Qn::Analysis::GetSetupsDir() + "/" + "correlation/example.yml");
+  EXPECT_NO_THROW(node["_detectors"].as<std::vector<QVectorTagged>>());
+}
 
-
+TEST(Config, YAMLSequenceQuery) {
+  auto node = LoadFile(Qn::Analysis::GetSetupsDir() + "/" + "correlation/example.yml");
+  EXPECT_NO_THROW(node["_queries"].as<std::vector<YAMLSequenceQuery>>());
 }
 
 }

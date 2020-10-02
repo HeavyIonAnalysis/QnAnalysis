@@ -1,0 +1,20 @@
+
+
+_detectors:
+  - name: detectorA
+    tags: [observable]
+    correction-step: rescaled
+  - name: detectorB
+    tags: [reference]
+    correction-step: recentered
+  - name: detectorC
+    tags: []
+    correction-step: plain
+
+_queries:
+  # queries in the form of map: field - predicate
+  - name: { equals: detectorA }
+  - tags: { any-in: [reference] }
+  - name: { regex-match: detector* }
+  # queries in the form of sequence [predicate1, predicate2, etc]
+  - [{target-field: name, equals: detectorA }]

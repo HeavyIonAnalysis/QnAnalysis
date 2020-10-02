@@ -1,0 +1,10 @@
+
+#pragma once
+
+#include <string>
+
+namespace Qn::Analysis {
+
+inline std::string GetSetupsDir() { return "@QnAnalysis_SETUPS_DIR@"; }
+
+}
