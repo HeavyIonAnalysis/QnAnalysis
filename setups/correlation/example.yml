@@ -15,6 +15,6 @@ _queries:
   # queries in the form of map: field - predicate
   - name: { equals: detectorA }
   - tags: { any-in: [reference] }
-  - name: { regex-match: detector* }
+  - name: { regex-match: "detector.*" }
   # queries in the form of sequence [predicate1, predicate2, etc]
   - [{target-field: name, equals: detectorA }]

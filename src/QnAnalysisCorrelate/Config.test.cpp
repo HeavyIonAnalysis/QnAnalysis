@@ -9,7 +9,22 @@
 namespace {
 
 using namespace YAML;
+using namespace YAMLHelper;
 using namespace Qn::Analysis::Correlate;
+
+TEST(Config, QuerySequence) {
+  auto node = LoadFile(Qn::Analysis::GetSetupsDir() + "/" + "correlation/example.yml");
+
+  auto q0 = node["_queries"][0].as<YAMLSequenceQuery>();
+  EXPECT_EQ(QuerySequence(node["_detectors"], q0).size(), 1);
+  std::cout << "Q0" << std::endl << QuerySequence(node["_detectors"], q0) << std::endl;
+  auto q1 = node["_queries"][1].as<YAMLSequenceQuery>();
+  EXPECT_EQ(QuerySequence(node["_detectors"], q1).size(), 1);
+  std::cout <<  "Q1" << std::endl << QuerySequence(node["_detectors"], q1) << std::endl;
+  auto q2 = node["_queries"][2].as<YAMLSequenceQuery>();
+  EXPECT_EQ(QuerySequence(node["_detectors"], q2).size(), 3);
+  std::cout <<  "Q2" << std::endl << QuerySequence(node["_detectors"], q2) << std::endl;
+}
 
 TEST(Config, BetterEnumsConversion) {
 
