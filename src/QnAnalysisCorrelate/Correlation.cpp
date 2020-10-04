@@ -3,7 +3,7 @@
 
 #include <boost/program_options.hpp>
 
-#include "CorrelationTask.h"
+#include "CorrelationTaskRunner.hpp"
 /*
  *
  *

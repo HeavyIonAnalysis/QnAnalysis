@@ -57,6 +57,11 @@ TEST(Config, CorrelationTaskArgument) {
 
   auto result = node["_task_args"].as<std::vector<CorrelationTaskArgument>>();
   result.size();
+}
+
+TEST(Config, CorrelationTask) {
+  auto node = LoadFile(Qn::Analysis::GetSetupsDir() + "/" + "correlation/example.yml");
+  EXPECT_NO_THROW(node["_tasks"].as<std::vector<CorrelationTask>>());
 
 }
 

@@ -21,12 +21,21 @@ _queries:
     name: { regex-match: "detector.*" }
 
 _task_args:
-  - query: *q0
+  - &ta0
+    query: *q0
     query-list: *detectors
     weight: observable
-  - query: *q1
+  - &ta1
+    query: *q1
     query-list: *detectors
     weight: reference
-  - query: *q2
+  - &ta2
+    query: *q2
     query-list: *detectors
     weight: reference
+
+_tasks:
+  - args: [*ta0, *ta1]
+    actions: [xx, xy, yx, yy]
+
+

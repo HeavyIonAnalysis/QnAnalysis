@@ -235,7 +235,7 @@ struct convert<YAMLHelper::YAMLSequenceQuery> {
       if (node["predicates"] && node["predicates"].IsSequence()) {
         qv.predicates = node.as<std::vector<YAMLQueryPredicate>>();
       } else {
-        for (auto element : node) {
+        for (auto &element : node) {
           std::string target_field = element.first.Scalar();
           auto predicate = element.second.as<YAMLQueryPredicate>();
           if (!predicate.target_field.empty()) {
@@ -264,6 +264,18 @@ struct convert<Qn::Analysis::Correlate::CorrelationTaskArgument> {
   }
 
 };
+
+template<>
+struct convert<Qn::Analysis::Correlate::CorrelationTask> {
+
+  static bool decode(const Node& node, Qn::Analysis::Correlate::CorrelationTask& task) {
+    using namespace Qn::Analysis::Correlate;
+    task.arguments = node["args"].as<std::vector<CorrelationTaskArgument>>();
+    task.actions = node["actions"].as<std::vector<std::string>>();
+    return true;
+  }
+};
+
 
 }
 
