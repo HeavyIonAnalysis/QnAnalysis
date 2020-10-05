@@ -32,7 +32,7 @@ TEST(Utils, Combine) {
   Combine(std::back_inserter(result), std::vector<int>({1,2,3}), std::vector<int>({1,2}), std::vector<int>({1,2,3,4}));
   ASSERT_EQ(result.size(), 24);
   ASSERT_EQ(result.front(), std::make_tuple(1,1,1));
-  ASSERT_EQ(result.back(), std::make_tuple(1,1,1));
+  ASSERT_EQ(result.back(), std::make_tuple(3,2,4));
 
 }
 

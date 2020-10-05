@@ -77,11 +77,12 @@ void Combine(OIter &&o, Container &&...containers) {
 
   auto get_size = [](auto &&c) { return std::distance(std::cbegin(c), std::cend(c)); };
 
-  std::vector<std::size_t> shape({get_size(containers)...});
+  std::vector<size_t> shape({get_size(containers)...});
   TensorIndex tind(shape);
   std::vector<size_t> index(shape.size());
 
   for (std::size_t i = 0; i < tind.size(); ++i) {
+    tind.GetIndex(i, index);
     o = Details::GetTensorElement(index, container_tuple, std::make_index_sequence<sizeof...(Container)>());
   }
 
