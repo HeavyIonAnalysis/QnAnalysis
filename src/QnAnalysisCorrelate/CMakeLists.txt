@@ -1,10 +1,12 @@
 
+find_package(Boost REQUIRED COMPONENTS program_options)
+
 set(QnAnalysis_SETUPS_DIR ${CMAKE_SOURCE_DIR}/setups)
 
 configure_file(BuildOptions.hpp.in BuildOptions.hpp)
 
-add_executable(QnAnalysisCorrelate Correlation.cpp CorrelationTaskRunner.cpp)
-target_link_libraries(QnAnalysisCorrelate PUBLIC QnToolsDataFrame)
+add_executable(QnAnalysisCorrelate CorrelationMain.cpp CorrelationTaskRunner.cpp)
+target_link_libraries(QnAnalysisCorrelate PUBLIC QnToolsDataFrame Boost::program_options)
 
 if (QnAnalysis_BUILD_TESTS)
     include(GoogleTest)

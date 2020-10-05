@@ -10,9 +10,15 @@
 #include <vector>
 #include <tuple>
 
-namespace Qn::Analysis::Correlate {
+namespace Qn::Analysis::Correlate::Utils {
 
-namespace Utils {
+namespace Details {
+
+template<typename Tuple, size_t ... I>
+auto GetTensorElement(const std::vector<size_t>& index, Tuple&&t, std::index_sequence<I...>) {
+  assert(index.size() == sizeof...(I));
+  return std::make_tuple(std::get<I>(t)[index[I]]...);
+}
 
 struct TensorIndex {
   explicit TensorIndex(std::vector<size_t> s) : shape(std::move(s)) {}
@@ -36,6 +42,7 @@ struct TensorIndex {
     }
   }
 };
+}
 
 template<typename IIter, typename OIter>
 void
@@ -49,7 +56,7 @@ CombineDynamic(IIter &&i1, IIter &&i2, OIter &&o1) {
     auto &ax = *t;
     shape.emplace_back(std::distance(std::begin(ax), std::end(ax)));
   }
-  TensorIndex tind(shape);
+  Details::TensorIndex tind(shape);
   std::vector<size_t> index(n_dim);
   std::vector<value_type> result(n_dim);
   for (size_t i = 0; i < tind.size(); ++i) {
@@ -61,32 +68,20 @@ CombineDynamic(IIter &&i1, IIter &&i2, OIter &&o1) {
   }
 }
 
-namespace Details {
-
-template<typename Tuple, size_t ... I>
-auto GetTensorElement(const std::vector<size_t>& index, Tuple&&t, std::index_sequence<I...>) {
-  assert(index.size() == sizeof...(I));
-  return std::make_tuple(std::get<I>(t)[index[I]]...);
-}
-
-}
-
 template<typename OIter, typename ... Container>
 void Combine(OIter &&o, Container &&...containers) {
   auto container_tuple = std::make_tuple(containers...);
 
-  auto get_size = [](auto &&c) { return std::distance(std::cbegin(c), std::cend(c)); };
+  auto get_size = [](auto &&c) -> std::size_t { return std::distance(std::cbegin(c), std::cend(c)); };
 
-  std::vector<size_t> shape({get_size(containers)...});
-  TensorIndex tind(shape);
+  std::vector<std::size_t> shape({get_size(containers)...});
+  Details::TensorIndex tind(shape);
   std::vector<size_t> index(shape.size());
 
   for (std::size_t i = 0; i < tind.size(); ++i) {
     tind.GetIndex(i, index);
     o = Details::GetTensorElement(index, container_tuple, std::make_index_sequence<sizeof...(Container)>());
   }
-
-}
 
 }
 
