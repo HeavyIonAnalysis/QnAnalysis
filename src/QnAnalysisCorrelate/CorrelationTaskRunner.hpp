@@ -26,6 +26,8 @@ namespace Qn::Analysis::Correlate {
 
 class CorrelationTaskRunner {
 
+  using CorrelationResultPtr = ROOT::RDF::RResultPtr<Qn::Correlation::CorrelationActionBase>;
+
   struct ActionArg {
 
   };
@@ -41,7 +43,7 @@ class CorrelationTaskRunner {
 
   struct file_not_found_exception : public std::exception {
     file_not_found_exception() = default;
-    file_not_found_exception(const std::exception&e) : std::exception(e) {};
+    explicit file_not_found_exception(const std::exception&e) : std::exception(e) {};
   };
 
 public:
@@ -61,21 +63,20 @@ public:
   void Run();
 
 private:
+  std::unique_ptr<ROOT::RDataFrame> GetRDF();
   void LookupConfiguration();
   bool LoadConfiguration(const std::filesystem::path& path);
 
 
   std::filesystem::path configuration_file_path_{};
   std::string configuration_node_name_{};
-
-  std::vector<CorrelationTask> tasks_;
-
-
-
+  std::string output_file_;
+  std::filesystem::path input_file_;
+  std::string input_tree_;
 
 
-
-
+  std::vector<CorrelationTask> config_tasks_;
+  std::vector<Correlation> correlations_;
 };
 
 }

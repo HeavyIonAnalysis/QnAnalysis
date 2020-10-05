@@ -28,7 +28,12 @@ int main(int argc, char **argv) {
     return 0;
   }
 
-  vm.notify();
+  try {
+    vm.notify();
+  } catch (std::exception& e) {
+    Error("Main", "%s", e.what());
+    return 1;
+  }
 
 
   runner.Initialize();
