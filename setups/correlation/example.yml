@@ -35,7 +35,9 @@ _task_args:
     weight: reference
 
 _tasks:
-  - args: [*ta0, *ta1]
+  - args: [*ta0, *ta2]
     actions: [xx, xy, yx, yy]
+    n-samples: 50
+    event-axes: []
 
 

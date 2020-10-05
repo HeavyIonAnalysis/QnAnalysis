@@ -136,6 +136,8 @@ struct CorrelationTaskArgument {
 struct CorrelationTask {
   std::vector<CorrelationTaskArgument> arguments;
   std::vector<std::string> actions;
+  std::vector<Axis> axes;
+  int n_samples{0};
 };
 
 }
@@ -179,6 +181,13 @@ struct convert<Enum<T>> {
     Node result;
     result = e.opt_enum.value()._to_string();
     return result;
+  }
+};
+
+template<>
+struct convert<Qn::Analysis::Correlate::Axis> {
+  static bool decode(const Node &node, Qn::Analysis::Correlate::Axis &qv) {
+    return true;
   }
 };
 
@@ -272,6 +281,8 @@ struct convert<Qn::Analysis::Correlate::CorrelationTask> {
     using namespace Qn::Analysis::Correlate;
     task.arguments = node["args"].as<std::vector<CorrelationTaskArgument>>();
     task.actions = node["actions"].as<std::vector<std::string>>();
+    task.n_samples = node["n-samples"].as<int>();
+    task.axes = node["axes"].as<std::vector<Axis>>(std::vector<Axis>());
     return true;
   }
 };

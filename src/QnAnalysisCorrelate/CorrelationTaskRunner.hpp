@@ -39,6 +39,11 @@ class CorrelationTaskRunner {
     Action action;
   };
 
+  struct file_not_found_exception : public std::exception {
+    file_not_found_exception() = default;
+    file_not_found_exception(const std::exception&e) : std::exception(e) {};
+  };
+
 public:
 
 
@@ -51,8 +56,7 @@ public:
    * N(arg1)*N(arg2)*...N(argN)*N(actions)
    * @param task
    */
-  void LoadCorrelationTask(const CorrelationTask& task) {
-  }
+  void LoadTasks();
 
   void Run();
 
@@ -64,7 +68,6 @@ private:
   std::filesystem::path configuration_file_path_{};
   std::string configuration_node_name_{};
 
-  bool is_configuration_loaded_{false};
   std::vector<CorrelationTask> tasks_;
 
 
