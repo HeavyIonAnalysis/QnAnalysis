@@ -14,7 +14,8 @@ int main(int argc, char **argv) {
 
   options_description desc("Common options");
   desc.add_options()
-      ("help", "Print help message");
+      ("help", "Print help message")
+      ;
 
   desc.add(runner.GetBoostOptions());
 
@@ -29,6 +30,9 @@ int main(int argc, char **argv) {
 
   vm.notify();
 
+
+  runner.Initialize();
+  runner.Run();
 
 
   return 0;

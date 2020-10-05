@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 #include <string>
+#include <filesystem>
 
 #include <QnDataFrame.hpp>
 #include <TFile.h>
@@ -56,10 +57,15 @@ public:
   void Run();
 
 private:
-  std::string configuration_file_name_{};
+  void LookupConfiguration();
+  bool LoadConfiguration(const std::filesystem::path& path);
+
+
+  std::filesystem::path configuration_file_path_{};
   std::string configuration_node_name_{};
 
-
+  bool is_configuration_loaded_{false};
+  std::vector<CorrelationTask> tasks_;
 
 
 
