@@ -7,10 +7,12 @@
 
 #include <iostream>
 #include <algorithm>
+#include <vector>
+#include <tuple>
 
 namespace Qn::Analysis::Correlate {
 
-namespace Details {
+namespace Utils {
 
 struct TensorIndex {
   explicit TensorIndex(std::vector<size_t> s) : shape(std::move(s)) {}
@@ -57,6 +59,32 @@ CombineDynamic(IIter &&i1, IIter &&i2, OIter &&o1) {
     }
     o1 = result;
   }
+}
+
+namespace Details {
+
+template<typename Tuple, size_t ... I>
+auto GetTensorElement(const std::vector<size_t>& index, Tuple&&t, std::index_sequence<I...>) {
+  assert(index.size() == sizeof...(I));
+  return std::make_tuple(std::get<I>(t)[index[I]]...);
+}
+
+}
+
+template<typename OIter, typename ... Container>
+void Combine(OIter &&o, Container &&...containers) {
+  auto container_tuple = std::make_tuple(containers...);
+
+  auto get_size = [](auto &&c) { return std::distance(std::cbegin(c), std::cend(c)); };
+
+  std::vector<std::size_t> shape({get_size(containers)...});
+  TensorIndex tind(shape);
+  std::vector<size_t> index(shape.size());
+
+  for (std::size_t i = 0; i < tind.size(); ++i) {
+    o = Details::GetTensorElement(index, container_tuple, std::make_index_sequence<sizeof...(Container)>());
+  }
+
 }
 
 }

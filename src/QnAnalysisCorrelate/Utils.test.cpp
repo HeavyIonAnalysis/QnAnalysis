@@ -7,7 +7,7 @@
 
 namespace {
 
-using namespace Qn::Analysis::Correlate::Details;
+using namespace Qn::Analysis::Correlate::Utils;
 
 TEST(Utils, CombineDynamic) {
 
@@ -23,11 +23,18 @@ TEST(Utils, CombineDynamic) {
   ASSERT_EQ(result.front(), std::vector<int>({1,1,1}));
   ASSERT_EQ(result.back(), std::vector<int>({3,2,4}));
 
-
-
-
 }
 
+TEST(Utils, Combine) {
+
+
+  std::vector<std::tuple<int,int,int>> result;
+  Combine(std::back_inserter(result), std::vector<int>({1,2,3}), std::vector<int>({1,2}), std::vector<int>({1,2,3,4}));
+  ASSERT_EQ(result.size(), 24);
+  ASSERT_EQ(result.front(), std::make_tuple(1,1,1));
+  ASSERT_EQ(result.back(), std::make_tuple(1,1,1));
+
+}
 
 
 
