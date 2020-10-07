@@ -1,6 +1,10 @@
 
 _axes:
   - &ax0
+    name: Contrality
+    nb: 10
+    lo: 0
+    hi: 100
 
 _detectors: &detectors
   - name: detectorA

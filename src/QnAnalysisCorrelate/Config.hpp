@@ -115,10 +115,20 @@ namespace Qn::Analysis::Correlate {
 BETTER_ENUM(EQnWeight, int, OBSERVABLE, REFERENCE)
 BETTER_ENUM(EQnCorrectionStep, int, PLAIN, RECENTERED, TWIST, RESCALED, ALIGNED)
 
-struct Axis {
 
+struct AxisConfig {
+  enum EAxisType { RANGE,
+    BIN_EDGES };
+
+  std::string variable;
+
+  EAxisType type{RANGE};
+  int nb{0};
+  double lo{0.};
+  double hi{0.};
+
+  std::vector<double> bin_edges;
 };
-
 
 struct QVectorTagged {
   std::string name;
@@ -136,7 +146,7 @@ struct CorrelationTaskArgument {
 struct CorrelationTask {
   std::vector<CorrelationTaskArgument> arguments;
   std::vector<std::string> actions;
-  std::vector<Axis> axes;
+  std::vector<AxisConfig> axes;
   int n_samples{0};
 };
 
@@ -185,9 +195,29 @@ struct convert<Enum<T>> {
 };
 
 template<>
-struct convert<Qn::Analysis::Correlate::Axis> {
-  static bool decode(const Node &node, Qn::Analysis::Correlate::Axis &qv) {
-    return true;
+struct convert<Qn::Analysis::Correlate::AxisConfig> {
+
+  static bool decode(const Node& node, Qn::Analysis::Correlate::AxisConfig& axis_config) {
+    using namespace Qn::Analysis::Correlate;
+    if (node.IsMap()) {
+      axis_config.variable = node["name"].as<std::string>();
+
+      if (node["nb"] && node["lo"] && node["hi"]) {
+        axis_config.type = AxisConfig::RANGE;
+        axis_config.nb = node["nb"].as<int>();
+        axis_config.lo = node["lo"].as<double>();
+        axis_config.hi = node["hi"].as<double>();
+        return true;
+      } else if (node["bin-edges"]) {
+        axis_config.type = AxisConfig::BIN_EDGES;
+        axis_config.bin_edges = node["bin-edges"].as<std::vector<double>>();
+        return true;
+      }
+
+      return false;
+    }
+
+    return false;
   }
 };
 
@@ -282,7 +312,7 @@ struct convert<Qn::Analysis::Correlate::CorrelationTask> {
     task.arguments = node["args"].as<std::vector<CorrelationTaskArgument>>();
     task.actions = node["actions"].as<std::vector<std::string>>();
     task.n_samples = node["n-samples"].as<int>();
-    task.axes = node["axes"].as<std::vector<Axis>>(std::vector<Axis>());
+    task.axes = node["axes"].as<std::vector<AxisConfig>>();
     return true;
   }
 };

@@ -65,6 +65,22 @@ private:
   void LookupConfiguration();
   bool LoadConfiguration(const std::filesystem::path &path);
 
+  static Qn::AxisD ToQnAxis(const AxisConfig& c) {
+    if (c.type == AxisConfig::RANGE) {
+      return Qn::AxisD(c.variable, c.nb, c.lo, c.hi);
+    } else if (c.type == AxisConfig::BIN_EDGES) {
+      return Qn::AxisD(c.variable, c.bin_edges);
+    }
+    __builtin_unreachable();
+  }
+  /*
+   * All machinery below is needed because Lucas uses static
+   * polymorphism in correlation task base on DataFrame, that
+   * makes dynamic parametrization very difficult to implement.
+   *
+   * Vectors of axes and vectors of arguments must be somehow converted
+   * to arrays or passed to template function
+   */
   template<std::size_t N, std::size_t... Seq>
   static
   constexpr std::index_sequence<N + Seq ...>
@@ -106,6 +122,8 @@ private:
     auto df_sampled = Qn::Correlation::Resample(*df, t.n_samples);
     /* Qn::MakeAxes() */
     std::vector<Qn::AxisD> axes_qn;
+    std::transform(t.axes.begin(), t.axes.end(),
+                   std::back_inserter(axes_qn), ToQnAxis);
     auto axes_config = MakeAxisConfig(axes_qn, std::make_index_sequence<NAxis>());
 
     auto result = std::make_shared<CorrelationTaskInitialized>();
@@ -158,7 +176,6 @@ private:
   std::string input_tree_;
 
   std::vector<CorrelationTask> config_tasks_;
-  std::vector<Correlation> correlations_;
   std::vector<std::shared_ptr<CorrelationTaskInitialized>> initialized_tasks_;
 };
 
