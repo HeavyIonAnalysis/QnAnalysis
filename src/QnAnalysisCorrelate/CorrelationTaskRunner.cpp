@@ -72,6 +72,7 @@ bool Qn::Analysis::Correlate::CorrelationTaskRunner::LoadConfiguration(const std
   Info(__func__, "Loaded %s...", path.c_str());
 
   config_tasks_ = top_node[configuration_node_name_].as<std::vector<CorrelationTask>>();
+  return true;
 }
 
 std::unique_ptr<ROOT::RDataFrame> CorrelationTaskRunner::GetRDF() {
@@ -85,5 +86,18 @@ std::unique_ptr<ROOT::RDataFrame> CorrelationTaskRunner::GetRDF() {
   }
 
   throw std::runtime_error("Unknown extension " + input_file_.extension().string());
+}
+
+Qn::AxisD CorrelationTaskRunner::ToQnAxis(const AxisConfig &c) {
+  if (c.type == AxisConfig::RANGE) {
+    return Qn::AxisD(c.variable, c.nb, c.lo, c.hi);
+  } else if (c.type == AxisConfig::BIN_EDGES) {
+    return Qn::AxisD(c.variable, c.bin_edges);
+  }
+  __builtin_unreachable();
+}
+
+std::string CorrelationTaskRunner::ToQVectorFullName(const QVectorTagged &qv) {
+  return qv.name + "_" + qv.correction_step._to_string();
 }
 

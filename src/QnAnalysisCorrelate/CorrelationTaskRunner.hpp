@@ -20,6 +20,7 @@
 
 #include "Config.hpp"
 #include "Utils.hpp"
+#include "CorrelationAction.h"
 
 namespace Qn::Analysis::Correlate {
 
@@ -65,14 +66,9 @@ private:
   void LookupConfiguration();
   bool LoadConfiguration(const std::filesystem::path &path);
 
-  static Qn::AxisD ToQnAxis(const AxisConfig& c) {
-    if (c.type == AxisConfig::RANGE) {
-      return Qn::AxisD(c.variable, c.nb, c.lo, c.hi);
-    } else if (c.type == AxisConfig::BIN_EDGES) {
-      return Qn::AxisD(c.variable, c.bin_edges);
-    }
-    __builtin_unreachable();
-  }
+  static Qn::AxisD ToQnAxis(const AxisConfig& c);
+
+  static std::string ToQVectorFullName(const QVectorTagged& qv);
   /*
    * All machinery below is needed because Lucas uses static
    * polymorphism in correlation task base on DataFrame, that
@@ -125,6 +121,27 @@ private:
     std::transform(t.axes.begin(), t.axes.end(),
                    std::back_inserter(axes_qn), ToQnAxis);
     auto axes_config = MakeAxisConfig(axes_qn, std::make_index_sequence<NAxis>());
+
+    for (auto &combination : arguments_actions_combined) {
+      auto registry = Qn::Analysis::Correlate::Action::GetRegistry<Arity>();
+      auto function = registry.Get(std::get<std::string>(combination));
+
+      auto args_list = std::get<QVectorList>(combination);
+      std::array<std::string,Arity> args_list_array;
+      std::transform(args_list.begin(), args_list.end(),
+                     args_list_array.begin(), ToQVectorFullName);
+      std::cout << std::endl;
+
+      auto booked_action = Qn::MakeAverageHelper(Qn::Correlation::MakeCorrelationAction(
+          "",
+          function,
+          function,
+          Qn::Correlation::UseWeights::No,
+          args_list_array,
+          axes_config,
+          t.n_samples
+          )).BookMe(df_sampled);
+    }
 
     auto result = std::make_shared<CorrelationTaskInitialized>();
     result->arity = Arity;

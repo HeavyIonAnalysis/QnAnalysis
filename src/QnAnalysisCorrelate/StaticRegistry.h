@@ -8,7 +8,7 @@
 #include <map>
 #include <vector>
 
-namespace Correlation {
+namespace Qn::Analysis::Correlate {
 
 namespace Details {
 
