@@ -85,7 +85,7 @@ std::unique_ptr<ROOT::RDataFrame> CorrelationTaskRunner::GetRDF() {
     return std::make_unique<ROOT::RDataFrame>(input_tree_.c_str(), input_file_.c_str());
   }
 
-  throw std::runtime_error("Unknown extension " + input_file_.extension().string());
+  throw std::runtime_error("Unknown input file extension " + input_file_.extension().string());
 }
 
 Qn::AxisD CorrelationTaskRunner::ToQnAxis(const AxisConfig &c) {

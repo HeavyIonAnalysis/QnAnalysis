@@ -147,7 +147,10 @@ struct CorrelationTask {
   std::vector<CorrelationTaskArgument> arguments;
   std::vector<std::string> actions;
   std::vector<AxisConfig> axes;
+  bool use_weights{false};
+  std::string weights;
   int n_samples{0};
+  std::string output_folder;
 };
 
 }
@@ -313,6 +316,10 @@ struct convert<Qn::Analysis::Correlate::CorrelationTask> {
     task.actions = node["actions"].as<std::vector<std::string>>();
     task.n_samples = node["n-samples"].as<int>();
     task.axes = node["axes"].as<std::vector<AxisConfig>>();
+    if (node["weights"]) {
+      task.use_weights = true;
+      task.weights = node["weights"].as<std::string>();
+    }
     return true;
   }
 };

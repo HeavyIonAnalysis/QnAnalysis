@@ -14,12 +14,6 @@ namespace Qn::Analysis::Correlate::Utils {
 
 namespace Details {
 
-template<typename Tuple, size_t ... I>
-auto GetTensorElement(const std::vector<size_t>& index, Tuple&&t, std::index_sequence<I...>) {
-  assert(index.size() == sizeof...(I));
-  return std::make_tuple(std::get<I>(t)[index[I]]...);
-}
-
 struct TensorIndex {
   explicit TensorIndex(std::vector<size_t> s) : shape(std::move(s)) {}
 
@@ -42,6 +36,13 @@ struct TensorIndex {
     }
   }
 };
+
+template<typename Tuple, size_t ... I>
+auto GetTensorElement(const std::vector<size_t> &index, Tuple &&t, std::index_sequence<I...>) {
+  assert(index.size() == sizeof...(I));
+  return std::make_tuple(std::get<I>(t)[index[I]]...);
+}
+
 }
 
 template<typename IIter, typename OIter>

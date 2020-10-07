@@ -66,6 +66,21 @@ private:
   void LookupConfiguration();
   bool LoadConfiguration(const std::filesystem::path &path);
 
+  template<typename Iter>
+  static std::string JoinStrings(Iter && i1, Iter && i2, std::string delim = ", ") {
+    auto n = std::distance(i1, i2);
+    if (n<2) {
+      return std::string(*i1);
+    }
+
+    std::stringstream str_stream;
+    for (auto ii = i1; ii < i2-1; ++ii) {
+      str_stream << *ii << delim;
+    }
+    str_stream << *(i2-1);
+    return str_stream.str();
+  }
+
   static Qn::AxisD ToQnAxis(const AxisConfig& c);
 
   static std::string ToQVectorFullName(const QVectorTagged& qv);
@@ -124,7 +139,7 @@ private:
 
     for (auto &combination : arguments_actions_combined) {
       auto registry = Qn::Analysis::Correlate::Action::GetRegistry<Arity>();
-      auto function = registry.Get(std::get<std::string>(combination));
+      auto correlation_function = registry.Get(std::get<std::string>(combination));
 
       auto args_list = std::get<QVectorList>(combination);
       std::array<std::string,Arity> args_list_array;
@@ -132,11 +147,13 @@ private:
                      args_list_array.begin(), ToQVectorFullName);
       std::cout << std::endl;
 
+      auto correlation_name = JoinStrings(args_list_array.begin(), args_list_array.end(), ".");
+
       auto booked_action = Qn::MakeAverageHelper(Qn::Correlation::MakeCorrelationAction(
-          "",
-          function,
-          function,
-          Qn::Correlation::UseWeights::No,
+          correlation_name,
+          correlation_function,
+          correlation_function,
+          t.use_weights ? Qn::Correlation::UseWeights::Yes : Qn::Correlation::UseWeights::No,
           args_list_array,
           axes_config,
           t.n_samples
