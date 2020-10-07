@@ -34,7 +34,9 @@ boost::program_options::options_description Qn::Analysis::Correlate::Correlation
 
 void Qn::Analysis::Correlate::CorrelationTaskRunner::Initialize() {
   LookupConfiguration();
-  LoadTasks();
+  auto result = InitializeTasks();
+  std::cout << "" << std::endl;
+
 }
 void Qn::Analysis::Correlate::CorrelationTaskRunner::Run() {
 
@@ -50,8 +52,8 @@ void Qn::Analysis::Correlate::CorrelationTaskRunner::LookupConfiguration() {
       try {
         LoadConfiguration(lookup_path);
         break;
-      } catch (file_not_found_exception&e) {
-        Warning(__func__ , "File not found.");
+      } catch (file_not_found_exception &e) {
+        Warning(__func__, "File not found.");
       }
     }
   }
@@ -72,38 +74,6 @@ bool Qn::Analysis::Correlate::CorrelationTaskRunner::LoadConfiguration(const std
   config_tasks_ = top_node[configuration_node_name_].as<std::vector<CorrelationTask>>();
 }
 
-void Qn::Analysis::Correlate::CorrelationTaskRunner::LoadTasks() {
-
-  using QVectorList = std::vector<QVectorTagged>;
-
-  for (auto &task : config_tasks_) {
-
-    std::vector<QVectorList> argument_lists_to_combine;
-    argument_lists_to_combine.reserve(task.arguments.size());
-    for (auto &arg_list : task.arguments) {
-      argument_lists_to_combine.emplace_back(arg_list.query_result);
-    }
-    std::vector<QVectorList> arguments_combined;
-    Utils::CombineDynamic(argument_lists_to_combine.begin(),
-                          argument_lists_to_combine.end(),
-                          std::back_inserter(arguments_combined));
-    /* now we combine them with actions */
-    std::vector<std::tuple<QVectorList, std::string>> arguments_actions_combined;
-    Utils::Combine(std::back_inserter(arguments_actions_combined), arguments_combined, task.actions);
-
-    /* init RDataFrame */
-    auto df = GetRDF();
-    auto df_sampled = Qn::Correlation::Resample(*df, task.n_samples);
-    /* Qn::MakeAxes() */
-    std::cout << std::endl;
-
-
-
-
-
-  }
-
-}
 std::unique_ptr<ROOT::RDataFrame> CorrelationTaskRunner::GetRDF() {
   if (".list" == input_file_.extension()) {
     TFileCollection fc("fc", "", input_file_.c_str());

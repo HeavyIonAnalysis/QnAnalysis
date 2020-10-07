@@ -1,4 +1,6 @@
 
+_axes:
+  - &ax0
 
 _detectors: &detectors
   - name: detectorA
@@ -38,6 +40,6 @@ _tasks:
   - args: [*ta0, *ta2]
     actions: [xx, xy, yx, yy]
     n-samples: 50
-    event-axes: []
+    axes: [*ax0]
 
 
