@@ -26,10 +26,15 @@ namespace Qn::Analysis::Correlate {
 
 class CorrelationTaskRunner {
 
+  using QVectorList = std::vector<QVectorTagged>;
   using CorrelationResultPtr = ROOT::RDF::RResultPtr<Qn::Correlation::CorrelationActionBase>;
 
   struct Correlation {
+    QVectorList args_list;
+    std::string action_name;
 
+    std::vector<std::string> argument_names;
+    std::string correlation_name;
     CorrelationResultPtr result_ptr;
   };
 
@@ -58,6 +63,8 @@ private:
   std::unique_ptr<ROOT::RDataFrame> GetRDF();
   void LookupConfiguration();
   bool LoadConfiguration(const std::filesystem::path &path);
+
+  static std::vector<Correlation> GetTaskCombinations(const CorrelationTask &t);
 
   template<typename Iter>
   static std::string JoinStrings(Iter &&i1, Iter &&i2, std::string delim = ", ") {
@@ -104,25 +111,21 @@ private:
   template<size_t NAxes>
   static bool PredicateNAxes(const CorrelationTask &t) { return t.axes.size() == NAxes; }
 
+
+
+  /**
+   * @brief Takes task config and initializes IO
+   *        TODO shrink as possible
+   * @tparam Arity
+   * @tparam NAxis
+   * @param t
+   * @return
+   */
   template<size_t Arity, size_t NAxis>
   std::shared_ptr<CorrelationTaskInitialized> InitializeTask(const CorrelationTask &t) {
     using Qn::Correlation::UseWeights;
-    using QVectorList = std::vector<QVectorTagged>;
     /* this is a function pointer */
     const auto GetActionRegistry = ::Qn::Analysis::Correlate::Action::GetActionRegistry<Arity>;
-
-    std::vector<QVectorList> argument_lists_to_combine;
-    argument_lists_to_combine.reserve(t.arguments.size());
-    for (auto &arg_list : t.arguments) {
-      argument_lists_to_combine.emplace_back(arg_list.query_result);
-    }
-    std::vector<QVectorList> arguments_combined;
-    Utils::CombineDynamic(argument_lists_to_combine.begin(),
-                          argument_lists_to_combine.end(),
-                          std::back_inserter(arguments_combined));
-    /* now we combine them with actions */
-    std::vector<std::tuple<QVectorList, std::string>> arguments_actions_combined;
-    Utils::Combine(std::back_inserter(arguments_actions_combined), arguments_combined, t.actions);
 
     /* Qn::MakeAxes() */
     std::vector<Qn::AxisD> axes_qn;
@@ -137,23 +140,21 @@ private:
 
     auto result = std::make_shared<CorrelationTaskInitialized>();
     /* init RDataFrame */
-    auto df = GetRDF();
-    auto df_sampled = Qn::Correlation::Resample(*df, t.n_samples);
+    auto df = GetRDF()->Range(0, 100);
+    auto df_sampled = Qn::Correlation::Resample(df, t.n_samples);
 
-    for (auto &combination : arguments_actions_combined) {
-      auto action_name = std::get<std::string>(combination);
+    for (auto &correlation : GetTaskCombinations(t)) {
+      auto action_name = correlation.action_name;
       auto correlation_function = GetActionRegistry().Get(action_name);
 
-      auto args_list = std::get<QVectorList>(combination);
+      auto args_list = correlation.args_list;
       std::array<std::string, Arity> args_list_array;
-      std::transform(args_list.begin(), args_list.end(),
-                     args_list_array.begin(), ToQVectorFullName);
+      std::copy(std::begin(correlation.argument_names), std::end(correlation.argument_names),
+                std::begin(args_list_array));
 
-      auto correlation_name = JoinStrings(args_list_array.begin(), args_list_array.end(), ".");
-      correlation_name.append(".").append(action_name);
 
       auto booked_action = Qn::MakeAverageHelper(Qn::Correlation::MakeCorrelationAction(
-          correlation_name,
+          correlation.correlation_name,
           correlation_function,
           weight_function,
           use_weights,
@@ -161,11 +162,10 @@ private:
           axes_config,
           t.n_samples)).BookMe(df_sampled);
 
-      Correlation c;
-      c.result_ptr = booked_action;
+      correlation.result_ptr = booked_action;
 
-      result->correlations.emplace_back(std::move(c));
-      Info(__func__, "%s", correlation_name.c_str());
+      result->correlations.emplace_back(correlation);
+      Info(__func__, "%s", correlation.correlation_name.c_str());
     }
 
     result->arity = Arity;
@@ -175,37 +175,30 @@ private:
   }
 
   template<typename OIter, size_t Arity, size_t NAxes>
-  auto InitializeTasksArityNAxes(OIter &&o, const std::vector<CorrelationTask> &tasks) {
+  void InitializeTasksArityNAxes(OIter &&o, const std::vector<CorrelationTask> &tasks) {
     std::vector<CorrelationTask> tasks_naxes;
     std::copy_if(tasks.begin(), tasks.end(), std::back_inserter(tasks_naxes), PredicateNAxes<NAxes>);
     for (auto &t : tasks_naxes) {
       o = InitializeTask<Arity, NAxes>(t);
     }
-    return std::make_tuple(Arity, NAxes, tasks_naxes.size());
   }
 
   template<typename OIter, typename Container, size_t Arity, size_t ...INAxes>
-  auto InitializeTasksArity(OIter &&o, Container &&c) {
+  void InitializeTasksArity(OIter &&o, Container &&c) {
     std::vector<typename std::remove_reference_t<Container>::value_type> tasks_arity;
     std::copy_if(std::begin(c), std::end(c), std::back_inserter(tasks_arity), PredicateArity<Arity>);
-    return std::make_tuple(InitializeTasksArityNAxes<OIter, Arity, INAxes>(
-        std::forward<OIter>(o),
-        tasks_arity)...);
+    (InitializeTasksArityNAxes<OIter, Arity, INAxes>(std::forward<OIter>(o), tasks_arity),...);
   }
 
   template<typename OIter, typename Container, size_t...IArity, size_t...INAxis>
-  auto InitializeTasksImpl(OIter &&o,
-                           Container &&c,
-                           std::index_sequence<IArity...>,
-                           std::index_sequence<INAxis...>) {
-    return std::make_tuple(InitializeTasksArity<OIter, Container, IArity, INAxis...>(
-        std::forward<OIter>(o),
-        std::forward<Container>(c))...);
+  void InitializeTasksImpl(OIter &&o, Container &&c, std::index_sequence<IArity...>, std::index_sequence<INAxis...>) {
+    /* CXX17 folding */
+    (InitializeTasksArity<OIter, Container, IArity, INAxis...>(std::forward<OIter>(o), std::forward<Container>(c)),...);
   }
 
   auto InitializeTasks() {
     initialized_tasks_.clear();
-    return InitializeTasksImpl(std::back_inserter(initialized_tasks_),
+    InitializeTasksImpl(std::back_inserter(initialized_tasks_),
                                config_tasks_,
                                make_index_range<1, MAX_ARITY>(), make_index_range<1, MAX_AXES>());
   }

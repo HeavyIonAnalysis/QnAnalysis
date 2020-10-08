@@ -37,10 +37,10 @@ struct TensorIndex {
   }
 };
 
-template<typename Tuple, size_t ... I>
-auto GetTensorElement(const std::vector<size_t> &index, Tuple &&t, std::index_sequence<I...>) {
+template<typename Tuple, typename Function, size_t ... I>
+auto GetTensorElement(const std::vector<size_t> &index, Tuple &&t, Function &&f, std::index_sequence<I...>) {
   assert(index.size() == sizeof...(I));
-  return std::make_tuple(std::get<I>(t)[index[I]]...);
+  return f(std::get<I>(t)[index[I]]...);
 }
 
 }
@@ -69,8 +69,8 @@ CombineDynamic(IIter &&i1, IIter &&i2, OIter &&o1) {
   }
 }
 
-template<typename OIter, typename ... Container>
-void Combine(OIter &&o, Container &&...containers) {
+template<typename OIter, typename Function, typename ... Container>
+void Combine(OIter &&o, Function &&f, Container &&...containers) {
   auto container_tuple = std::make_tuple(containers...);
 
   auto get_size = [](auto &&c) -> std::size_t { return std::distance(std::cbegin(c), std::cend(c)); };
@@ -81,7 +81,9 @@ void Combine(OIter &&o, Container &&...containers) {
 
   for (std::size_t i = 0; i < tind.size(); ++i) {
     tind.GetIndex(i, index);
-    o = Details::GetTensorElement(index, container_tuple, std::make_index_sequence<sizeof...(Container)>());
+    o = Details::GetTensorElement(index, container_tuple,
+                                  std::forward<Function>(f),
+                                  std::make_index_sequence<sizeof...(Container)>());
   }
 
 }

@@ -41,7 +41,7 @@ void Qn::Analysis::Correlate::CorrelationTaskRunner::Run() {
 
   for (auto &task : initialized_tasks_) {
     for (auto &c : task->correlations) {
-      std::cout << "Processing " << c.result_ptr->GetName() << std::endl;
+      Info(__func__, "Processing '%s'... ", c.result_ptr->GetName().c_str());
       c.result_ptr.GetValue();
     }
   }
@@ -105,5 +105,34 @@ Qn::AxisD CorrelationTaskRunner::ToQnAxis(const AxisConfig &c) {
 
 std::string CorrelationTaskRunner::ToQVectorFullName(const QVectorTagged &qv) {
   return qv.name + "_" + qv.correction_step._to_string();
+}
+
+std::vector<CorrelationTaskRunner::Correlation> CorrelationTaskRunner::GetTaskCombinations(const CorrelationTask &t) {
+  std::vector<QVectorList> argument_lists_to_combine;
+  argument_lists_to_combine.reserve(t.arguments.size());
+  for (auto &arg_list : t.arguments) {
+    argument_lists_to_combine.emplace_back(arg_list.query_result);
+  }
+  std::vector<QVectorList> arguments_combined;
+  Utils::CombineDynamic(argument_lists_to_combine.begin(),
+                        argument_lists_to_combine.end(),
+                        std::back_inserter(arguments_combined));
+  /* now we combine them with actions */
+  std::vector<Correlation> result;
+  auto make_correlation = [](const QVectorList &qv, const std::string &action) {
+    Correlation c;
+    c.action_name = action;
+    c.args_list = qv;
+    std::transform(std::begin(c.args_list), std::end(c.args_list),
+                   std::back_inserter(c.argument_names),
+                   ToQVectorFullName);
+    c.correlation_name = JoinStrings(c.argument_names.begin(), c.argument_names.end(), ".");
+    c.correlation_name.append(".").append(c.action_name);
+    return c;
+  };
+  Utils::Combine(std::back_inserter(result), make_correlation, arguments_combined, t.actions);
+
+
+  return result;
 }
 
