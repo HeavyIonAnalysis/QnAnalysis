@@ -26,6 +26,7 @@ _queries:
   - &q2
     name: { regex-match: "detector.*" }
 
+
 _task_args:
   - &ta0
     query: *q0

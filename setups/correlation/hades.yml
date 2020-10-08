@@ -1,0 +1,33 @@
+
+
+_detectors: &detectors
+  - name: u
+    tags: [track]
+    correction-step: rescaled
+  - name: W1
+    tags: [wall]
+    correction-step: recentered
+  - name: W2
+    tags: [wall]
+    correction-step: recentered
+  - name: W3
+    tags: [wall]
+    correction-step: recentered
+
+
+_tasks:
+  - args:
+    - query: { tags: { any-in: [track] }}
+      query-list: *detectors
+    - query: { tags: { any-in: [wall] }}
+      query-list: *detectors
+    actions: [xx,xy,yx,yy]
+    n-samples: 50
+    weights-type: observable
+    weights-function: xx
+    axes:
+      - name: event_header_selected_tof_rpc_hits_centrality
+        nb: 10
+        lo: 0
+        hi: 100
+

@@ -20,7 +20,7 @@
 
 #include "Config.hpp"
 #include "Utils.hpp"
-#include "CorrelationAction.h"
+#include "UserCorrelationAction.hpp"
 
 namespace Qn::Analysis::Correlate {
 
@@ -115,6 +115,8 @@ private:
   std::shared_ptr<CorrelationTaskInitialized> InitializeTask(const CorrelationTask &t) {
     using Qn::Correlation::UseWeights;
     using QVectorList = std::vector<QVectorTagged>;
+    /* this is a function pointer */
+    const auto GetActionRegistry = ::Qn::Analysis::Correlate::Action::GetActionRegistry<Arity>;
 
     std::vector<QVectorList> argument_lists_to_combine;
     argument_lists_to_combine.reserve(t.arguments.size());
@@ -144,8 +146,7 @@ private:
     auto df_sampled = Qn::Correlation::Resample(*df, t.n_samples);
 
     for (auto &combination : arguments_actions_combined) {
-      auto registry = Qn::Analysis::Correlate::Action::GetRegistry<Arity>();
-      auto correlation_function = registry.Get(std::get<std::string>(combination));
+      auto correlation_function = GetActionRegistry().Get(std::get<std::string>(combination));
 
       auto args_list = std::get<QVectorList>(combination);
       std::array<std::string,Arity> args_list_array;

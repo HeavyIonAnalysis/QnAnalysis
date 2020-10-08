@@ -12,8 +12,8 @@ target_include_directories(QnAnalysisCorrelate PRIVATE ${CMAKE_CURRENT_BINARY_DI
 
 if (QnAnalysis_BUILD_TESTS)
     include(GoogleTest)
-    add_executable(QnAnalysisCorrelate_UnitTests Config.test.cpp Utils.test.cpp)
-    target_link_libraries(QnAnalysisCorrelate_UnitTests PRIVATE gtest_main yaml-cpp)
+    add_executable(QnAnalysisCorrelate_UnitTests Config.test.cpp Utils.test.cpp UserCorrelationAction.test.cpp)
+    target_link_libraries(QnAnalysisCorrelate_UnitTests PRIVATE gtest_main yaml-cpp QnToolsDataFrame)
     target_include_directories(QnAnalysisCorrelate_UnitTests PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
     gtest_add_tests(TARGET QnAnalysisCorrelate_UnitTests)
 endif ()
