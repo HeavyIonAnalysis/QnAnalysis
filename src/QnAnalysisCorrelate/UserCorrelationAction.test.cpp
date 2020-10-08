@@ -25,6 +25,23 @@ TEST(CorrelationAction, WrapFunction) {
 
 }
 
+TEST(CorrelationAction, Builder) {
+
+  const auto xx = Builder<Qx1,Qx1>::F;
+  const auto yy = Builder<Qy1,Qy1>::F;
+  Qn::QVector v1;
+  v1.ActivateHarmonic(1);
+  v1.SetX(1, 1.);
+  v1.SetY(1, 2.);
+  Qn::QVector v2;
+  v2.ActivateHarmonic(1);
+  v2.SetX(1, 3.);
+  v2.SetY(1, 4.);
+  EXPECT_EQ(xx(v1,v2), 1*3);
+  EXPECT_EQ(yy(v1,v2), 2*4);
+
+}
+
 TEST(CorrelationAction, PredefinedActions) {
   EXPECT_NO_THROW(GetActionRegistry<2>().Get("xx"));
   EXPECT_NO_THROW(GetActionRegistry<2>().Get("xy"));

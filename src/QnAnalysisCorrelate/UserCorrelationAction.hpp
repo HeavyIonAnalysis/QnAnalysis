@@ -150,17 +150,7 @@ struct Builder {
   using Arg_t = const Qn::QVector &;
 
   static inline float F(Arg_t<Q>... arg) {
-    return EvalImpl<Q...>(std::forward<Arg_t<Q>>(arg)...);
-  }
-
-  template<typename Q1, typename... Qn>
-  static inline float EvalImpl(Arg_t<Q1> arg1, Arg_t<Qn>... args) {
-    return Q1::Eval(arg1) * EvalImpl<Qn...>(std::forward<Arg_t<Qn>>(args)...);
-  }
-
-  template<typename Q1>
-  static inline float EvalImpl(Arg_t<Q1> arg1) {
-    return Q1::Eval(arg1) * 1.;
+    return (Q::Eval(arg) * ... * 1);
   }
 };
 

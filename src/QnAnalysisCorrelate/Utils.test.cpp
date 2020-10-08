@@ -29,7 +29,7 @@ TEST(Utils, Combine) {
 
 
   std::vector<std::tuple<int,int,int>> result;
-  Combine(std::back_inserter(result), std::vector<int>({1,2,3}), std::vector<int>({1,2}), std::vector<int>({1,2,3,4}));
+  Combine(std::back_inserter(result), [] (int a,int b,int c) { return std::tuple{a,b,c}; }, std::vector<int>({1,2,3}), std::vector<int>({1,2}), std::vector<int>({1,2,3,4}));
   ASSERT_EQ(result.size(), 24);
   ASSERT_EQ(result.front(), std::make_tuple(1,1,1));
   ASSERT_EQ(result.back(), std::make_tuple(3,2,4));
