@@ -28,32 +28,25 @@ class CorrelationTaskRunner {
 
   using CorrelationResultPtr = ROOT::RDF::RResultPtr<Qn::Correlation::CorrelationActionBase>;
 
-  struct ActionArg {
-
-  };
-
-  struct Action {
-    std::string action_name;
-  };
-
   struct Correlation {
-    std::vector<ActionArg> action_args;
-    Action action;
+
+    CorrelationResultPtr result_ptr;
   };
 
   struct CorrelationTaskInitialized {
     size_t arity{0};
     size_t n_axes{0};
+    std::list<Correlation> correlations;
   };
 
-  struct file_not_found_exception : public std::exception {
-    file_not_found_exception() = default;
-    explicit file_not_found_exception(const std::exception &e) : std::exception(e) {};
+  struct bad_config_file : public std::exception {
+    bad_config_file() = default;
+    explicit bad_config_file(const std::exception &e) : std::exception(e) {};
   };
 
 public:
-  static constexpr size_t MAX_ARITY = 10;
-  static constexpr size_t MAX_AXES = 10;
+  static constexpr size_t MAX_ARITY = 8;
+  static constexpr size_t MAX_AXES = 4;
 
   boost::program_options::options_description GetBoostOptions();
 
@@ -67,23 +60,23 @@ private:
   bool LoadConfiguration(const std::filesystem::path &path);
 
   template<typename Iter>
-  static std::string JoinStrings(Iter && i1, Iter && i2, std::string delim = ", ") {
+  static std::string JoinStrings(Iter &&i1, Iter &&i2, std::string delim = ", ") {
     auto n = std::distance(i1, i2);
-    if (n<2) {
+    if (n < 2) {
       return std::string(*i1);
     }
 
     std::stringstream str_stream;
-    for (auto ii = i1; ii < i2-1; ++ii) {
+    for (auto ii = i1; ii < i2 - 1; ++ii) {
       str_stream << *ii << delim;
     }
-    str_stream << *(i2-1);
+    str_stream << *(i2 - 1);
     return str_stream.str();
   }
 
-  static Qn::AxisD ToQnAxis(const AxisConfig& c);
+  static Qn::AxisD ToQnAxis(const AxisConfig &c);
 
-  static std::string ToQVectorFullName(const QVectorTagged& qv);
+  static std::string ToQVectorFullName(const QVectorTagged &qv);
   /*
    * All machinery below is needed because Lucas uses static
    * polymorphism in correlation task base on DataFrame, that
@@ -138,36 +131,43 @@ private:
     auto axes_config = MakeAxisConfig(axes_qn, std::make_index_sequence<NAxis>());
 
     /* weights */
-    auto use_weights = t.weight_type == EQnWeight(EQnWeight::OBSERVABLE)? UseWeights::Yes : UseWeights::No;
+    auto use_weights = t.weight_type == EQnWeight(EQnWeight::OBSERVABLE) ? UseWeights::Yes : UseWeights::No;
+    auto weight_function_name = t.weights_function;
+    auto weight_function = GetActionRegistry().Get(weight_function_name);
 
-
+    auto result = std::make_shared<CorrelationTaskInitialized>();
     /* init RDataFrame */
     auto df = GetRDF();
     auto df_sampled = Qn::Correlation::Resample(*df, t.n_samples);
 
     for (auto &combination : arguments_actions_combined) {
-      auto correlation_function = GetActionRegistry().Get(std::get<std::string>(combination));
+      auto action_name = std::get<std::string>(combination);
+      auto correlation_function = GetActionRegistry().Get(action_name);
 
       auto args_list = std::get<QVectorList>(combination);
-      std::array<std::string,Arity> args_list_array;
+      std::array<std::string, Arity> args_list_array;
       std::transform(args_list.begin(), args_list.end(),
                      args_list_array.begin(), ToQVectorFullName);
-      std::cout << std::endl;
 
       auto correlation_name = JoinStrings(args_list_array.begin(), args_list_array.end(), ".");
+      correlation_name.append(".").append(action_name);
 
       auto booked_action = Qn::MakeAverageHelper(Qn::Correlation::MakeCorrelationAction(
           correlation_name,
           correlation_function,
-          correlation_function,
+          weight_function,
           use_weights,
           args_list_array,
           axes_config,
-          t.n_samples
-          )).BookMe(df_sampled);
+          t.n_samples)).BookMe(df_sampled);
+
+      Correlation c;
+      c.result_ptr = booked_action;
+
+      result->correlations.emplace_back(std::move(c));
+      Info(__func__, "%s", correlation_name.c_str());
     }
 
-    auto result = std::make_shared<CorrelationTaskInitialized>();
     result->arity = Arity;
     result->n_axes = NAxis;
 
@@ -207,7 +207,7 @@ private:
     initialized_tasks_.clear();
     return InitializeTasksImpl(std::back_inserter(initialized_tasks_),
                                config_tasks_,
-                               make_index_range<1,MAX_ARITY>(), make_index_range<1,MAX_AXES>());
+                               make_index_range<1, MAX_ARITY>(), make_index_range<1, MAX_AXES>());
   }
 
   std::filesystem::path configuration_file_path_{};

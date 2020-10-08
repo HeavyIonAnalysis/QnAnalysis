@@ -34,11 +34,17 @@ boost::program_options::options_description Qn::Analysis::Correlate::Correlation
 
 void Qn::Analysis::Correlate::CorrelationTaskRunner::Initialize() {
   LookupConfiguration();
-  auto result = InitializeTasks();
-  std::cout << "" << std::endl;
-
+  InitializeTasks();
 }
 void Qn::Analysis::Correlate::CorrelationTaskRunner::Run() {
+  Info(__func__, "Go!");
+
+  for (auto &task : initialized_tasks_) {
+    for (auto &c : task->correlations) {
+      std::cout << "Processing " << c.result_ptr->GetName() << std::endl;
+      c.result_ptr.GetValue();
+    }
+  }
 
 }
 
@@ -52,8 +58,8 @@ void Qn::Analysis::Correlate::CorrelationTaskRunner::LookupConfiguration() {
       try {
         LoadConfiguration(lookup_path);
         break;
-      } catch (file_not_found_exception &e) {
-        Warning(__func__, "File not found.");
+      } catch (bad_config_file &e) {
+        Warning(__func__, "%s", e.what());
       }
     }
   }
@@ -65,8 +71,8 @@ bool Qn::Analysis::Correlate::CorrelationTaskRunner::LoadConfiguration(const std
   Node top_node;
   try {
     top_node = LoadFile(path.string());
-  } catch (std::exception &e) {
-    throw file_not_found_exception(e);
+  } catch (YAML::BadFile &e) {
+    throw bad_config_file(e);
   }
 
   Info(__func__, "Loaded %s...", path.c_str());

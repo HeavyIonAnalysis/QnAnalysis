@@ -30,4 +30,17 @@ _tasks:
         nb: 10
         lo: 0
         hi: 100
-
+  - args:
+    - query: { tags: { any-in: [wall] }}
+      query-list: *detectors
+    - query: { tags: { any-in: [wall] }}
+      query-list: *detectors
+    actions: [xx,xy,yx,yy]
+    n-samples: 50
+    weights-type: reference
+    weights-function: xx
+    axes:
+      - name: event_header_selected_tof_rpc_hits_centrality
+        nb: 8
+        lo: 0
+        hi: 40
