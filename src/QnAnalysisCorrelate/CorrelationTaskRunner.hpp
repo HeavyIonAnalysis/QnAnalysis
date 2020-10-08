@@ -113,6 +113,7 @@ private:
 
   template<size_t Arity, size_t NAxis>
   std::shared_ptr<CorrelationTaskInitialized> InitializeTask(const CorrelationTask &t) {
+    using Qn::Correlation::UseWeights;
     using QVectorList = std::vector<QVectorTagged>;
 
     std::vector<QVectorList> argument_lists_to_combine;
@@ -128,14 +129,19 @@ private:
     std::vector<std::tuple<QVectorList, std::string>> arguments_actions_combined;
     Utils::Combine(std::back_inserter(arguments_actions_combined), arguments_combined, t.actions);
 
-    /* init RDataFrame */
-    auto df = GetRDF();
-    auto df_sampled = Qn::Correlation::Resample(*df, t.n_samples);
     /* Qn::MakeAxes() */
     std::vector<Qn::AxisD> axes_qn;
     std::transform(t.axes.begin(), t.axes.end(),
                    std::back_inserter(axes_qn), ToQnAxis);
     auto axes_config = MakeAxisConfig(axes_qn, std::make_index_sequence<NAxis>());
+
+    /* weights */
+    auto use_weights = t.weight_type == EQnWeight(EQnWeight::OBSERVABLE)? UseWeights::Yes : UseWeights::No;
+
+
+    /* init RDataFrame */
+    auto df = GetRDF();
+    auto df_sampled = Qn::Correlation::Resample(*df, t.n_samples);
 
     for (auto &combination : arguments_actions_combined) {
       auto registry = Qn::Analysis::Correlate::Action::GetRegistry<Arity>();
@@ -153,7 +159,7 @@ private:
           correlation_name,
           correlation_function,
           correlation_function,
-          t.use_weights ? Qn::Correlation::UseWeights::Yes : Qn::Correlation::UseWeights::No,
+          use_weights,
           args_list_array,
           axes_config,
           t.n_samples

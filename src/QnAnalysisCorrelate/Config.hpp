@@ -147,7 +147,7 @@ struct CorrelationTask {
   std::vector<CorrelationTaskArgument> arguments;
   std::vector<std::string> actions;
   std::vector<AxisConfig> axes;
-  bool use_weights{false};
+  EQnWeight weight_type{EQnWeight::REFERENCE};
   std::string weights;
   int n_samples{0};
   std::string output_folder;
@@ -300,7 +300,7 @@ struct convert<Qn::Analysis::Correlate::CorrelationTaskArgument> {
   static bool decode(const Node& node, Qn::Analysis::Correlate::CorrelationTaskArgument& arg) {
     using namespace Qn::Analysis::Correlate;
     arg.query = node["query"].as<YAMLHelper::YAMLSequenceQuery>();
-    arg.weight = node["weight"].as<Enum<EQnWeight>>();
+//    arg.weight = node["weight"].as<Enum<EQnWeight>>();
     arg.query_result = YAMLHelper::QuerySequence(node["query-list"], arg.query).as<std::vector<QVectorTagged>>();
     return true;
   }
@@ -316,9 +316,9 @@ struct convert<Qn::Analysis::Correlate::CorrelationTask> {
     task.actions = node["actions"].as<std::vector<std::string>>();
     task.n_samples = node["n-samples"].as<int>();
     task.axes = node["axes"].as<std::vector<AxisConfig>>();
-    if (node["weights"]) {
-      task.use_weights = true;
-      task.weights = node["weights"].as<std::string>();
+    task.weight_type = node["weights-type"].as<Enum<EQnWeight>>();
+    if (task.weight_type == EQnWeight(EQnWeight::OBSERVABLE)) {
+      task.weights = node["weights-function"].as<std::string>();
     }
     return true;
   }
