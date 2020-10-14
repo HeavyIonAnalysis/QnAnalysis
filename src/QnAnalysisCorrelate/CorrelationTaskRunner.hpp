@@ -31,10 +31,11 @@ class CorrelationTaskRunner {
 
   struct Correlation {
     QVectorList args_list;
-    std::string action_name;
 
     std::vector<std::string> argument_names;
-    std::string correlation_name;
+    std::string action_name;
+    std::string meta_key;
+
     CorrelationResultPtr result_ptr;
   };
 
@@ -61,7 +62,8 @@ public:
   void Run();
 
 private:
-  std::unique_ptr<ROOT::RDataFrame> GetRDF();
+  std::shared_ptr<TTree> GetTree();
+  std::shared_ptr<ROOT::RDataFrame> GetRDF();
   void LookupConfiguration();
   bool LoadConfiguration(const std::filesystem::path &path);
 
@@ -112,7 +114,11 @@ private:
   template<size_t NAxes>
   static bool PredicateNAxes(const CorrelationTask &t) { return t.axes.size() == NAxes; }
 
-  static TDirectory *mkcd(const std::filesystem::path& path, TDirectory &root);
+  static TDirectory *mkcd(const std::filesystem::path& path, TDirectory &root_dir);
+
+  static std::string GenMeta(const Correlation& c);
+
+  static std::vector<QVectorTagged> LookupQVectors(TTree *t);
 
 
   /**
@@ -142,7 +148,7 @@ private:
 
     auto result = std::make_shared<CorrelationTaskInitialized>();
     /* init RDataFrame */
-    auto df = GetRDF()->Range(0, 100);
+    auto df = GetRDF()->Range(0, 500);
     auto df_sampled = Qn::Correlation::Resample(df, t.n_samples);
 
     for (auto &correlation : GetTaskCombinations(t)) {
@@ -156,7 +162,7 @@ private:
 
 
       auto booked_action = Qn::MakeAverageHelper(Qn::Correlation::MakeCorrelationAction(
-          correlation.correlation_name,
+          correlation.meta_key,
           correlation_function,
           weight_function,
           use_weights,
@@ -171,7 +177,7 @@ private:
       if (result->output_folder.is_relative()) {
         throw std::runtime_error("Output folder must be an absolute path");
       }
-      Info(__func__, "%s", correlation.correlation_name.c_str());
+      Info(__func__, "%s", correlation.meta_key.c_str());
     }
 
     result->arity = Arity;
@@ -212,7 +218,8 @@ private:
   std::filesystem::path configuration_file_path_{};
   std::string configuration_node_name_{};
   std::string output_file_;
-  std::filesystem::path input_file_;
+
+  std::filesystem::path input_file_name_;
   std::string input_tree_;
 
   std::vector<CorrelationTask> config_tasks_;

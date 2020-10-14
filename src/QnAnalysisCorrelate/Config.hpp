@@ -30,8 +30,6 @@ struct YAMLQueryPredicate {
 };
 
 struct YAMLSequenceQuery {
-  std::string _file;
-  std::string _node_path;
   std::vector<YAMLQueryPredicate> predicates;
 };
 
@@ -272,8 +270,8 @@ struct convert<YAMLHelper::YAMLSequenceQuery> {
   static bool decode(const Node &node, YAMLHelper::YAMLSequenceQuery &qv) {
     using namespace YAMLHelper;
     if (node.IsMap()) {
-      qv._file = node["_file"].as<std::string>("");
-      qv._node_path = node["_node_path"].as<std::string>("");
+      node["_file"].as<std::string>("");
+      node["_node_path"].as<std::string>("");
       if (node["predicates"] && node["predicates"].IsSequence()) {
         qv.predicates = node.as<std::vector<YAMLQueryPredicate>>();
       } else {
@@ -299,9 +297,10 @@ struct convert<Qn::Analysis::Correlate::CorrelationTaskArgument> {
 
   static bool decode(const Node& node, Qn::Analysis::Correlate::CorrelationTaskArgument& arg) {
     using namespace Qn::Analysis::Correlate;
-    arg.query = node["query"].as<YAMLHelper::YAMLSequenceQuery>();
-//    arg.weight = node["weight"].as<Enum<EQnWeight>>();
-    arg.query_result = YAMLHelper::QuerySequence(node["query-list"], arg.query).as<std::vector<QVectorTagged>>();
+    if (node["query"]) {
+      arg.query = node["query"].as<YAMLHelper::YAMLSequenceQuery>();
+      arg.query_result = YAMLHelper::QuerySequence(node["query-list"], arg.query).as<std::vector<QVectorTagged>>();
+    }
     return true;
   }
 
