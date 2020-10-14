@@ -19,8 +19,12 @@ _tasks:
   - args:
     - query: { tags: { any-in: [track] }}
       query-list: *detectors
+      components: [x1,y1]
+      correction-steps: [rescaled,recentered]
     - query: { tags: { any-in: [wall] }}
       query-list: *detectors
+      components: [x1,y1]
+      correction-steps: [recentered]
     actions: [xx,xy,yx,yy]
     n-samples: 50
     weights-type: observable
@@ -31,11 +35,18 @@ _tasks:
         nb: 10
         lo: 0
         hi: 100
+  # Reference x Reference
   - args:
     - query: { tags: { any-in: [wall] }}
       query-list: *detectors
+      # what are the Q-vector components participating in the correlation
+      components: [x1,y1]
+      # what corrections steps are participating in the correlation
+      correction-steps: [recentered]
     - query: { tags: { any-in: [wall] }}
       query-list: *detectors
+      components: [x1,y1]
+      correction-steps: [recentered]
     actions: [xx,xy,yx,yy]
     n-samples: 50
     weights-type: reference

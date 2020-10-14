@@ -31,12 +31,18 @@ _task_args:
   - &ta0
     query: *q0
     query-list: *detectors
+    correction-steps: [recentered]
+    components: [x1,y1]
   - &ta1
     query: *q1
     query-list: *detectors
+    correction-steps: [recentered]
+    components: [x1,y1]
   - &ta2
     query: *q2
     query-list: *detectors
+    correction-steps: [recentered]
+    components: [x1,y1]
 
 _tasks:
   - args: [*ta0, *ta2]

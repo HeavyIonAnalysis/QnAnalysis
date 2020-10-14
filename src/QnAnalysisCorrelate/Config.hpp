@@ -137,7 +137,10 @@ struct QVectorTagged {
 struct CorrelationTaskArgument {
   YAMLHelper::YAMLSequenceQuery query;
   std::vector<QVectorTagged> query_result;
-  EQnWeight weight{EQnWeight::OBSERVABLE};
+  EQnWeight weight{EQnWeight::OBSERVABLE}; // obsolete
+
+  std::vector<EQnCorrectionStep> corrections_steps;
+  std::vector<std::string> components;
 };
 
 /* list of arguments, list of actions to apply */
@@ -166,7 +169,7 @@ struct Enum {
   Enum() = default;
   Enum(const T &v) { opt_enum = v; }
   Enum(typename T::_integral v) { opt_enum = T::_from_integral(v); }
-  operator T const &() const {
+  operator T () const {
     return opt_enum.value();
   }
 };
@@ -301,6 +304,12 @@ struct convert<Qn::Analysis::Correlate::CorrelationTaskArgument> {
       arg.query = node["query"].as<YAMLHelper::YAMLSequenceQuery>();
       arg.query_result = YAMLHelper::QuerySequence(node["query-list"], arg.query).as<std::vector<QVectorTagged>>();
     }
+
+    auto correction_steps = node["correction-steps"].as<std::vector<Enum<EQnCorrectionStep>>>();
+    std::transform(std::begin(correction_steps), std::end(correction_steps),
+                   std::back_inserter(arg.corrections_steps),
+                   [] (const auto &step) { return EQnCorrectionStep(step); });
+    arg.components = node["components"].as<std::vector<std::string>>();
     return true;
   }
 
