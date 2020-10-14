@@ -13,6 +13,7 @@
 #include <QnDataFrame.hpp>
 #include <TFileCollection.h>
 #include <TChain.h>
+#include <TDirectory.h>
 
 using std::filesystem::path;
 using std::filesystem::current_path;
@@ -39,12 +40,18 @@ void Qn::Analysis::Correlate::CorrelationTaskRunner::Initialize() {
 void Qn::Analysis::Correlate::CorrelationTaskRunner::Run() {
   Info(__func__, "Go!");
 
+  TFile f(output_file_.c_str(), "RECREATE");
+
   for (auto &task : initialized_tasks_) {
+    auto dir = mkcd(task->output_folder, f);
     for (auto &c : task->correlations) {
       Info(__func__, "Processing '%s'... ", c.result_ptr->GetName().c_str());
-      c.result_ptr.GetValue();
+      auto &container = c.result_ptr.GetValue().GetDataContainer();
+      dir->WriteObject(&container, c.correlation_name.c_str());
     }
   }
+
+  f.Close();
 
 }
 
@@ -134,5 +141,14 @@ std::vector<CorrelationTaskRunner::Correlation> CorrelationTaskRunner::GetTaskCo
 
 
   return result;
+}
+
+TDirectory *CorrelationTaskRunner::mkcd(const path &path, TDirectory &root) {
+  TDirectory *pwd = &root;
+  for (const auto& path_ele : path) {
+    if (path_ele == "/") continue;
+    pwd = pwd->mkdir(path_ele.c_str(),"", kTRUE);
+  }
+  return pwd;
 }
 

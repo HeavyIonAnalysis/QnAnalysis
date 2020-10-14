@@ -29,6 +29,7 @@ TEST(CorrelationAction, Builder) {
 
   const auto xx = Builder<Qx1,Qx1>::F;
   const auto yy = Builder<Qy1,Qy1>::F;
+  const auto xy = Builder<Qx1,Qy1>::F;
   Qn::QVector v1;
   v1.ActivateHarmonic(1);
   v1.SetX(1, 1.);
@@ -39,6 +40,7 @@ TEST(CorrelationAction, Builder) {
   v2.SetY(1, 4.);
   EXPECT_EQ(xx(v1,v2), 1*3);
   EXPECT_EQ(yy(v1,v2), 2*4);
+  EXPECT_EQ(xy(v1,v2), 1*4);
 
 }
 

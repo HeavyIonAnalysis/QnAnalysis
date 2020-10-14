@@ -42,6 +42,7 @@ class CorrelationTaskRunner {
     size_t arity{0};
     size_t n_axes{0};
     std::list<Correlation> correlations;
+    std::filesystem::path output_folder;
   };
 
   struct bad_config_file : public std::exception {
@@ -111,6 +112,7 @@ private:
   template<size_t NAxes>
   static bool PredicateNAxes(const CorrelationTask &t) { return t.axes.size() == NAxes; }
 
+  static TDirectory *mkcd(const std::filesystem::path& path, TDirectory &root);
 
 
   /**
@@ -165,6 +167,10 @@ private:
       correlation.result_ptr = booked_action;
 
       result->correlations.emplace_back(correlation);
+      result->output_folder = std::filesystem::path(t.output_folder);
+      if (result->output_folder.is_relative()) {
+        throw std::runtime_error("Output folder must be an absolute path");
+      }
       Info(__func__, "%s", correlation.correlation_name.c_str());
     }
 

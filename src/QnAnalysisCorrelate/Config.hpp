@@ -320,6 +320,8 @@ struct convert<Qn::Analysis::Correlate::CorrelationTask> {
 //    if (task.weight_type == EQnWeight(EQnWeight::OBSERVABLE)) {
       task.weights_function = node["weights-function"].as<std::string>();
 //    }
+
+    task.output_folder = node["folder"].as<std::string>("/");
     return true;
   }
 };
