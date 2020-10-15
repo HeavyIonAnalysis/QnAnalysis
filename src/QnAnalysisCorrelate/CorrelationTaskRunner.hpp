@@ -216,8 +216,8 @@ private:
 
     auto result = std::make_shared<CorrelationTaskInitialized>();
     /* init RDataFrame */
-    auto df = GetRDF()->Range(0, 500);
-    auto df_sampled = Qn::Correlation::Resample(df, t.n_samples);
+    auto df = GetRDF();
+    auto df_sampled = Qn::Correlation::Resample(*df, t.n_samples);
 
     result->output_folder = std::filesystem::path(t.output_folder);
     if (result->output_folder.is_relative()) {
