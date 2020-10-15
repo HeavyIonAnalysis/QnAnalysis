@@ -1,0 +1,55 @@
+
+_axes:
+  - &ax0
+    name: Contrality
+    nb: 10
+    lo: 0
+    hi: 100
+
+_detectors: &detectors
+  - name: detectorA
+    tags: [observable]
+    correction-step: rescaled
+  - name: detectorB
+    tags: [reference]
+    correction-step: recentered
+  - name: detectorC
+    tags: []
+    correction-step: plain
+
+_queries:
+  # queries in the form of map: field - predicate
+  - &q0
+    name: { equals: detectorA }
+  - &q1
+    tags: { any-in: [reference] }
+  - &q2
+    name: { regex-match: "detector.*" }
+
+
+_task_args:
+  - &ta0
+    query: *q0
+    query-list: *detectors
+    correction-steps: [recentered]
+    components: [x1,y1]
+  - &ta1
+    query: *q1
+    query-list: *detectors
+    correction-steps: [recentered]
+    components: [x1,y1]
+  - &ta2
+    query: *q2
+    query-list: *detectors
+    correction-steps: [recentered]
+    components: [x1,y1]
+
+_tasks:
+  - args: [*ta0, *ta2]
+    actions: [xx, xy, yx, yy]
+    n-samples: 50
+    weights-type: observable
+    weights-function: auto
+    axes: [*ax0]
+
+

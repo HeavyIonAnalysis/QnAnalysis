@@ -1,0 +1,64 @@
+_detectors: &detectors
+  - name: u
+    tags: [ track ]
+    correction-step: rescaled
+  - name: W1
+    tags: [ wall ]
+    correction-step: recentered
+  - name: W2
+    tags: [ wall ]
+    correction-step: recentered
+  - name: W3
+    tags: [ wall ]
+    correction-step: recentered
+
+_axes:
+  - &centrality
+    name: event_header_selected_tof_rpc_hits_centrality
+    nb: 10
+    lo: 0
+    hi: 100
+
+_components:
+  - &2d1h
+    [ x1,y1,cos1,sin1 ]
+
+_tasks:
+  - args:
+      - query: { tags: { any-in: [ track ] } }
+        query-list: *detectors
+        components: *2d1h
+        correction-steps: [ rescaled,recentered ]
+        weight: sumw
+      - query: { tags: { any-in: [ wall ] } }
+        query-list: *detectors
+        components: *2d1h
+        correction-steps: [ recentered ]
+        weight: ones
+    # temporarily ignored
+    #    actions: [xx,xy,yx,yy]
+    n-samples: 50
+    weights-type: observable
+    # temporarily ignored
+    #    weights-function: xx
+    folder: "/uQ"
+    axes: [ *centrality ]
+  # Reference x Reference
+  - args:
+      - query: { tags: { any-in: [ wall ] } }
+        query-list: *detectors
+        # what are the Q-vector components participating in the correlation
+        components: *2d1h
+        # what corrections steps are participating in the correlation
+        correction-steps: [ recentered ]
+      - query: { tags: { any-in: [ wall ] } }
+        query-list: *detectors
+        components: *2d1h
+        correction-steps: [ recentered ]
+    # temporarily ignored
+    #    actions: [xx,xy,yx,yy]
+    n-samples: 50
+    weights-type: reference
+    #    weights-function: xx
+    folder: "/QQ/test"
+    axes: [ *centrality ]
