@@ -17,11 +17,12 @@
 
 using std::filesystem::path;
 using std::filesystem::current_path;
-using namespace boost::program_options;
-
 using namespace Qn::Analysis::Correlate;
 
+
+
 boost::program_options::options_description Qn::Analysis::Correlate::CorrelationTaskRunner::GetBoostOptions() {
+  using namespace boost::program_options;
   options_description desc("Correlation options");
   desc.add_options()
       ("configuration-file", value(&configuration_file_path_)->required(), "Path to the YAML configuration")
@@ -37,6 +38,14 @@ void Qn::Analysis::Correlate::CorrelationTaskRunner::Initialize() {
   LookupConfiguration();
   InitializeTasks();
 }
+
+void CorrelationTaskRunner::InitializeTasks() {
+  initialized_tasks_.clear();
+  InitializeTasksImpl(std::back_inserter(initialized_tasks_),
+                      config_tasks_,
+                      make_index_range<1, MAX_ARITY>(), make_index_range<1, MAX_AXES>());
+}
+
 void Qn::Analysis::Correlate::CorrelationTaskRunner::Run() {
   Info(__func__, "Go!");
 
@@ -50,7 +59,7 @@ void Qn::Analysis::Correlate::CorrelationTaskRunner::Run() {
       Info(__func__, "Processing '%s'... ", correlation.result_ptr->GetName().c_str());
       auto &container = correlation.result_ptr.GetValue().GetDataContainer();
 
-      container_meta.String() = GenMeta(correlation);
+      container_meta.String() = GenCorrelationMeta(correlation);
 
       dir->WriteObject(&container, correlation.meta_key.c_str());
       dir->WriteObject(&container_meta, (correlation.meta_key + "_meta").c_str());
@@ -61,7 +70,6 @@ void Qn::Analysis::Correlate::CorrelationTaskRunner::Run() {
   Info(__func__, "Written to '%s'...", f.GetName());
 
 }
-
 void Qn::Analysis::Correlate::CorrelationTaskRunner::LookupConfiguration() {
   if (configuration_file_path_.is_absolute()) {
     LoadConfiguration(configuration_file_path_);
@@ -85,6 +93,7 @@ void Qn::Analysis::Correlate::CorrelationTaskRunner::LookupConfiguration() {
   }
 
 }
+
 bool Qn::Analysis::Correlate::CorrelationTaskRunner::LoadConfiguration(const std::filesystem::path &path) {
   using namespace YAML;
 
@@ -146,36 +155,60 @@ std::string CorrelationTaskRunner::ToQVectorFullName(const QVectorTagged &qv) {
 }
 
 std::vector<CorrelationTaskRunner::Correlation> CorrelationTaskRunner::GetTaskCombinations(const CorrelationTask &t) {
-  std::vector<QVectorList> argument_lists_to_combine;
-  argument_lists_to_combine.reserve(t.arguments.size());
-  for (auto &arg_list : t.arguments) {
-    argument_lists_to_combine.emplace_back(arg_list.query_result);
+
+
+  auto make_arg = [] (const QVectorTagged& qv,
+                      EQnCorrectionStep step,
+                      const std::string& component_name,
+                      const std::string& weight) -> CorrelationArg {
+    return {
+      .q_vector_name = qv.name,
+      .correction_step = step,
+      .component = std::string(component_name),
+      .weight = weight
+    };
+  };
+
+  std::vector<CorrelationArgList> arglists_to_combine;
+  for (auto &task_arg : t.arguments) {
+    CorrelationArgList arglist;
+    Utils::Combine(std::back_inserter(arglist), make_arg,
+                   task_arg.query_result,
+                   task_arg.corrections_steps,
+                   task_arg.components,
+                   std::vector<std::string>({task_arg.weight}));
+    arglists_to_combine.emplace_back(std::move(arglist));
   }
-  std::vector<QVectorList> arguments_combined;
-  Utils::CombineDynamic(argument_lists_to_combine.begin(),
-                        argument_lists_to_combine.end(),
-                        std::back_inserter(arguments_combined));
+
+  std::vector<CorrelationArgList> arglists_combined;
+  Utils::CombineDynamic(std::begin(arglists_to_combine), std::end(arglists_to_combine),
+                        std::back_inserter(arglists_combined));
+
 
   /* now we combine them with actions */
-  auto make_correlation = [](const QVectorList &qv, const std::string &action) {
+  auto make_correlation = [](const CorrelationArgList &args) {
     Correlation c;
-    c.action_name = action;
-    c.args_list = qv;
+    c.args_list = args;
     std::transform(std::begin(c.args_list), std::end(c.args_list),
                    std::back_inserter(c.argument_names),
-                   ToQVectorFullName);
-    auto meta_key = JoinStrings(c.argument_names.begin(), c.argument_names.end(), ".")
-        .append(".").append(c.action_name);
+                   [] (const CorrelationArg& arg) { return arg.q_vector_name + "_" + arg.correction_step._to_string(); });
+    auto meta_key = JoinStrings(c.argument_names.begin(), c.argument_names.end(), ".");
+    meta_key.append(".");
+    for (auto &arg : c.args_list) {
+      meta_key.append(arg.component);
+    }
+
     c.meta_key = std::move(meta_key);
     return c;
   };
 
   std::vector<Correlation> result;
-  Utils::Combine(std::back_inserter(result), make_correlation, arguments_combined, t.actions);
+  std::transform(
+      std::begin(arglists_combined), std::end(arglists_combined), std::back_inserter(result),
+      make_correlation);
 
   return result;
 }
-
 TDirectory *CorrelationTaskRunner::mkcd(const path &path, TDirectory& root_dir) {
   TDirectory *pwd = &root_dir;
   for (const auto &path_ele : path) {
@@ -185,17 +218,8 @@ TDirectory *CorrelationTaskRunner::mkcd(const path &path, TDirectory& root_dir) 
   }
   return pwd;
 }
-std::vector<QVectorTagged> CorrelationTaskRunner::LookupQVectors(TTree *t) {
-  auto list_branches = t->GetListOfBranches();
 
-  for (auto brobj : *list_branches) {
-    brobj->Print();
-  }
-
-  return {};
-}
-
-std::string CorrelationTaskRunner::GenMeta(const CorrelationTaskRunner::Correlation &c) {
+std::string CorrelationTaskRunner::GenCorrelationMeta(const CorrelationTaskRunner::Correlation &c) {
   using namespace YAML;
 
   Node n;
@@ -206,5 +230,53 @@ std::string CorrelationTaskRunner::GenMeta(const CorrelationTaskRunner::Correlat
   std::stringstream stream;
   stream << n;
   return stream.str();
+}
+
+CorrelationTaskRunner::QVectorComponentFct CorrelationTaskRunner::GetQVectorComponentFct(const CorrelationArg &arg) {
+  using namespace std::regex_constants;
+  const std::regex re("^(x|y|cos|sin)(\\d)$", ECMAScript | icase);
+
+  std::smatch match_results;
+  bool match_ok = std::regex_search(arg.component, match_results, re);
+
+  // [0] - entire string, [1] - component, [2] - harmonic
+  if (!(match_ok || match_results.size() == 3)) {
+    throw bad_qvector_component();
+  }
+
+  auto harmonic = boost::lexical_cast<unsigned int>(match_results[2].str());
+
+  if (match_results[1] == "x") {
+    return {.component = QVectorComponentFct::kX, .harmonic=harmonic};
+  }
+  else if (match_results[1] == "y") {
+    return {.component = QVectorComponentFct::kY, .harmonic=harmonic};
+  }
+  else if (match_results[1] == "cos" || match_results[1] == "Cos") {
+    return {.component = QVectorComponentFct::kCos, .harmonic=harmonic};
+  }
+  else if (match_results[1] == "sin" || match_results[1] == "Sin") {
+    return {.component = QVectorComponentFct::kSin, .harmonic=harmonic};
+  }
+  else {
+    throw bad_qvector_component();
+  }
+}
+CorrelationTaskRunner::QVectorWeightFct CorrelationTaskRunner::GetQVectorWeightFct(const CorrelationTaskRunner::CorrelationArg &arg) {
+  using namespace std::regex_constants;
+  const std::regex re("^(Sumw|Ones)$", ECMAScript | icase);
+
+  std::smatch match_results;
+  bool match_ok = std::regex_search(arg.weight, match_results, re);
+  if (!match_ok) {
+    throw bad_qvector_weight();
+  }
+  if (match_results[1] == "Sumw" || match_results[1] == "sumw") {
+    return {.type = QVectorWeightFct::kSumw};
+  } else if (match_results[1] == "ones" || match_results[1] == "Ones") {
+    return {.type = QVectorWeightFct::kOne};
+  } else {
+    throw bad_qvector_weight();
+  }
 }
 

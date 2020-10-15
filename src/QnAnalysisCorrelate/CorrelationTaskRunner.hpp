@@ -20,17 +20,65 @@
 
 #include "Config.hpp"
 #include "Utils.hpp"
-#include "UserCorrelationAction.hpp"
+//#include "UserCorrelationAction.hpp"
 
 namespace Qn::Analysis::Correlate {
 
 class CorrelationTaskRunner {
 
-  using QVectorList = std::vector<QVectorTagged>;
   using CorrelationResultPtr = ROOT::RDF::RResultPtr<Qn::Correlation::CorrelationActionBase>;
 
+
+  struct CorrelationArg {
+    std::string q_vector_name;
+    EQnCorrectionStep correction_step{EQnCorrectionStep::PLAIN};
+    std::string component;
+    std::string weight;
+  };
+
+  using CorrelationArgList = std::vector<CorrelationArg>;
+
+  struct QVectorComponentFct {
+    enum EComp { kX, kY, kCos, kSin };
+
+    EComp component{kX};
+    unsigned int harmonic{0};
+
+    [[nodiscard]]
+    float
+    Eval(const Qn::QVector &qv) const noexcept {
+      if (component == kX) {
+        return qv.x(harmonic);
+      } else if (component == kY) {
+        return qv.y(harmonic);
+      } else if (component == kCos) {
+        return qv.x(harmonic)/qv.mag(harmonic);
+      } else if (component == kSin) {
+        return qv.y(harmonic)/qv.mag(harmonic);
+      }
+      __builtin_unreachable();
+    }
+  };
+
+  struct QVectorWeightFct {
+    enum EWeightType { kOne, kSumw };
+
+    float Eval(const Qn::QVector &qv) const {
+      if (type == kOne) {
+        return 1.f;
+      } else if (type == kSumw) {
+        return qv.sumweights();
+      }
+
+      __builtin_unreachable();
+    }
+
+    EWeightType type{kOne};
+
+  };
+
   struct Correlation {
-    QVectorList args_list;
+    CorrelationArgList args_list;
 
     std::vector<std::string> argument_names;
     std::string action_name;
@@ -51,6 +99,12 @@ class CorrelationTaskRunner {
     explicit bad_config_file(const std::exception &e) : std::exception(e) {};
   };
 
+  struct bad_qvector_component : public std::exception {
+  };
+
+  struct bad_qvector_weight : public std::exception {
+  };
+
 public:
   static constexpr size_t MAX_ARITY = 8;
   static constexpr size_t MAX_AXES = 4;
@@ -67,7 +121,7 @@ private:
   void LookupConfiguration();
   bool LoadConfiguration(const std::filesystem::path &path);
 
-  static std::vector<Correlation> GetTaskCombinations(const CorrelationTask &t);
+  static std::vector<Correlation> GetTaskCombinations(const CorrelationTask &args);
 
   template<typename Iter>
   static std::string JoinStrings(Iter &&i1, Iter &&i2, std::string delim = ", ") {
@@ -114,12 +168,26 @@ private:
   template<size_t NAxes>
   static bool PredicateNAxes(const CorrelationTask &t) { return t.axes.size() == NAxes; }
 
-  static TDirectory *mkcd(const std::filesystem::path& path, TDirectory &root_dir);
+  static TDirectory *mkcd(const std::filesystem::path &path, TDirectory &root_dir);
 
-  static std::string GenMeta(const Correlation& c);
+  static std::string GenCorrelationMeta(const Correlation &c);
 
-  static std::vector<QVectorTagged> LookupQVectors(TTree *t);
+  static QVectorComponentFct GetQVectorComponentFct(const CorrelationArg &arg);
 
+  static QVectorWeightFct GetQVectorWeightFct(const CorrelationArg &arg);
+
+
+  template<size_t I>
+  using IndexedQVectorArg = const QVector &;
+
+  template<typename FunctionFactory, size_t ... IArg>
+  static auto BuildFunction(FunctionFactory &&factory, const Correlation &correlation, std::index_sequence<IArg...>) {
+    auto fct_tuple = std::make_tuple(factory(correlation.args_list[IArg])...);
+    return [fct_tuple](IndexedQVectorArg<IArg>...args) -> float {
+      auto args_tuple = std::forward_as_tuple(args...);
+      return (std::get<IArg>(fct_tuple).Eval(std::get<IArg>(args_tuple)) * ... * 1);
+    };
+  }
 
   /**
    * @brief Takes task config and initializes IO
@@ -133,7 +201,7 @@ private:
   std::shared_ptr<CorrelationTaskInitialized> InitializeTask(const CorrelationTask &t) {
     using Qn::Correlation::UseWeights;
     /* this is a function pointer */
-    const auto GetActionRegistry = ::Qn::Analysis::Correlate::Action::GetActionRegistry<Arity>;
+//    const auto GetActionRegistry = ::Qn::Analysis::Correlate::Action::GetActionRegistry<Arity>;
 
     /* Qn::MakeAxes() */
     std::vector<Qn::AxisD> axes_qn;
@@ -143,28 +211,30 @@ private:
 
     /* weights */
     auto use_weights = t.weight_type == EQnWeight(EQnWeight::OBSERVABLE) ? UseWeights::Yes : UseWeights::No;
-    auto weight_function_name = t.weights_function;
-    auto weight_function = GetActionRegistry().Get(weight_function_name);
+//    auto weight_function_name = t.weights_function;
+//    auto weight_function = GetActionRegistry().Get(weight_function_name);
 
     auto result = std::make_shared<CorrelationTaskInitialized>();
     /* init RDataFrame */
     auto df = GetRDF()->Range(0, 500);
     auto df_sampled = Qn::Correlation::Resample(df, t.n_samples);
 
+    result->output_folder = std::filesystem::path(t.output_folder);
+    if (result->output_folder.is_relative()) {
+      throw std::runtime_error("Output folder must be an absolute path");
+    }
+
     for (auto &correlation : GetTaskCombinations(t)) {
-      auto action_name = correlation.action_name;
-      auto correlation_function = GetActionRegistry().Get(action_name);
 
       auto args_list = correlation.args_list;
       std::array<std::string, Arity> args_list_array;
       std::copy(std::begin(correlation.argument_names), std::end(correlation.argument_names),
                 std::begin(args_list_array));
 
-
       auto booked_action = Qn::MakeAverageHelper(Qn::Correlation::MakeCorrelationAction(
           correlation.meta_key,
-          correlation_function,
-          weight_function,
+          BuildFunction(GetQVectorComponentFct, correlation, std::make_index_sequence<Arity>()),
+          BuildFunction(GetQVectorWeightFct, correlation, std::make_index_sequence<Arity>()),
           use_weights,
           args_list_array,
           axes_config,
@@ -173,10 +243,6 @@ private:
       correlation.result_ptr = booked_action;
 
       result->correlations.emplace_back(correlation);
-      result->output_folder = std::filesystem::path(t.output_folder);
-      if (result->output_folder.is_relative()) {
-        throw std::runtime_error("Output folder must be an absolute path");
-      }
       Info(__func__, "%s", correlation.meta_key.c_str());
     }
 
@@ -199,21 +265,17 @@ private:
   void InitializeTasksArity(OIter &&o, Container &&c) {
     std::vector<typename std::remove_reference_t<Container>::value_type> tasks_arity;
     std::copy_if(std::begin(c), std::end(c), std::back_inserter(tasks_arity), PredicateArity<Arity>);
-    (InitializeTasksArityNAxes<OIter, Arity, INAxes>(std::forward<OIter>(o), tasks_arity),...);
+    (InitializeTasksArityNAxes<OIter, Arity, INAxes>(std::forward<OIter>(o), tasks_arity), ...);
   }
 
   template<typename OIter, typename Container, size_t...IArity, size_t...INAxis>
   void InitializeTasksImpl(OIter &&o, Container &&c, std::index_sequence<IArity...>, std::index_sequence<INAxis...>) {
     /* CXX17 folding */
-    (InitializeTasksArity<OIter, Container, IArity, INAxis...>(std::forward<OIter>(o), std::forward<Container>(c)),...);
+    (InitializeTasksArity<OIter, Container, IArity, INAxis...>(std::forward<OIter>(o),
+                                                               std::forward<Container>(c)), ...);
   }
 
-  auto InitializeTasks() {
-    initialized_tasks_.clear();
-    InitializeTasksImpl(std::back_inserter(initialized_tasks_),
-                               config_tasks_,
-                               make_index_range<1, MAX_ARITY>(), make_index_range<1, MAX_AXES>());
-  }
+  void InitializeTasks();
 
   std::filesystem::path configuration_file_path_{};
   std::string configuration_node_name_{};
