@@ -1,4 +1,9 @@
 FROM kreisl/rootcpp17
 
-RUN yum install -y http://repo.okay.com.mx/centos/7/x86_64/release/okay-release-1-1.noarch.rpm
-RUN yum install -y boost-devel yaml-cpp-devel yaml-cpp
+RUN yum install -y boost-devel
+
+WORKDIR /opt/yaml-cpp
+RUN git clone https://github.com/jbeder/yaml-cpp.git &&\
+    mkdir -vp yaml-cpp-build && cd yaml-cpp-build &&\
+    cmake -DYAML_BUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release ../yaml-cpp &&\
+    make install
