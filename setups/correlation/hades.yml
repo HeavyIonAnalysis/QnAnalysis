@@ -1,39 +1,44 @@
 _detectors: &detectors
   - name: u
-    tags: [ track ]
+    tags: [ un_vector ]
     correction-step: rescaled
   - name: W1
-    tags: [ wall ]
-    correction-step: recentered
+    tags: [ qn_vector ]
+    correction-step: rescaled
   - name: W2
-    tags: [ wall ]
-    correction-step: recentered
+    tags: [ qn_vector ]
+    correction-step: rescaled
   - name: W3
-    tags: [ wall ]
-    correction-step: recentered
+    tags: [ qn_vector ]
+    correction-step: rescaled
+  - name: M
+    tags: [ qn_vector ]
+    correction-step: rescaled
 
 _axes:
   - &centrality
     name: event_header_selected_tof_rpc_hits_centrality
-    nb: 10
+    nb: 8
     lo: 0
-    hi: 100
+    hi: 40
 
 _components:
-  - &2d1h
-    [ x1,y1,cos1,sin1 ]
+  - &sp_components
+    [ x1,y1 ]
+  - &ep_components
+    [ cos1,sin1 ]
 
 _tasks:
   - args:
-      - query: { tags: { any-in: [ track ] } }
+      - query: { tags: { any-in: [ un_vector ] } }
         query-list: *detectors
-        components: *2d1h
-        correction-steps: [ rescaled,recentered ]
+        components: *sp_components
+        correction-steps: [ rescaled ]
         weight: sumw
-      - query: { tags: { any-in: [ wall ] } }
+      - query: { tags: { any-in: [ qn_vector ] } }
         query-list: *detectors
-        components: *2d1h
-        correction-steps: [ recentered ]
+        components: *sp_components
+        correction-steps: [ rescaled ]
         weight: ones
     # temporarily ignored
     #    actions: [xx,xy,yx,yy]
@@ -41,24 +46,61 @@ _tasks:
     weights-type: observable
     # temporarily ignored
     #    weights-function: xx
-    folder: "/uQ"
+    folder: "/uQ/SP"
+    axes: [ *centrality ]
+  - args:
+      - query: { tags: { any-in: [ un_vector ] } }
+        query-list: *detectors
+        components: *sp_components
+        correction-steps: [ rescaled ]
+        weight: sumw
+      - query: { tags: { any-in: [ qn_vector ] } }
+        query-list: *detectors
+        components: *ep_components
+        correction-steps: [ rescaled ]
+        weight: ones
+    # temporarily ignored
+    #    actions: [xx,xy,yx,yy]
+    n-samples: 50
+    weights-type: observable
+    # temporarily ignored
+    #    weights-function: xx
+    folder: "/uQ/EP"
     axes: [ *centrality ]
   # Reference x Reference
   - args:
-      - query: { tags: { any-in: [ wall ] } }
+      - query: { tags: { any-in: [ qn_vector ] } }
         query-list: *detectors
         # what are the Q-vector components participating in the correlation
-        components: *2d1h
+        components: *sp_components
         # what corrections steps are participating in the correlation
-        correction-steps: [ recentered ]
-      - query: { tags: { any-in: [ wall ] } }
+        correction-steps: [ rescaled ]
+      - query: { tags: { any-in: [ qn_vector ] } }
         query-list: *detectors
-        components: *2d1h
-        correction-steps: [ recentered ]
+        components: *sp_components
+        correction-steps: [ rescaled ]
     # temporarily ignored
     #    actions: [xx,xy,yx,yy]
     n-samples: 50
     weights-type: reference
     #    weights-function: xx
-    folder: "/QQ/test"
+    folder: "/QQ/SP"
+    axes: [ *centrality ]
+  - args:
+      - query: { tags: { any-in: [ qn_vector ] } }
+        query-list: *detectors
+        # what are the Q-vector components participating in the correlation
+        components: *ep_components
+        # what corrections steps are participating in the correlation
+        correction-steps: [ rescaled ]
+      - query: { tags: { any-in: [ qn_vector ] } }
+        query-list: *detectors
+        components: *ep_components
+        correction-steps: [ rescaled ]
+    # temporarily ignored
+    #    actions: [xx,xy,yx,yy]
+    n-samples: 50
+    weights-type: reference
+    #    weights-function: xx
+    folder: "/QQ/EP"
     axes: [ *centrality ]
