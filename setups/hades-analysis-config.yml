@@ -14,6 +14,7 @@ _axes:
 _cuts:
   - &protons_cuts
     mdc_vtx_tracks/pid: { equals: 2212 }
+    mdc_vtx_tracks/pT: {range: [0.0, 1.6]}
     mdc_vtx_tracks/dca_xy: {range: [-10.0, 10.0]}
     mdc_vtx_tracks/dca_z: {range: [-10.0, 10.0]}
     mdc_vtx_tracks/chi2: {range: [0.0, 100.0]}
@@ -73,7 +74,7 @@ hades_analysis:
     - name: W1
       type: track
       phi:  forward_wall_hits/phi
-      weight: Ones
+      weight: forward_wall_hits/signal
       corrections:
         - recentering
         - twist-and-rescale
@@ -82,7 +83,7 @@ hades_analysis:
     - name: W2
       type: track
       phi:  forward_wall_hits/phi
-      weight: Ones
+      weight: forward_wall_hits/signal
       corrections:
         - recentering
         - twist-and-rescale
@@ -91,7 +92,7 @@ hades_analysis:
     - name: W3
       type: track
       phi:  forward_wall_hits/phi
-      weight: Ones
+      weight: forward_wall_hits/signal
       corrections:
         - recentering
         - twist-and-rescale
