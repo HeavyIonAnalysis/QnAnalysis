@@ -64,7 +64,7 @@ hades_analysis:
         - *axis_rapidity
       cuts:
         *protons_cuts
-        mdc_vtx_tracks/pT: { range: [0.0, 1.6] }
+#        mdc_vtx_tracks/pT: { range: [0.0, 1.6] }
       qa:
         - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_pT
