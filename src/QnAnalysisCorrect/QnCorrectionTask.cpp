@@ -215,7 +215,9 @@ void QnCorrectionTask::PreInit() {
     auto& qvec = this->GetConfig()->PsiQvector();
     qvec.SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry({qvec.GetPhiVar()})).first);
   }
-  auto event_var_id = at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(this->GetConfig()->GetEventVars())).first;
+  if (!this->GetConfig()->EventVars().empty()) {
+    at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(this->GetConfig()->GetEventVars()));
+  }
 
   at_vm_task->FillBranchNames();
 //  at_vm_task->SetCutsMap(cuts_map_); FIXME
