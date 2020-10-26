@@ -29,7 +29,7 @@ set(QnAnalysis_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 include(cmake_modules/YamlCpp.cmake)
 include(cmake_modules/Root.cmake)
-include(cmake_modules/Cuts.cmake)
+#include(cmake_modules/Cuts.cmake)
 include(cmake_modules/QnTools.cmake)
 include(cmake_modules/AnalysisTree.cmake)
 include(cmake_modules/AnalysisTreeTaskSkeleton.cmake)
