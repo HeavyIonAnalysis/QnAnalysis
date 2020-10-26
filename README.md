@@ -30,6 +30,9 @@ Input data are expected to be in [AnalysisTree](https://github.com/HeavyIonAnaly
      
 In case of problems please [submit an issue](https://github.com/HeavyIonAnalysis/QnAnalysis/issues/new/choose).
 
+### Using bundled `yaml-cpp`
+For some environments yaml-cpp is not available (e.g Kronos or lxplus).
+To build bundled version of `yaml-cpp`, use CMake option `-Dyaml-cpp_BUNDLED=ON` 
 ## Running example
 
 Coming soon...
