@@ -6,8 +6,21 @@
 
 Qn::DataContainer<Qn::StatCalculate> Method::ReadContainerFromFile( const std::string& directory, const std::vector<VectorConfig>& vectors ){
   Qn::DataContainerStatCollect*  obj;
-  std::string name = directory+"/";
+  std::string name;
   std::string component;
+  try{
+    name = directory+"/";
+    component.clear();
+    for (const auto& vector : vectors) {
+      name += vector.name+".";
+      component += vector.component_name;
+    }
+    name+=component;
+    obj = FileManager::GetObject<Qn::DataContainerStatCollect>(name);
+    auto result = Qn::DataContainerStatCalculate(*obj);
+    result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
+    return result;
+  } catch (std::exception&) {}
   auto combinations = GetAllCombinations(vectors);
   int n=0;
   while ( n<combinations.size() ) {

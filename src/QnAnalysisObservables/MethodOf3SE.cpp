@@ -34,9 +34,13 @@ std::vector<std::vector<std::vector<VectorConfig>>> MethodOf3SE::ConstructResolu
   std::vector<std::vector<std::vector<VectorConfig>>> combinations;
   for (size_t i=0; i<q_combination.size(); ++i ){
     auto q2 = q_combination.at(i);
+    if( q1.name == q2.name )
+      continue;
     q2.component_name = q1.component_name;
     for( size_t j=i+1; j<q_combination.size(); ++j ){
       auto q3 = q_combination.at(j);
+      if( q1.name == q3.name )
+        continue;
       q3.component_name = q1.component_name;
       std::vector<std::vector<VectorConfig>> combination;
       combination.push_back({q1, q2});
