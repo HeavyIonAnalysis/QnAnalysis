@@ -53,7 +53,6 @@ void Qn::Analysis::Correlate::CorrelationTaskRunner::Run() {
 
   TFile f(output_file_.c_str(), "RECREATE");
 
-  TObjString container_meta;
   for (auto &task : initialized_tasks_) {
     auto dir = mkcd(task->output_folder, f);
 
@@ -61,10 +60,10 @@ void Qn::Analysis::Correlate::CorrelationTaskRunner::Run() {
       Info(__func__, "Processing '%s'... ", correlation.result_ptr->GetName().c_str());
       auto &container = correlation.result_ptr.GetValue().GetDataContainer();
 
-      container_meta.String() = GenCorrelationMeta(correlation);
+      auto correlation_meta = GenCorrelationMeta(correlation);
 
       dir->WriteObject(&container, correlation.meta_key.c_str());
-      dir->WriteObject(&container_meta, (correlation.meta_key + "_meta").c_str());
+      dir->WriteObject(&correlation_meta, (correlation.meta_key + "_meta").c_str());
     }
   }
 
@@ -221,7 +220,7 @@ TDirectory *CorrelationTaskRunner::mkcd(const path &path, TDirectory& root_dir) 
   return pwd;
 }
 
-std::string CorrelationTaskRunner::GenCorrelationMeta(const CorrelationTaskRunner::Correlation &c) {
+TStringMeta CorrelationTaskRunner::GenCorrelationMeta(const CorrelationTaskRunner::Correlation &c) {
   using namespace YAML;
 
   Node n;
@@ -237,7 +236,7 @@ std::string CorrelationTaskRunner::GenCorrelationMeta(const CorrelationTaskRunne
 
   std::stringstream stream;
   stream << n;
-  return stream.str();
+  return TStringMeta(stream.str());
 }
 
 CorrelationTaskRunner::QVectorComponentFct CorrelationTaskRunner::GetQVectorComponentFct(const CorrelationArg &arg) {

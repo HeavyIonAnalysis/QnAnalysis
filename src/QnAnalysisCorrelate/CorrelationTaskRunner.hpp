@@ -22,6 +22,7 @@
 #include "Config.hpp"
 #include "Utils.hpp"
 //#include "UserCorrelationAction.hpp"
+#include "TStringMeta.hpp"
 
 
 namespace Qn::Analysis::Correlate {
@@ -172,7 +173,7 @@ private:
 
   static TDirectory *mkcd(const std::filesystem::path &path, TDirectory &root_dir);
 
-  static std::string GenCorrelationMeta(const Correlation &c);
+  static TStringMeta GenCorrelationMeta(const Correlation &c);
 
   static QVectorComponentFct GetQVectorComponentFct(const CorrelationArg &arg);
 
