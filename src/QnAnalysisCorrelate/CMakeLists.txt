@@ -1,6 +1,5 @@
 
 find_package(Boost REQUIRED COMPONENTS program_options)
-find_package(yaml-cpp REQUIRED)
 
 set(QnAnalysis_SETUPS_DIR ${CMAKE_SOURCE_DIR}/setups)
 
