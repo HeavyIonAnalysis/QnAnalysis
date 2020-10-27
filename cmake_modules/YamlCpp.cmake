@@ -14,14 +14,12 @@ if (yaml-cpp_BUNDLED)
             PREFIX ${CMAKE_BINARY_DIR}/external/yaml-cpp
     )
 
-
+    execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/external/yaml-cpp/include)
 
     add_library(yaml-cpp SHARED IMPORTED GLOBAL)
-    set_target_properties(yaml-cpp PROPERTIES
-            IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/external/yaml-cpp/lib/libyaml-cpp.so
-            INCLUDE_DIRECTORIES ${CMAKE_BINARY_DIR}/external/yaml-cpp/include
-            )
-    add_dependencies(yaml-cpp yaml-cpp_Ext)
+    set_target_properties(yaml-cpp PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/external/yaml-cpp/lib/libyaml-cpp.so)
+    target_include_directories(yaml-cpp INTERFACE ${CMAKE_BINARY_DIR}/external/yaml-cpp/include)
+    add_dependencies(yaml-cpp yaml-cpp_Ext yaml-cpp.include)
 
     set(yaml-cpp_FOUND TRUE)
     set(yaml-cpp_INCLUDE_DIR ${CMAKE_BINARY_DIR}/external/yaml-cpp/include)
