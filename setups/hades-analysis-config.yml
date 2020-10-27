@@ -3,9 +3,9 @@ _layouts:
 _axes:
   - &axis_pT
     name: mdc_vtx_tracks/pT
-    nb: 16
+    nb: 20
     lo: 0.0
-    hi: 1.6
+    hi: 2.0
   - &axis_rapidity
     name: mdc_vtx_tracks/rapidity
     nb: 15
@@ -14,7 +14,20 @@ _axes:
 _cuts:
   - &protons_cuts
     mdc_vtx_tracks/pid: { equals: 2212 }
-    mdc_vtx_tracks/pT: {range: [0.0, 1.6]}
+    mdc_vtx_tracks/dca_xy: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks/dca_z: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks/chi2: {range: [0.0, 100.0]}
+  - &mf_cuts
+    mdc_vtx_tracks/pid: { equals: 2212 }
+    mdc_vtx_tracks/pT: {range: [0.0, 2.0]}
+    mdc_vtx_tracks/rapidity: {range: [1.09, 1.29]}
+    mdc_vtx_tracks/dca_xy: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks/dca_z: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks/chi2: {range: [0.0, 100.0]}
+  - &mb_cuts
+    mdc_vtx_tracks/pid: { equals: 2212 }
+    mdc_vtx_tracks/pT: {range: [0.0, 2.0]}
+    mdc_vtx_tracks/rapidity: {range: [0.19, 0.39]}
     mdc_vtx_tracks/dca_xy: {range: [-10.0, 10.0]}
     mdc_vtx_tracks/dca_z: {range: [-10.0, 10.0]}
     mdc_vtx_tracks/chi2: {range: [0.0, 100.0]}
@@ -35,7 +48,7 @@ hades_analysis:
   event-variables:
     - event_header/selected_tof_rpc_hits_centrality
   axes:
-    - { name: event_header/selected_tof_rpc_hits_centrality, nb: 8, lo: 0.0, hi: 40 }
+    - { name: event_header/selected_tof_rpc_hits_centrality, nb: 12, lo: 0.0, hi: 60 }
   q-vectors:
     - name: u
       type: track
@@ -54,23 +67,28 @@ hades_analysis:
         - *axis_pT
         - *axis_rapidity
         - [*axis_rapidity, *axis_pT]
-    - name: M
+    - name: Mf
       type: track
       phi:  mdc_vtx_tracks/phi
       weight: Ones
       corrections:
         - recentering
         - twist-and-rescale
-      axes:
-        - *axis_rapidity
       cuts:
-        *protons_cuts
-#        mdc_vtx_tracks/pT: { range: [0.0, 1.6] }
+        *mf_cuts
       qa:
         - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
-        - *axis_pT
-        - *axis_rapidity
-        - [*axis_rapidity, *axis_pT]
+    - name: Mb
+      type: track
+      phi:  mdc_vtx_tracks/phi
+      weight: Ones
+      corrections:
+        - recentering
+        - twist-and-rescale
+      cuts:
+        *mb_cuts
+      qa:
+        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
     - name: W1
       type: track
       phi:  forward_wall_hits/phi

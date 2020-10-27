@@ -11,16 +11,19 @@ _detectors: &detectors
   - name: W3
     tags: [ qn_vector ]
     correction-step: rescaled
-  - name: M
+  - name: Mf
+    tags: [ qn_vector ]
+    correction-step: rescaled
+  - name: Mb
     tags: [ qn_vector ]
     correction-step: rescaled
 
 _axes:
   - &centrality
     name: event_header_selected_tof_rpc_hits_centrality
-    nb: 8
+    nb: 12
     lo: 0
-    hi: 40
+    hi: 60
 
 _components:
   - &sp_components
@@ -42,7 +45,7 @@ _tasks:
         weight: ones
     # temporarily ignored
     #    actions: [xx,xy,yx,yy]
-    n-samples: 50
+    n-samples: 100
     weights-type: observable
     # temporarily ignored
     #    weights-function: xx
@@ -61,7 +64,7 @@ _tasks:
         weight: ones
     # temporarily ignored
     #    actions: [xx,xy,yx,yy]
-    n-samples: 50
+    n-samples: 100
     weights-type: observable
     # temporarily ignored
     #    weights-function: xx
@@ -81,7 +84,7 @@ _tasks:
         correction-steps: [ rescaled ]
     # temporarily ignored
     #    actions: [xx,xy,yx,yy]
-    n-samples: 50
+    n-samples: 100
     weights-type: reference
     #    weights-function: xx
     folder: "/QQ/SP"
@@ -99,7 +102,7 @@ _tasks:
         correction-steps: [ rescaled ]
     # temporarily ignored
     #    actions: [xx,xy,yx,yy]
-    n-samples: 50
+    n-samples: 100
     weights-type: reference
     #    weights-function: xx
     folder: "/QQ/EP"

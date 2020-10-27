@@ -21,9 +21,10 @@ Qn::DataContainer<Qn::StatCalculate> Method::ReadContainerFromFile( const std::s
     result=result.Rebin( axes );
   auto projection = vectors.first.projection_axes;
   for( const auto& axis : vectors.second.projection_axes )
-    if( std::count(projection.begin(), projection.end(), axis) > 0 )
-      projection.push_back(axis);
-  result.Projection(projection);
+    if( std::count(projection.begin(), projection.end(), axis) == 0 )
+      projection.emplace_back(axis);
+  if( !std::empty(projection) )
+    result = result.Projection(projection);
   return result;
 }
 
