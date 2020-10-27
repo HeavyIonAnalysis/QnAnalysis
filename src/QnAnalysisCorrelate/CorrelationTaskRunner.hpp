@@ -14,6 +14,7 @@
 #include <QnDataFrame.hpp>
 #include <TFile.h>
 #include <TTree.h>
+#include <TObjString.h>
 #include <boost/program_options.hpp>
 
 #include <yaml-cpp/yaml.h>
@@ -21,6 +22,7 @@
 #include "Config.hpp"
 #include "Utils.hpp"
 //#include "UserCorrelationAction.hpp"
+
 
 namespace Qn::Analysis::Correlate {
 
@@ -216,8 +218,8 @@ private:
 
     auto result = std::make_shared<CorrelationTaskInitialized>();
     /* init RDataFrame */
-    auto df = GetRDF();
-    auto df_sampled = Qn::Correlation::Resample(*df, t.n_samples);
+    auto df = GetRDF()->Range(0, 100);
+    auto df_sampled = Qn::Correlation::Resample(df, t.n_samples);
 
     result->output_folder = std::filesystem::path(t.output_folder);
     if (result->output_folder.is_relative()) {

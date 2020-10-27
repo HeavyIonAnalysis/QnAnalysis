@@ -15,6 +15,8 @@
 #include <TChain.h>
 #include <TDirectory.h>
 
+#include "Config.hpp"
+
 using std::filesystem::path;
 using std::filesystem::current_path;
 using namespace Qn::Analysis::Correlate;
@@ -224,8 +226,14 @@ std::string CorrelationTaskRunner::GenCorrelationMeta(const CorrelationTaskRunne
 
   Node n;
   n["meta_key"] = c.meta_key;
-  n["action_name"] = c.action_name;
-  n["argument_names"] = c.argument_names;
+  for (auto &arg : c.args_list) {
+    Node arg_node;
+    arg_node["q-vector"] = arg.q_vector_name;
+    arg_node["correction-step"] = Enum<EQnCorrectionStep>(arg.correction_step);
+    arg_node["component"] = arg.component;
+    arg_node["weight"] = arg.weight;
+    n["args"].push_back(arg_node);
+  }
 
   std::stringstream stream;
   stream << n;
