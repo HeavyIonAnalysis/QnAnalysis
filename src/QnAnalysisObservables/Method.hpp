@@ -12,10 +12,7 @@
 
 struct VectorConfig {
   std::string name;
-  std::string title;
   std::string component_name;
-  std::vector<std::string> projection_axes;
-  std::vector<Qn::AxisD> rebin_axes;
 };
 
 class Method {
@@ -31,7 +28,7 @@ public:
   void Write(){
     int i=0;
     std::string component = u_vector_config_.component_name;
-    for( auto config : q_vectors_configs_){
+    for( const auto& config : q_vectors_configs_){
       component+=config.component_name;
     }
     for( auto  resolution: resolutions_){
@@ -53,9 +50,8 @@ protected:
         q_vectors_configs_(std::move(q_vector_config)),
         resolution_q_vectors_configs_(std::move(resolution_q_vectors_configs)) {}
 
-  virtual Qn::DataContainer<Qn::StatCalculate> CalculateResolution(std::vector<Qn::DataContainerStatCalculate> correlations){ };
-  virtual std::vector<std::vector<std::pair<VectorConfig,VectorConfig>>> ConstructResolutionCombinations(std::vector<VectorConfig> reff_q, std::vector<VectorConfig> q_combination){}
-  Qn::DataContainer<Qn::StatCalculate> ReadContainerFromFile( const std::string&, const std::pair<VectorConfig, VectorConfig>& vectors );
+  static Qn::DataContainer<Qn::StatCalculate> ReadContainerFromFile( const std::string&, const std::vector<VectorConfig>& vectors );
+  static std::vector<std::vector<VectorConfig>> GetAllCombinations( std::vector<VectorConfig> elements );
 
   std::string uq_directory_;
   std::string qq_directory_;
