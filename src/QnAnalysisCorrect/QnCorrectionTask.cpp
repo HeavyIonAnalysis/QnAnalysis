@@ -197,7 +197,7 @@ void QnCorrectionTask::FillTracksQvectors() {
 }
 
 void QnCorrectionTask::PreInit() {
-  auto at_vm_task  = GetTaskPtr<ATVarManagerTask>();
+  auto at_vm_task  = ATVarManagerTask::Instance();
   if (!at_vm_task->IsEnabled()) {
     throw std::runtime_error("Keep ATVarManagerTask enabled");
   }
@@ -225,7 +225,7 @@ void QnCorrectionTask::PreInit() {
   at_vm_task->FillBranchNames();
 //  at_vm_task->SetCutsMap(cuts_map_); FIXME
 
-  var_manager_ = at_vm_task.operator->();
+  var_manager_ = at_vm_task;
 }
 
 
