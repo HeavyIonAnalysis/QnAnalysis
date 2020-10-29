@@ -1,7 +1,7 @@
 
 FetchContent_Declare(ATTaskSkeleton
         GIT_REPOSITORY https://github.com/eugene274/AnalysisTreeTaskSkeleton.git
-        GIT_TAG master
+        GIT_TAG 0.0.3
         GIT_SHALLOW ON
         UPDATE_DISCONNECTED ${UPDATE_DISCONNECTED}
         )
