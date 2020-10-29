@@ -69,7 +69,10 @@ void QnCorrectionTask::InitVariables() {
 }
 
 void QnCorrectionTask::Init(std::map<std::string, void*>&) {
-  out_file_ = static_cast<std::shared_ptr<TFile>>(TFile::Open("correction_out.root", "recreate"));
+  out_file_ = std::shared_ptr<TFile>(TFile::Open("correction_out.root", "recreate"));
+  if (!(out_file_ && out_file_->IsOpen())) {
+    throw std::runtime_error("Unable to open output file for writing");
+  }
   out_file_->cd();
   out_tree_ = new TTree("tree", "tree");
   manager_.SetCalibrationInputFileName(in_calibration_file_name_);
@@ -287,6 +290,7 @@ void QnCorrectionTask::Finish() {
   //  global_config_->Write("Config");
 
   out_file_->Close();
+  out_file_.reset();
 }
 /**
 * Set correction steps in a CorrectionManager for a given Q-vector
