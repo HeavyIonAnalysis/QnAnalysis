@@ -9,6 +9,8 @@ include(ExternalProject)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 message(STATUS "Using C++${CMAKE_CXX_STANDARD}")
 
+option(yaml-cpp_BUNDLED "Build bundled yaml-cpp" OFF)
+
 # by default build optimized code with debug symbols
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE RELEASE)
@@ -25,8 +27,9 @@ set(EXTERNAL_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/external)
 
 set(QnAnalysis_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+include(cmake_modules/YamlCpp.cmake)
 include(cmake_modules/Root.cmake)
-include(cmake_modules/Cuts.cmake)
+#include(cmake_modules/Cuts.cmake)
 include(cmake_modules/QnTools.cmake)
 include(cmake_modules/AnalysisTree.cmake)
 include(cmake_modules/AnalysisTreeTaskSkeleton.cmake)

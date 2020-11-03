@@ -69,7 +69,10 @@ void QnCorrectionTask::InitVariables() {
 }
 
 void QnCorrectionTask::Init(std::map<std::string, void*>&) {
-  out_file_ = static_cast<std::shared_ptr<TFile>>(TFile::Open("correction_out.root", "recreate"));
+  out_file_ = std::shared_ptr<TFile>(TFile::Open("correction_out.root", "recreate"));
+  if (!(out_file_ && out_file_->IsOpen())) {
+    throw std::runtime_error("Unable to open output file for writing");
+  }
   out_file_->cd();
   out_tree_ = new TTree("tree", "tree");
   manager_.SetCalibrationInputFileName(in_calibration_file_name_);
@@ -194,7 +197,7 @@ void QnCorrectionTask::FillTracksQvectors() {
 }
 
 void QnCorrectionTask::PreInit() {
-  auto at_vm_task  = GetTaskPtr<ATVarManagerTask>();
+  auto at_vm_task  = ATVarManagerTask::Instance();
   if (!at_vm_task->IsEnabled()) {
     throw std::runtime_error("Keep ATVarManagerTask enabled");
   }
@@ -215,12 +218,14 @@ void QnCorrectionTask::PreInit() {
     auto& qvec = this->GetConfig()->PsiQvector();
     qvec.SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry({qvec.GetPhiVar()})).first);
   }
-  auto event_var_id = at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(this->GetConfig()->GetEventVars())).first;
+  if (!this->GetConfig()->EventVars().empty()) {
+    at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(this->GetConfig()->GetEventVars()));
+  }
 
   at_vm_task->FillBranchNames();
 //  at_vm_task->SetCutsMap(cuts_map_); FIXME
 
-  var_manager_ = at_vm_task.operator->();
+  var_manager_ = at_vm_task;
 }
 
 
@@ -285,6 +290,7 @@ void QnCorrectionTask::Finish() {
   //  global_config_->Write("Config");
 
   out_file_->Close();
+  out_file_.reset();
 }
 /**
 * Set correction steps in a CorrectionManager for a given Q-vector

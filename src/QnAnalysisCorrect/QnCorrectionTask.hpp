@@ -54,7 +54,7 @@ class QnCorrectionTask : public UserFillTask {
   std::string yaml_config_file_;
   std::string yaml_config_node_;
 
-  std::shared_ptr<TFile> out_file_{nullptr};
+  std::shared_ptr<TFile> out_file_;
   std::string in_calibration_file_name_{"correction_in.root"};
 
   TTree* out_tree_{nullptr};
