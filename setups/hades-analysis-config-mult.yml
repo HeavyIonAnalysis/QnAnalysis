@@ -1,0 +1,118 @@
+_layouts:
+
+_axes:
+  - &axis_pT
+    name: mdc_vtx_tracks/pT
+    nb: 20
+    lo: 0.0
+    hi: 2.0
+  - &axis_rapidity
+    name: mdc_vtx_tracks/rapidity
+    nb: 15
+    lo: -0.01
+    hi: 1.49
+_cuts:
+  - &protons_cuts
+    mdc_vtx_tracks/pid: { equals: 2212 }
+    mdc_vtx_tracks/dca_xy: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks/dca_z: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks/chi2: {range: [0.0, 100.0]}
+  - &mf_cuts
+    mdc_vtx_tracks/pid: { equals: 2212 }
+    mdc_vtx_tracks/pT: {range: [0.0, 2.0]}
+    mdc_vtx_tracks/rapidity: {range: [1.09, 1.29]}
+    mdc_vtx_tracks/dca_xy: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks/dca_z: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks/chi2: {range: [0.0, 100.0]}
+  - &mb_cuts
+    mdc_vtx_tracks/pid: { equals: 2212 }
+    mdc_vtx_tracks/pT: {range: [0.0, 2.0]}
+    mdc_vtx_tracks/rapidity: {range: [0.19, 0.39]}
+    mdc_vtx_tracks/dca_xy: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks/dca_z: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks/chi2: {range: [0.0, 100.0]}
+  - &w1_cuts
+    forward_wall_hits/ring: { range: [1.0, 5.0] }
+    forward_wall_hits/beta: { range: [0.84, 1.0] }
+    forward_wall_hits/signal: { range: [80.0, 999.0] }
+  - &w2_cuts
+    forward_wall_hits/ring: { range: [6.0, 7.0] }
+    forward_wall_hits/beta: { range: [0.85, 1.0] }
+    forward_wall_hits/signal: { range: [85.0, 999.0] }
+  - &w3_cuts
+    forward_wall_hits/ring: { range: [8.0, 10.0] }
+    forward_wall_hits/beta: { range: [0.80, 1.0] }
+    forward_wall_hits/signal: { range: [88.0, 999.0] }
+
+hades_analysis:
+  event-variables:
+    - event_header/selected_tof_rpc_hits
+  axes:
+    - { name: event_header/selected_tof_rpc_hits, bin-edges: [0, 10, 17, 23, 29, 36, 45, 55, 68, 82, 99, 117, 136, 157, 180, 312, 499] }
+  q-vectors:
+    - name: u
+      type: track
+      phi:  mdc_vtx_tracks/phi
+      weight: Ones
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *axis_pT
+        - *axis_rapidity
+      cuts:
+        *protons_cuts
+      qa:
+        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_pT
+        - *axis_rapidity
+        - [*axis_rapidity, *axis_pT]
+    - name: Mf
+      type: track
+      phi:  mdc_vtx_tracks/phi
+      weight: Ones
+      corrections:
+        - recentering
+        - twist-and-rescale
+      cuts:
+        *mf_cuts
+      qa:
+        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
+    - name: Mb
+      type: track
+      phi:  mdc_vtx_tracks/phi
+      weight: Ones
+      corrections:
+        - recentering
+        - twist-and-rescale
+      cuts:
+        *mb_cuts
+      qa:
+        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
+    - name: W1
+      type: track
+      phi:  forward_wall_hits/phi
+      weight: forward_wall_hits/signal
+      corrections:
+        - recentering
+        - twist-and-rescale
+      cuts:
+        *w1_cuts
+    - name: W2
+      type: track
+      phi:  forward_wall_hits/phi
+      weight: forward_wall_hits/signal
+      corrections:
+        - recentering
+        - twist-and-rescale
+      cuts:
+        *w2_cuts
+    - name: W3
+      type: track
+      phi:  forward_wall_hits/phi
+      weight: forward_wall_hits/signal
+      corrections:
+        - recentering
+        - twist-and-rescale
+      cuts:
+        *w3_cuts
