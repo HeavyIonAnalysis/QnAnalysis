@@ -232,8 +232,13 @@ struct convert<Qn::Analysis::Base::QVectorConfig> {
       config.corrections =
           node["corrections"].as<std::vector<QVectorCorrectionConfig>>(EmptyVector<QVectorCorrectionConfig>());
 
-      if (node["qa"] && node["qa"].IsSequence()) {
-        config.qa = node["qa"].as<std::vector<HistogramConfig>>();
+      for (auto &node_element : node) {
+        const std::regex re_qa("^qa(-.+)?$");
+        auto node_name = node_element.first.Scalar();
+        if (!std::regex_match(node_name, re_qa)) continue;
+
+        auto qa = node_element.second.as<std::vector<HistogramConfig>>();
+        std::move(qa.begin(), qa.end(), std::back_inserter(config.qa));
       }
 
       if (config.type == EQVectorType::TRACK) {
@@ -241,7 +246,7 @@ struct convert<Qn::Analysis::Base::QVectorConfig> {
         config.axes = node["axes"].as<std::vector<AxisConfig>>(EmptyVector<AxisConfig>());
         /* cuts */
         for (auto &node_element : node) {
-          const std::regex re_cuts("cuts.*");
+          const std::regex re_cuts("^cuts(-.+)?$");
           auto node_name = node_element.first.Scalar();
 
           if (!std::regex_match(node_name, re_cuts)) continue;
