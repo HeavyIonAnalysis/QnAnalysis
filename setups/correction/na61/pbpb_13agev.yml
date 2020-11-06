@@ -22,17 +22,26 @@ _axes:
     hi:  4.
   - &ax-phi { name: RecParticles/phi, nb: 400, lo: -4., hi: 4.}
 
+_cuts:
+  - &rec-particle-cuts-quality-standard
+    RecParticles/dcax : { range: [-2., 2.] }
+    RecParticles/dcay : { range: [-1., 1.] }
+
 
 _qa:
   - &psd-qa
     - { name: PsdModules/phi, nb: 100, lo: -4., hi: 4. }
     - { name: PsdModules/signal, nb: 100, lo: 0., hi: 100. }
-  - &rec-particle-qa
+  - &rec-particle-qa-kinematics
     - *ax-phi
-    - *ax-pt
-    - *ax-rapidity
-    - [*ax-rapidity, *ax-pt]
-    - [*ax-phi, *ax-rapidity]
+    - &ax-pt-qa { name: RecParticles/pT, nb: 1000, lo: 0., hi: 2. }
+    - &ax-rapidity-qa { name: RecParticles/y_cm, nb: 1000, lo: -4., hi: 4. }
+    - [*ax-rapidity-qa, *ax-pt-qa]
+    - [*ax-phi, *ax-rapidity-qa]
+  - &rec-particle-qa-quality
+    - &ax-dcax-qa { name: RecParticles/dcax, nb: 200, lo: -10, hi: 10 }
+    - &ax-dcay-qa { name: RecParticles/dcay, nb: 200, lo: -10, hi: 10 }
+    - [*ax-dcax-qa, *ax-dcay-qa]
 
 
 
@@ -50,9 +59,11 @@ pbpb_13agev_16_025:
         - twist-and-rescale
       axes:
         - *ax-pt
+      cuts-quality: *rec-particle-cuts-quality-standard
       cuts:
         RecParticles/pid : { equals: 2212 }
-      qa: *rec-particle-qa
+      qa-quality: *rec-particle-qa-quality
+      qa-kinematics: *rec-particle-qa-kinematics
     - name: psd1
       type: channel
       phi: PsdModules/phi
