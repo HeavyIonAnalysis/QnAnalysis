@@ -12,6 +12,11 @@ ClassImp(Qn::Analysis::Base::QVectorConfig)
     for (const auto& axis : axes_) {
       vars.emplace_back(axis.GetVariable());
     }
+    for (const auto & histogram : qa_histograms_) {
+      for (const auto & axis : histogram.axes) {
+        vars.emplace_back(axis.GetVariable());
+      }
+    }
     // remove Ones and Filled
     auto new_end = std::remove_if(vars.begin(), vars.end(),
                                   [](const AnalysisTree::Variable& var) {
