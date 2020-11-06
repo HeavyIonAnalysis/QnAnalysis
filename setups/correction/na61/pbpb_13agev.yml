@@ -5,21 +5,54 @@ _layouts:
     [ 16,17,18,19,20,21,22,23,24,25,26,27 ]
   - &layout-na61-psd3
     [ 28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43 ]
-_qa:
-  - &psd-qa
-    - { name: PsdModules/phi, nb: 100, lo: -4., hi: 4. }
-    - { name: PsdModules/signal, nb: 100, lo: 0., hi: 100. }
 
 _axes:
   - &centrality
     name: Centrality/Centrality_Epsd
     bin-edges: [ 0., 5., 10., 15., 25., 35., 45., 60., 80., 100. ]
+  - &ax-pt
+    name: RecParticles/pT
+    nb: 80
+    lo: 0.
+    hi: 2.
+  - &ax-rapidity
+    name: RecParticles/y_cm
+    nb: 80
+    lo: -4.
+    hi:  4.
+  - &ax-phi { name: RecParticles/phi, nb: 400, lo: -4., hi: 4.}
+
+
+_qa:
+  - &psd-qa
+    - { name: PsdModules/phi, nb: 100, lo: -4., hi: 4. }
+    - { name: PsdModules/signal, nb: 100, lo: 0., hi: 100. }
+  - &rec-particle-qa
+    - *ax-phi
+    - *ax-pt
+    - *ax-rapidity
+    - [*ax-rapidity, *ax-pt]
+    - [*ax-phi, *ax-rapidity]
+
+
 
 
 pbpb_13agev_16_025:
   event-variables: [ Centrality/Centrality_Epsd ]
   axes: [ *centrality ]
   q-vectors:
+    - name: protons_pt
+      type: track
+      phi: RecParticles/phi
+      weight: Ones
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *ax-pt
+      cuts:
+        RecParticles/pid : { equals: 2212 }
+      qa: *rec-particle-qa
     - name: psd1
       type: channel
       phi: PsdModules/phi
