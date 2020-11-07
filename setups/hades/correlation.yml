@@ -43,12 +43,8 @@ _tasks:
         components: *sp_components
         correction-steps: [ rescaled ]
         weight: ones
-    # temporarily ignored
-    #    actions: [xx,xy,yx,yy]
     n-samples: 100
     weights-type: observable
-    # temporarily ignored
-    #    weights-function: xx
     folder: "/uQ/SP"
     axes: [ *centrality ]
   - args:
@@ -62,48 +58,34 @@ _tasks:
         components: *ep_components # <un.x1*Qn.x1/|Qn|>
         correction-steps: [ rescaled ]
         weight: ones
-    # temporarily ignored
-    #    actions: [xx,xy,yx,yy]
     n-samples: 100
     weights-type: observable
-    # temporarily ignored
-    #    weights-function: xx
     folder: "/uQ/EP"
     axes: [ *centrality ]
   # Reference x Reference
   - args:
       - query: { tags: { any-in: [ qn_vector ] } }
         query-list: *detectors
-        # what are the Q-vector components participating in the correlation
         components: *sp_components
-        # what corrections steps are participating in the correlation
         correction-steps: [ rescaled ]
       - query: { tags: { any-in: [ qn_vector ] } }
         query-list: *detectors
         components: *sp_components
         correction-steps: [ rescaled ]
-    # temporarily ignored
-    #    actions: [xx,xy,yx,yy]
     n-samples: 100
     weights-type: reference
-    #    weights-function: xx
     folder: "/QQ/SP"
     axes: [ *centrality ]
   - args:
       - query: { tags: { any-in: [ qn_vector ] } }
         query-list: *detectors
-        # what are the Q-vector components participating in the correlation
         components: *ep_components
-        # what corrections steps are participating in the correlation
         correction-steps: [ rescaled ]
       - query: { tags: { any-in: [ qn_vector ] } }
         query-list: *detectors
         components: *ep_components
         correction-steps: [ rescaled ]
-    # temporarily ignored
-    #    actions: [xx,xy,yx,yy]
     n-samples: 100
     weights-type: reference
-    #    weights-function: xx
     folder: "/QQ/EP"
     axes: [ *centrality ]
