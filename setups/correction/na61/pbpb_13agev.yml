@@ -92,6 +92,15 @@ pbpb_13agev_16_025:
       type: channel
       phi: PsdModules/phi
       weight: PsdModules/signal
+#      norm: mag
+      corrections: [ recentering ]
+      qa: *psd-qa
+      channel-ids: *layout-na61-psd1
+    - name: psd1_1
+      type: channel
+      phi: PsdModules/phi
+      weight: PsdModules/signal
+      norm: mag
       corrections: [ recentering ]
       qa: *psd-qa
       channel-ids: *layout-na61-psd1
@@ -99,6 +108,7 @@ pbpb_13agev_16_025:
       type: channel
       phi: PsdModules/phi
       weight: PsdModules/signal
+#      norm: mag
       corrections: [ recentering ]
       qa: *psd-qa
       channel-ids: *layout-na61-psd2
@@ -106,6 +116,7 @@ pbpb_13agev_16_025:
       type: channel
       phi: PsdModules/phi
       weight: PsdModules/signal
+      norm: mag
       corrections: [ recentering ]
       qa: *psd-qa
       channel-ids: *layout-na61-psd3
