@@ -92,7 +92,7 @@ void QnCorrectionTask::Init(std::map<std::string, void*>&) {
       auto track_qv = std::dynamic_pointer_cast<Base::QVectorTrack>(qvec_ptr);
       const string& name = track_qv->GetName();
       auto qn_weight = track_qv->GetWeightVar().GetName() == "_Ones" ? "Ones" : track_qv->GetWeightVar().GetName();
-      manager_.AddDetector(name, DetectorType::TRACK, track_qv->GetPhiVar().GetName(), qn_weight, track_qv->GetAxes(), {1, 2});
+      manager_.AddDetector(name, DetectorType::TRACK, track_qv->GetPhiVar().GetName(), qn_weight, track_qv->GetAxes(), {1, 2}, track_qv->GetNormalization());
       Info(__func__, "Add track detector '%s'", name.c_str());
       SetCorrectionSteps(track_qv.operator*());
       for (const auto& cut : track_qv->GetCuts()) {//NOTE cannot apply cuts on more than 1 variable
@@ -103,13 +103,13 @@ void QnCorrectionTask::Init(std::map<std::string, void*>&) {
       const string name = channel_qv->GetName();
       auto qn_phi = name + "_" + channel_qv->GetPhiVar().GetName();
       auto qn_weight = channel_qv->GetWeightVar().GetName() == "_Ones" ? "Ones" : name + "_" + channel_qv->GetWeightVar().GetName();
-      manager_.AddDetector(name, DetectorType::CHANNEL, qn_phi, qn_weight, {/* no axes to be passed */}, {1});
+      manager_.AddDetector(name, DetectorType::CHANNEL, qn_phi, qn_weight, {/* no axes to be passed */}, {1}, channel_qv->GetNormalization());
       Info(__func__, "Add channel detector '%s'", name.c_str());
       SetCorrectionSteps(channel_qv.operator*());
     } else if (qvec_ptr->GetType() == Base::EQVectorType::EVENT_PSI) {
       const string name = qvec_ptr->GetName();
       auto qn_weight = qvec_ptr->GetWeightVar().GetName() == "_Ones" ? "Ones" : qvec_ptr->GetWeightVar().GetName();
-      manager_.AddDetector(qvec_ptr->GetName(), DetectorType::CHANNEL, qvec_ptr->GetPhiVar().GetName(), qn_weight, {}, {1, 2});
+      manager_.AddDetector(qvec_ptr->GetName(), DetectorType::CHANNEL, qvec_ptr->GetPhiVar().GetName(), qn_weight, {}, {1, 2}, qvec_ptr->GetNormalization());
       Info(__func__, "Add event PSI '%s'", name.c_str());
     }
   }
