@@ -228,6 +228,21 @@ struct convert<Qn::Analysis::Base::QVectorConfig> {
 
       config.phi = node["phi"].as<VariableConfig>();
       config.weight = node["weight"].as<VariableConfig>(VariableConfig::Ones());
+
+      auto norm_str = node["norm"].as<std::string>("none");
+      if (norm_str == "none" || norm_str == "NONE") {
+        config.normalization = Qn::QVector::Normalization::NONE;
+      } else if (norm_str == "m" || norm_str == "M") {
+        config.normalization = Qn::QVector::Normalization::M;
+      } else if (norm_str == "mag" || norm_str == "MAG" || norm_str == "magnitude" || norm_str == "MAGNITUDE") {
+        config.normalization = Qn::QVector::Normalization::MAGNITUDE;
+      } else if (norm_str == "sqrt_m" || norm_str == "SQRT_M") {
+        config.normalization = Qn::QVector::Normalization::SQRT_M;
+      } else {
+        /* todo notify */
+        return false;
+      }
+
       config.harmonics = node["harmonics"].as<std::string>("00000111");
       config.corrections =
           node["corrections"].as<std::vector<QVectorCorrectionConfig>>(EmptyVector<QVectorCorrectionConfig>());

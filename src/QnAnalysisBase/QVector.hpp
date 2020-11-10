@@ -96,6 +96,7 @@ struct QVectorConfig : public TObject {
 
   VariableConfig phi;
   VariableConfig weight;
+  Qn::QVector::Normalization normalization{Qn::QVector::Normalization::NONE};
 
   std::vector<HistogramConfig> qa;
 
@@ -222,13 +223,21 @@ class QVector {
     return "PLAIN";
   }
 
- protected:
+  Qn::QVector::Normalization GetNormalization() const {
+    return normalization_;
+  }
+  void SetNormalization(Qn::QVector::Normalization normalization) {
+    normalization_ = normalization;
+  }
+
+protected:
   std::string name_;///<  Name of the Q-vector
   EQVectorType type_;
   AnalysisTree::Variable phi_{};
   AnalysisTree::Variable weight_{};
   std::array<bool, nSteps> corrertions_{false, false, false};
   std::list<CorrectionPtr> corrections_;
+  Qn::QVector::Normalization normalization_{Qn::QVector::Normalization::NONE};
   Qn::Stat::WeightType weights_type_ = Qn::Stat::WeightType::OBSERVABLE;
 
   std::bitset<8> harmonics_;
