@@ -1,0 +1,109 @@
+_layouts:
+  - &layout-na61-psd1
+    [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 ]
+  - &layout-na61-psd2
+    [ 16,17,18,19,20,21,22,23,24,25,26,27 ]
+  - &layout-na61-psd3
+    [ 28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43 ]
+
+_axes:
+  - &centrality
+    name: Centrality/Centrality_Epsd
+    bin-edges: [ 0., 5., 10., 15., 25., 35., 45., 60., 80., 100. ]
+  - &ax-pt {name: RecParticles/pT, nb: 10, lo: 0., hi: 2.}
+  - &ax-y-cm-corr-1 {name: RecParticles/y_cm, nb: 1, lo: 0., hi: 1.2}
+  - &ax-y-cm-corr-2 {name: RecParticles/y_cm, nb: 3, lo: 0., hi: 1.2}
+
+_cuts:
+  - &rec-particle-cuts-quality-standard
+    RecParticles/nhits_total : { range: [30, 1000] }
+    RecParticles/nhits_vtpc : { range: [10, 1000] }
+    RecParticles/nhits_pot_total : { range: [1, 1000] }
+    RecParticles/nhits_ratio : { range: [0.55, 1.1] }
+    RecParticles/dcax : { range: [-2., 2.] }
+    RecParticles/dcay : { range: [-1., 1.] }
+
+
+_qa:
+  - &psd-qa
+    - { name: PsdModules/phi, nb: 100, lo: -4., hi: 4. }
+    - { name: PsdModules/signal, nb: 100, lo: 0., hi: 100. }
+  - &rec-particle-qa-kinematics
+    - &ax-phi-qa { name: RecParticles/phi, nb: 400, lo: -4., hi: 4.}
+    - &ax-pt-qa { name: RecParticles/pT, nb: 1000, lo: 0., hi: 2. }
+    - &ax-pz-qa { name: RecParticles/pz, nb: 1000, lo: 0., hi: 20.}
+    - &ax-rapidity-qa { name: RecParticles/y_cm, nb: 1000, lo: -4., hi: 4. }
+    - &ax-eta-qa { name: RecParticles/eta, nb: 1000, lo: -2., hi: 6. }
+    - [*ax-rapidity-qa, *ax-pt-qa]
+    - [*ax-eta-qa, *ax-pt-qa]
+    - [*ax-phi-qa, *ax-rapidity-qa]
+  - &rec-particle-qa-quality
+    - &ax-dcax-qa { name: RecParticles/dcax, nb: 200, lo: -10, hi: 10 }
+    - &ax-dcay-qa { name: RecParticles/dcay, nb: 200, lo: -10, hi: 10 }
+    - &ax-nhits-total-qa { name: RecParticles/nhits_total, nb: 300, lo: 0, hi: 300 }
+    - &ax-nhits-pot-total-qa { name: RecParticles/nhits_pot_total, nb: 300, lo: 0, hi: 300 }
+    - [*ax-nhits-pot-total-qa, *ax-nhits-total-qa]
+    - [*ax-dcax-qa, *ax-dcay-qa]
+
+
+
+
+pbpb_13agev_16_025:
+  event-variables: [ Centrality/Centrality_Epsd ]
+  axes: [ *centrality ]
+  q-vectors:
+    - name: protons_pt
+      type: track
+      phi: RecParticles/phi
+      weight: Ones
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *ax-pt
+        - *ax-y-cm-corr-1
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts:
+        RecParticles/pid : { equals: 2212 }
+      qa-quality: *rec-particle-qa-quality
+      qa-kinematics: *rec-particle-qa-kinematics
+    - name: pion_neg_pt
+      type: track
+      phi: RecParticles/phi
+      weight: Ones
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *ax-pt
+        - *ax-y-cm-corr-1
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts:
+        RecParticles/pid : { equals: -211 }
+      qa-quality: *rec-particle-qa-quality
+      qa-kinematics: *rec-particle-qa-kinematics
+# REFERENCE DETECTORS
+    - name: psd1
+      type: channel
+      phi: PsdModules/phi
+      weight: PsdModules/signal
+      norm: mag
+      corrections: [ recentering ]
+      qa: *psd-qa
+      channel-ids: *layout-na61-psd1
+    - name: psd2
+      type: channel
+      phi: PsdModules/phi
+      weight: PsdModules/signal
+      norm: mag
+      corrections: [ recentering ]
+      qa: *psd-qa
+      channel-ids: *layout-na61-psd2
+    - name: psd3
+      type: channel
+      phi: PsdModules/phi
+      weight: PsdModules/signal
+      norm: mag
+      corrections: [ recentering ]
+      qa: *psd-qa
+      channel-ids: *layout-na61-psd3
