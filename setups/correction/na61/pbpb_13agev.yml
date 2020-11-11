@@ -95,7 +95,7 @@ pbpb_13agev_16_025:
       type: channel
       phi: PsdModules/phi
       weight: PsdModules/signal
-#      norm: mag
+      norm: mag
       corrections: [ recentering ]
       qa: *psd-qa
       channel-ids: *layout-na61-psd2
