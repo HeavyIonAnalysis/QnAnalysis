@@ -11,10 +11,22 @@ _detectors: &detectors
   - name: W3
     tags: [ qn_vector ]
     correction-step: rescaled
-  - name: Mf
+  - name: Mf_protons
     tags: [ qn_vector ]
     correction-step: rescaled
-  - name: Mb
+  - name: Mb_protons
+    tags: [ qn_vector ]
+    correction-step: rescaled
+  - name: Mf_pi_plus
+    tags: [ qn_vector ]
+    correction-step: rescaled
+  - name: Mb_pi_plus
+    tags: [ qn_vector ]
+    correction-step: rescaled
+  - name: Mf_pi_minus
+    tags: [ qn_vector ]
+    correction-step: rescaled
+  - name: Mb_pi_minus
     tags: [ qn_vector ]
     correction-step: rescaled
 

@@ -3,9 +3,7 @@ _layouts:
 _axes:
   - &axis_pT
     name: mdc_vtx_tracks/pT
-    nb: 20
-    lo: 0.0
-    hi: 2.0
+    bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
   - &axis_rapidity
     name: mdc_vtx_tracks/rapidity
     nb: 15
@@ -14,23 +12,20 @@ _axes:
 _cuts:
   - &protons_cuts
     mdc_vtx_tracks/pid: { equals: 2212 }
+  - &pion_plus_cuts
+    mdc_vtx_tracks/pid: { equals: 211 }
+  - &pion_minus_cuts
+    mdc_vtx_tracks/pid: { equals: -211 }
+  - &good_particle_cuts
     mdc_vtx_tracks/dca_xy: {range: [-10.0, 10.0]}
     mdc_vtx_tracks/dca_z: {range: [-10.0, 10.0]}
     mdc_vtx_tracks/chi2: {range: [0.0, 100.0]}
   - &mf_cuts
-    mdc_vtx_tracks/pid: { equals: 2212 }
     mdc_vtx_tracks/pT: {range: [0.0, 2.0]}
     mdc_vtx_tracks/rapidity: {range: [1.09, 1.29]}
-    mdc_vtx_tracks/dca_xy: {range: [-10.0, 10.0]}
-    mdc_vtx_tracks/dca_z: {range: [-10.0, 10.0]}
-    mdc_vtx_tracks/chi2: {range: [0.0, 100.0]}
   - &mb_cuts
-    mdc_vtx_tracks/pid: { equals: 2212 }
     mdc_vtx_tracks/pT: {range: [0.0, 2.0]}
     mdc_vtx_tracks/rapidity: {range: [0.19, 0.39]}
-    mdc_vtx_tracks/dca_xy: {range: [-10.0, 10.0]}
-    mdc_vtx_tracks/dca_z: {range: [-10.0, 10.0]}
-    mdc_vtx_tracks/chi2: {range: [0.0, 100.0]}
   - &w1_cuts
     forward_wall_hits/ring: { range: [1.0, 5.0] }
     forward_wall_hits/beta: { range: [0.84, 1.0] }
@@ -60,33 +55,103 @@ hades_analysis:
       axes:
         - *axis_pT
         - *axis_rapidity
-      cuts:
+      cuts-pid:
         *protons_cuts
+      cuts-quality:
+        *good_particle_cuts
       qa:
         - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_pT
         - *axis_rapidity
         - [*axis_rapidity, *axis_pT]
-    - name: Mf
+    - name: Mf_protons
       type: track
       phi:  mdc_vtx_tracks/phi
       weight: Ones
       corrections:
         - recentering
         - twist-and-rescale
-      cuts:
+      cuts-subevent:
         *mf_cuts
+      cuts-quality:
+        *good_particle_cuts
+      cuts-pid:
+        *protons_cuts
       qa:
         - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
-    - name: Mb
+    - name: Mb_protons
       type: track
       phi:  mdc_vtx_tracks/phi
       weight: Ones
       corrections:
         - recentering
         - twist-and-rescale
-      cuts:
+      cuts-subevent:
         *mb_cuts
+      cuts-quality:
+        *good_particle_cuts
+      cuts-pid:
+        *protons_cuts
+      qa:
+        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
+    - name: Mf_pi_plus
+      type: track
+      phi:  mdc_vtx_tracks/phi
+      weight: Ones
+      corrections:
+        - recentering
+        - twist-and-rescale
+      cuts-subevent:
+        *mf_cuts
+      cuts-quality:
+        *good_particle_cuts
+      cuts-pid:
+        *pion_plus_cuts
+      qa:
+        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
+    - name: Mb_pi_plus
+      type: track
+      phi:  mdc_vtx_tracks/phi
+      weight: Ones
+      corrections:
+        - recentering
+        - twist-and-rescale
+      cuts-subevent:
+        *mb_cuts
+      cuts-quality:
+        *good_particle_cuts
+      cuts-pid:
+        *pion_plus_cuts
+      qa:
+        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
+    - name: Mf_pi_minus
+      type: track
+      phi:  mdc_vtx_tracks/phi
+      weight: Ones
+      corrections:
+        - recentering
+        - twist-and-rescale
+      cuts-subevent:
+        *mf_cuts
+      cuts-quality:
+        *good_particle_cuts
+      cuts-pid:
+        *pion_minus_cuts
+      qa:
+        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
+    - name: Mb_pi_minus
+      type: track
+      phi:  mdc_vtx_tracks/phi
+      weight: Ones
+      corrections:
+        - recentering
+        - twist-and-rescale
+      cuts-subevent:
+        *mb_cuts
+      cuts-quality:
+        *good_particle_cuts
+      cuts-pid:
+        *pion_minus_cuts
       qa:
         - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
     - name: W1

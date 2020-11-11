@@ -7,7 +7,7 @@
 #include "V1Observables.hpp"
 
 int main(){
-  FileManager::OpenFile( "~/Correlations/auau_mult.root" );
+  FileManager::OpenFile( "~/Correlations/new_qn_analysis_auau_pt2.root" );
   MethodOf3SE test_x = MethodOf3SE({"u_RESCALED", "x1"},
                                    {{"W1_RESCALED","x1"}},
                                  {
