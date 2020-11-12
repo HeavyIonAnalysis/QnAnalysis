@@ -1,0 +1,20 @@
+_detectors: &detectors
+  - name: detectorI
+    components: [cos1,sin1]
+    tags: [group-A]
+    correction-step: rescaled
+  - name: detectorII
+    components: [x1,y1]
+    tags: [group-B]
+    correction-step: recentered
+  - name: detectorIII
+    components: [x1,y1]
+    tags: [group-B]
+    correction-step: plain
+
+_observables:
+  - observable-for-v1:
+    u-vector: {name: u, components: [x1, y1], correction-step: rescaled}
+    EP-vectors: { tags: { any-in: [ group-A ] } }
+    Q-vectors: { tags: { any-in: [ group-B ] } }
+    folder: "A"
