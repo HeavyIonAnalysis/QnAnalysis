@@ -3,14 +3,12 @@ _layouts:
 _axes:
   - &axis_pT
     name: mdc_vtx_tracks/pT
-    nb: 20
-    lo: 0.0
-    hi: 2.0
+    bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
   - &axis_rapidity
     name: mdc_vtx_tracks/rapidity
     nb: 15
-    lo: -0.01
-    hi: 1.49
+    lo: 0.07
+    hi: 1.57
 _cuts:
   - &protons_cuts
     mdc_vtx_tracks/pid: { equals: 2212 }
@@ -24,10 +22,10 @@ _cuts:
     mdc_vtx_tracks/chi2: {range: [0.0, 100.0]}
   - &mf_cuts
     mdc_vtx_tracks/pT: {range: [0.0, 2.0]}
-    mdc_vtx_tracks/rapidity: {range: [1.09, 1.29]}
+    mdc_vtx_tracks/rapidity: {range: [1.17, 1.37]}
   - &mb_cuts
     mdc_vtx_tracks/pT: {range: [0.0, 2.0]}
-    mdc_vtx_tracks/rapidity: {range: [0.19, 0.39]}
+    mdc_vtx_tracks/rapidity: {range: [0.27, 0.47]}
   - &w1_cuts
     forward_wall_hits/ring: { range: [1.0, 5.0] }
     forward_wall_hits/time: { range: [22.681788, 27.002128] }

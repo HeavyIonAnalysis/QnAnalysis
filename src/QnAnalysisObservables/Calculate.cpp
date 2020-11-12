@@ -7,25 +7,39 @@
 #include "V1Observables.hpp"
 
 int main(){
-  FileManager::OpenFile( "~/Correlations/new_qn_analysis_auau_pt2.root" );
-  MethodOf3SE test_x = MethodOf3SE({"u_RESCALED", "x1"},
-                                   {{"W1_RESCALED","x1"}},
-                                 {
-                      {"W2_RESCALED"}, {"W3_RESCALED"},
-                      {"Mf_RESCALED"}, {"Mb_RESCALED"}
-//3
-                                 } );
+  FileManager::OpenFile( "~/Correlations/auau_2020_11_11.root" );
+
   V1Observables obs_sp( V1Observables::METHODS::MethodOf3SE );
   obs_sp.SetUvectors("u_RESCALED", {"x1", "y1"});
   obs_sp.SetEPvectors({"W1_RESCALED", "W2_RESCALED", "W3_RESCALED"}, {"x1", "y1"});
-  obs_sp.SetResolutionVectors({"W1_RESCALED", "W2_RESCALED", "W3_RESCALED", "Mf_RESCALED", "Mb_RESCALED"});
+  obs_sp.SetResolutionVectors({
+      "W1_RESCALED",
+      "W2_RESCALED",
+      "W3_RESCALED",
+      "Mf_protons_RESCALED",
+      "Mb_protons_RESCALED",
+      "Mf_pi_plus_RESCALED",
+      "Mb_pi_plus_RESCALED",
+      "Mf_pi_minus_RESCALED",
+      "Mb_pi_minus_RESCALED",
+  });
   obs_sp.SetQqCorrelationsDirectory("/QQ/SP");
   obs_sp.SetUqCorrelationsDirectory("/uQ/SP");
   obs_sp.Calculate();
   V1Observables obs_ep( V1Observables::METHODS::MethodOf3SE );
   obs_ep.SetUvectors("u_RESCALED", {"x1", "y1"});
   obs_ep.SetEPvectors({"W1_RESCALED", "W2_RESCALED", "W3_RESCALED"}, {"cos1", "sin1"});
-  obs_ep.SetResolutionVectors({"W1_RESCALED", "W2_RESCALED", "W3_RESCALED", "Mf_RESCALED", "Mb_RESCALED"});
+  obs_ep.SetResolutionVectors({
+                                  "W1_RESCALED",
+                                  "W2_RESCALED",
+                                  "W3_RESCALED",
+                                  "Mf_protons_RESCALED",
+                                  "Mb_protons_RESCALED",
+                                  "Mf_pi_plus_RESCALED",
+                                  "Mb_pi_plus_RESCALED",
+                                  "Mf_pi_minus_RESCALED",
+                                  "Mb_pi_minus_RESCALED",
+                              });
   obs_ep.SetQqCorrelationsDirectory("/QQ/EP");
   obs_ep.SetUqCorrelationsDirectory("/uQ/EP");
   obs_ep.Calculate();
