@@ -10,7 +10,9 @@ _axes:
   - &centrality
     name: Centrality/Centrality_Epsd
     bin-edges: [ 0., 5., 10., 15., 25., 35., 45., 60., 80., 100. ]
-  - &ax-pt {name: RecParticles/pT, nb: 10, lo: 0., hi: 2.}
+  - &ax-pt {name: RecParticles/pT, bin-edges: [0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0]}
+  - &ax-pt-corr-1 {name: RecParticles/pT, nb: 1, lo: 0., hi: 2.}
+  - &ax-y-cm {name: RecParticles/y_cm, nb: 15, lo: -0.6, hi: 2.4}
   - &ax-y-cm-corr-1 {name: RecParticles/y_cm, nb: 1, lo: 0., hi: 1.2}
   - &ax-y-cm-corr-2 {name: RecParticles/y_cm, nb: 3, lo: 0., hi: 1.2}
 
@@ -37,6 +39,7 @@ _qa:
     - [*ax-rapidity-qa, *ax-pt-qa]
     - [*ax-eta-qa, *ax-pt-qa]
     - [*ax-phi-qa, *ax-rapidity-qa]
+    - [*ax-phi-qa, *ax-pt-qa]
   - &rec-particle-qa-quality
     - &ax-dcax-qa { name: RecParticles/dcax, nb: 200, lo: -10, hi: 10 }
     - &ax-dcay-qa { name: RecParticles/dcay, nb: 200, lo: -10, hi: 10 }
@@ -67,6 +70,21 @@ pbpb_13agev_16_025:
         RecParticles/pid : { equals: 2212 }
       qa-quality: *rec-particle-qa-quality
       qa-kinematics: *rec-particle-qa-kinematics
+    - name: protons_y
+      type: track
+      phi: RecParticles/phi
+      weight: Ones
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *ax-y-cm
+        - *ax-pt-corr-1
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts:
+        RecParticles/pid: { equals: 2212 }
+      qa-quality: *rec-particle-qa-quality
+      qa-kinematics: *rec-particle-qa-kinematics
     - name: pion_neg_pt
       type: track
       phi: RecParticles/phi
@@ -80,6 +98,21 @@ pbpb_13agev_16_025:
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts:
         RecParticles/pid : { equals: -211 }
+      qa-quality: *rec-particle-qa-quality
+      qa-kinematics: *rec-particle-qa-kinematics
+    - name: pion_neg_y
+      type: track
+      phi: RecParticles/phi
+      weight: Ones
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *ax-y-cm
+        - *ax-pt-corr-1
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts:
+        RecParticles/pid: { equals: -211 }
       qa-quality: *rec-particle-qa-quality
       qa-kinematics: *rec-particle-qa-kinematics
 # REFERENCE DETECTORS
