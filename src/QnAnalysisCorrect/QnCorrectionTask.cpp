@@ -117,7 +117,9 @@ void QnCorrectionTask::Init(std::map<std::string, void*>&) {
   // Add Psi_RP
   if (analysis_setup_->IsSimulation()) {
     const auto& qvec = analysis_setup_->GetPsiQvector();
-    manager_.AddDetector(qvec.GetName(), DetectorType::CHANNEL, qvec.GetPhiVar().GetName(), qvec.GetWeightVar().GetName(), {}, {1, 2});
+    const string name = qvec.GetName();
+    auto qn_weight = qvec.GetWeightVar().GetName() == "_Ones" ? "Ones" : name + "_" + qvec.GetWeightVar().GetName();
+    manager_.AddDetector(name, DetectorType::CHANNEL, qvec.GetPhiVar().GetName(), qn_weight, {}, {1, 2});
     SetCorrectionSteps(qvec);
   }
 
