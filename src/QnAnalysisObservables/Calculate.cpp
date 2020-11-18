@@ -6,7 +6,7 @@
 #include "V1Observables.hpp"
 
 int main(){
-  FileManager::OpenFile( "~/Correlations/agag158_2020_11_12.root" );
+  FileManager::OpenFile( "~/Correlations/agag123_2020_11_12.root" );
 
   V1Observables obs_sp( V1Observables::METHODS::MethodOf3SE );
   obs_sp.SetUvectors("u_RESCALED", {"x1", "y1"});
@@ -42,7 +42,7 @@ int main(){
   obs_ep.SetQqCorrelationsDirectory("/QQ/EP");
   obs_ep.SetUqCorrelationsDirectory("/uQ/EP");
   obs_ep.Calculate();
-  auto file_out = TFile::Open("agag-158-2020-11-12.root", "recreate");
+  auto file_out = TFile::Open("agag-123-2020-11-12.root", "recreate");
   file_out->mkdir("SP");
   file_out->cd("/SP");
   obs_sp.Write();

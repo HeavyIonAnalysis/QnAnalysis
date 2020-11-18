@@ -26,6 +26,14 @@ _cuts:
   - &mb_cuts
     mdc_vtx_tracks/pT: {range: [0.0, 2.0]}
     mdc_vtx_tracks/rapidity: {range: [0.27, 0.47]}
+  - &r1_cuts
+    forward_wall_hits/rnd_sub: { equals: 0 }
+    forward_wall_hits/time: { range: [22.681788, 28.352235] }
+    forward_wall_hits/signal: { range: [80.0, 999.0] }
+  - &r2_cuts
+    forward_wall_hits/rnd_sub: { equals: 1 }
+    forward_wall_hits/time: { range: [22.681788, 28.352235] }
+    forward_wall_hits/signal: { range: [80.0, 999.0] }
   - &w1_cuts
     forward_wall_hits/ring: { range: [1.0, 5.0] }
     forward_wall_hits/time: { range: [22.681788, 27.002128] }
@@ -94,66 +102,24 @@ hades_analysis:
         *protons_cuts
       qa:
         - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
-    - name: Mf_pi_plus
+    - name: R1
       type: track
-      phi:  mdc_vtx_tracks/phi
-      weight: Ones
+      phi:  forward_wall_hits/phi
+      weight: forward_wall_hits/signal
       corrections:
         - recentering
         - twist-and-rescale
-      cuts-subevent:
-        *mf_cuts
-      cuts-quality:
-        *good_particle_cuts
-      cuts-pid:
-        *pion_plus_cuts
-      qa:
-        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
-    - name: Mb_pi_plus
+      cuts:
+        *r1_cuts
+    - name: R2
       type: track
-      phi:  mdc_vtx_tracks/phi
-      weight: Ones
+      phi:  forward_wall_hits/phi
+      weight: forward_wall_hits/signal
       corrections:
         - recentering
         - twist-and-rescale
-      cuts-subevent:
-        *mb_cuts
-      cuts-quality:
-        *good_particle_cuts
-      cuts-pid:
-        *pion_plus_cuts
-      qa:
-        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
-    - name: Mf_pi_minus
-      type: track
-      phi:  mdc_vtx_tracks/phi
-      weight: Ones
-      corrections:
-        - recentering
-        - twist-and-rescale
-      cuts-subevent:
-        *mf_cuts
-      cuts-quality:
-        *good_particle_cuts
-      cuts-pid:
-        *pion_minus_cuts
-      qa:
-        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
-    - name: Mb_pi_minus
-      type: track
-      phi:  mdc_vtx_tracks/phi
-      weight: Ones
-      corrections:
-        - recentering
-        - twist-and-rescale
-      cuts-subevent:
-        *mb_cuts
-      cuts-quality:
-        *good_particle_cuts
-      cuts-pid:
-        *pion_minus_cuts
-      qa:
-        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
+      cuts:
+        *r2_cuts
     - name: W1
       type: track
       phi:  forward_wall_hits/phi
