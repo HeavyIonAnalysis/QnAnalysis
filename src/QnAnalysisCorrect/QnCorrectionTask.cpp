@@ -235,7 +235,8 @@ boost::program_options::options_description QnCorrectionTask::GetBoostOptions() 
   desc.add_options()
       ("calibration-input-file", value(&in_calibration_file_name_)->default_value("correction_in.root"), "Input calibration file")
       ("yaml-config-file", value(&yaml_config_file_)->default_value("analysis-config.yml"), "Path to YAML config")
-      ("yaml-config-name", value(&yaml_config_node_)->required(), "Name of YAML node");
+      ("yaml-config-name", value(&yaml_config_node_)->required(), "Name of YAML node")
+      ("qa-file", value(&qa_file_name_)->default_value(""), "Produce dedicated file with QA");
   return desc;
 }
 
@@ -286,11 +287,16 @@ void QnCorrectionTask::Finish() {
   auto* correction_list = manager_.GetCorrectionList();
   auto* correction_qa_list = manager_.GetCorrectionQAList();
   correction_list->Write("CorrectionHistograms", TObject::kSingleKey);
-  correction_qa_list->Write("CorrectionQAHistograms", TObject::kSingleKey);
-  //  global_config_->Write("Config");
-
+  if (qa_file_name_.empty()) {
+    Info(__func__, "Writing QA to output file...");
+    correction_qa_list->Write("CorrectionQAHistograms", TObject::kSingleKey);
+  }
   out_file_->Close();
-  out_file_.reset();
+  if (!qa_file_name_.empty()) {
+    Info(__func__, "Writing QA to '%s'...", qa_file_name_.c_str());
+    TFile qa_file(qa_file_name_.c_str(), "RECREATE");
+    correction_qa_list->Write("CorrectionQAHistograms", TObject::kSingleKey);
+  }
 }
 /**
 * Set correction steps in a CorrectionManager for a given Q-vector
