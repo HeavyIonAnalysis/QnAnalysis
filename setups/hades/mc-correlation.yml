@@ -1,0 +1,55 @@
+_detectors: &detectors
+  - name: pid
+    tags: [ un_vector ]
+    correction-step: rescaled
+  - name: gen_prim
+    tags: [ gen_un_vector ]
+    correction-step: plain
+  - name: psi
+    tags: [ qn_vector ]
+    correction-step: plain
+
+_axes:
+  - &centrality
+    name: event_header_selected_tof_rpc_hits_centrality
+    nb: 12
+    lo: 0
+    hi: 60
+
+_components:
+  - &sp_components
+    [ x1,y1 ]
+  - &ep_components
+    [ cos1,sin1 ]
+
+_tasks:
+  - args:
+      - query: { tags: { any-in: [ un_vector ] } }
+        query-list: *detectors
+        components: *sp_components
+        correction-steps: [ plain ]
+        weight: sumw
+      - query: { tags: { any-in: [ qn_vector ] } }
+        query-list: *detectors
+        components: *sp_components
+        correction-steps: [ plain ]
+        weight: ones
+    n-samples: 100
+    weights-type: observable
+    folder: "/uQ/reco"
+    axes: [ *centrality ]
+  - args:
+      - query: { tags: { any-in: [ gen_un_vector ] } }
+        query-list: *detectors
+        components: *sp_components
+        correction-steps: [ plain ]
+        weight: sumw
+      - query: { tags: { any-in: [ qn_vector ] } }
+        query-list: *detectors
+        components: *sp_components
+        correction-steps: [ plain ]
+        weight: ones
+    n-samples: 100
+    weights-type: observable
+    folder: "/uQ/gen"
+    axes: [ *centrality ]

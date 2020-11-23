@@ -10,17 +10,17 @@ Qn::DataContainer<Qn::StatCalculate> MethodOf3SE::CalculateResolution3SE(std::ve
 }
 
 void MethodOf3SE::CalculateObservables(){
-  auto combinations = ConstructResolution3SECombinations(q_vectors_configs_.front(), resolution_q_vectors_configs_);
+  auto combinations = ConstructResolution3SECombinations(ep_vectors_configs_.front(), resolution_q_vectors_configs_);
   std::vector<Qn::DataContainer<Qn::StatCalculate>> results;
   for( auto res_combination_names : combinations ){
     std::vector<Qn::DataContainer<Qn::StatCalculate>> set_for_res_calc;
     set_for_res_calc.push_back( ReadContainerFromFile( qq_directory_, res_combination_names.at(0) ) );
     set_for_res_calc.push_back( ReadContainerFromFile( qq_directory_,  res_combination_names.at(1) ) );
     set_for_res_calc.push_back( ReadContainerFromFile(  qq_directory_, res_combination_names.at(2) ) );
-    observables_names_.push_back( u_vector_config_.name+"."+q_vectors_configs_.front().name+"("+res_combination_names.at(2).front().name+","+res_combination_names.at(2).back().name+")" );
+    observables_names_.push_back( u_vector_config_.name+"."+ ep_vectors_configs_.front().name+"("+res_combination_names.at(2).front().name+","+res_combination_names.at(2).back().name+")" );
     resolutions_.push_back( CalculateResolution3SE( set_for_res_calc ) );
   }
-  auto uq_correlation_confg = q_vectors_configs_;
+  auto uq_correlation_confg = ep_vectors_configs_;
   uq_correlation_confg.insert(uq_correlation_confg.begin(), u_vector_config_);
   auto uq_correlation = ReadContainerFromFile( uq_directory_, uq_correlation_confg );
   for( const auto& res : resolutions_ ){

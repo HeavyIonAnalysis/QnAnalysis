@@ -28,7 +28,7 @@ public:
   void Write(){
     int i=0;
     std::string component = u_vector_config_.component_name;
-    for( const auto& config : q_vectors_configs_){
+    for( const auto& config : ep_vectors_configs_){
       component+=config.component_name;
     }
     for( auto  resolution: resolutions_){
@@ -47,7 +47,7 @@ protected:
          std::vector<VectorConfig> q_vector_config,
          std::vector<VectorConfig> resolution_q_vectors_configs)
       : u_vector_config_(std::move(u_vector_config)),
-        q_vectors_configs_(std::move(q_vector_config)),
+        ep_vectors_configs_(std::move(q_vector_config)),
         resolution_q_vectors_configs_(std::move(resolution_q_vectors_configs)) {}
 
   static Qn::DataContainer<Qn::StatCalculate> ReadContainerFromFile( const std::string&, const std::vector<VectorConfig>& vectors );
@@ -56,7 +56,7 @@ protected:
   std::string uq_directory_;
   std::string qq_directory_;
   VectorConfig u_vector_config_;
-  std::vector<VectorConfig> q_vectors_configs_;
+  std::vector<VectorConfig> ep_vectors_configs_;
   std::vector<VectorConfig> resolution_q_vectors_configs_;
 
   std::vector<std::string> observables_names_;
