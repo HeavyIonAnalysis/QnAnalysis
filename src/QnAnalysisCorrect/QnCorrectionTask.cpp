@@ -92,7 +92,7 @@ void QnCorrectionTask::Init(std::map<std::string, void*>&) {
       auto track_qv = std::dynamic_pointer_cast<Base::QVectorTrack>(qvec_ptr);
       const string& name = track_qv->GetName();
       auto qn_weight = track_qv->GetWeightVar().GetName() == "_Ones" ? "Ones" : track_qv->GetWeightVar().GetName();
-      manager_.AddDetector(name, DetectorType::TRACK, track_qv->GetPhiVar().GetName(), qn_weight, track_qv->GetAxes(), {1, 2});
+      manager_.AddDetector(name, DetectorType::TRACK, track_qv->GetPhiVar().GetName(), qn_weight, track_qv->GetAxes(), {1, 2}, track_qv->GetNormalization());
       Info(__func__, "Add track detector '%s'", name.c_str());
       SetCorrectionSteps(track_qv.operator*());
       for (const auto& cut : track_qv->GetCuts()) {//NOTE cannot apply cuts on more than 1 variable
@@ -103,13 +103,13 @@ void QnCorrectionTask::Init(std::map<std::string, void*>&) {
       const string name = channel_qv->GetName();
       auto qn_phi = name + "_" + channel_qv->GetPhiVar().GetName();
       auto qn_weight = channel_qv->GetWeightVar().GetName() == "_Ones" ? "Ones" : name + "_" + channel_qv->GetWeightVar().GetName();
-      manager_.AddDetector(name, DetectorType::CHANNEL, qn_phi, qn_weight, {/* no axes to be passed */}, {1});
+      manager_.AddDetector(name, DetectorType::CHANNEL, qn_phi, qn_weight, {/* no axes to be passed */}, {1}, channel_qv->GetNormalization());
       Info(__func__, "Add channel detector '%s'", name.c_str());
       SetCorrectionSteps(channel_qv.operator*());
     } else if (qvec_ptr->GetType() == Base::EQVectorType::EVENT_PSI) {
       const string name = qvec_ptr->GetName();
       auto qn_weight = qvec_ptr->GetWeightVar().GetName() == "_Ones" ? "Ones" : qvec_ptr->GetWeightVar().GetName();
-      manager_.AddDetector(qvec_ptr->GetName(), DetectorType::CHANNEL, qvec_ptr->GetPhiVar().GetName(), qn_weight, {}, {1, 2});
+      manager_.AddDetector(qvec_ptr->GetName(), DetectorType::CHANNEL, qvec_ptr->GetPhiVar().GetName(), qn_weight, {}, {1, 2}, qvec_ptr->GetNormalization());
       Info(__func__, "Add event PSI '%s'", name.c_str());
     }
   }
@@ -117,7 +117,9 @@ void QnCorrectionTask::Init(std::map<std::string, void*>&) {
   // Add Psi_RP
   if (analysis_setup_->IsSimulation()) {
     const auto& qvec = analysis_setup_->GetPsiQvector();
-    manager_.AddDetector(qvec.GetName(), DetectorType::CHANNEL, qvec.GetPhiVar().GetName(), qvec.GetWeightVar().GetName(), {}, {1, 2});
+    const string name = qvec.GetName();
+    auto qn_weight = qvec.GetWeightVar().GetName() == "_Ones" ? "Ones" : name + "_" + qvec.GetWeightVar().GetName();
+    manager_.AddDetector(name, DetectorType::CHANNEL, qvec.GetPhiVar().GetName(), qn_weight, {}, {1, 2});
     SetCorrectionSteps(qvec);
   }
 
@@ -235,7 +237,8 @@ boost::program_options::options_description QnCorrectionTask::GetBoostOptions() 
   desc.add_options()
       ("calibration-input-file", value(&in_calibration_file_name_)->default_value("correction_in.root"), "Input calibration file")
       ("yaml-config-file", value(&yaml_config_file_)->default_value("analysis-config.yml"), "Path to YAML config")
-      ("yaml-config-name", value(&yaml_config_node_)->required(), "Name of YAML node");
+      ("yaml-config-name", value(&yaml_config_node_)->required(), "Name of YAML node")
+      ("qa-file", value(&qa_file_name_)->default_value(""), "Produce dedicated file with QA");
   return desc;
 }
 
@@ -286,11 +289,16 @@ void QnCorrectionTask::Finish() {
   auto* correction_list = manager_.GetCorrectionList();
   auto* correction_qa_list = manager_.GetCorrectionQAList();
   correction_list->Write("CorrectionHistograms", TObject::kSingleKey);
-  correction_qa_list->Write("CorrectionQAHistograms", TObject::kSingleKey);
-  //  global_config_->Write("Config");
-
+  if (qa_file_name_.empty()) {
+    Info(__func__, "Writing QA to output file...");
+    correction_qa_list->Write("CorrectionQAHistograms", TObject::kSingleKey);
+  }
   out_file_->Close();
-  out_file_.reset();
+  if (!qa_file_name_.empty()) {
+    Info(__func__, "Writing QA to '%s'...", qa_file_name_.c_str());
+    TFile qa_file(qa_file_name_.c_str(), "RECREATE");
+    correction_qa_list->Write("CorrectionQAHistograms", TObject::kSingleKey);
+  }
 }
 /**
 * Set correction steps in a CorrectionManager for a given Q-vector

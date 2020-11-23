@@ -78,7 +78,7 @@ Qn::Analysis::Base::QVector* Qn::Analysis::Config::Utils::Convert(const Qn::Anal
       result->AddQAHistogram(Convert(qa_histogram));
     }
     result->SetHarmonics(harmonics);
-
+    result->SetNormalization(config.normalization);
     return result;
   } else if (type == EQVectorType::CHANNEL) {
     auto result = new QVectorChannel(name, phi, weight, channel_ids);
@@ -89,12 +89,14 @@ Qn::Analysis::Base::QVector* Qn::Analysis::Config::Utils::Convert(const Qn::Anal
       result->AddQAHistogram(Convert(qa_histogram));
     }
     result->SetHarmonics(harmonics);
+    result->SetNormalization(config.normalization);
     return result;
   } else if (type == EQVectorType::EVENT_PSI) {
     auto result = new QVectorPsi(name, phi, weight);
     for (auto& qa_histogram : config.qa) {
       result->AddQAHistogram(Convert(qa_histogram));
     }
+    result->SetNormalization(config.normalization);
     return result;
   }
 

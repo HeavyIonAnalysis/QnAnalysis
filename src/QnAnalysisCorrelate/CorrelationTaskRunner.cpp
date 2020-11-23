@@ -14,6 +14,7 @@
 #include <TFileCollection.h>
 #include <TChain.h>
 #include <TDirectory.h>
+#include <TObjString.h>
 
 using std::filesystem::path;
 using std::filesystem::current_path;
