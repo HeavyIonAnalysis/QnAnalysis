@@ -39,7 +39,7 @@ struct AnalysisSetup {
     } else if (qv->GetType() == EQVectorType::CHANNEL) {
       channel_qvectors_.emplace_back(*dynamic_cast<const QVectorChannel*>(qv));
     } else if (qv->GetType() == EQVectorType::EVENT_PSI) {
-      /* todo ignore at this moment */
+      SetPsiQvector(*dynamic_cast<const QVectorPsi*>(qv));
     }
     q_vectors.emplace_back(qv);
   }
