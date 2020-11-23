@@ -52,7 +52,8 @@ _qa:
 
 
 pbpb_13agev_16_025:
-  event-variables: [ Centrality/Centrality_Epsd ]
+  event-variables:
+    - Centrality/Centrality_Epsd
   axes: [ *centrality ]
   q-vectors:
     - name: protons_pt
@@ -120,7 +121,7 @@ pbpb_13agev_16_025:
       type: channel
       phi: PsdModules/phi
       weight: PsdModules/signal
-      norm: mag
+      norm: m
       corrections: [ recentering ]
       qa: *psd-qa
       channel-ids: *layout-na61-psd1
@@ -128,7 +129,7 @@ pbpb_13agev_16_025:
       type: channel
       phi: PsdModules/phi
       weight: PsdModules/signal
-      norm: mag
+      norm: m
       corrections: [ recentering ]
       qa: *psd-qa
       channel-ids: *layout-na61-psd2
@@ -136,7 +137,7 @@ pbpb_13agev_16_025:
       type: channel
       phi: PsdModules/phi
       weight: PsdModules/signal
-      norm: mag
+      norm: m
       corrections: [ recentering ]
       qa: *psd-qa
       channel-ids: *layout-na61-psd3
