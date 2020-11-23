@@ -1,20 +1,22 @@
 _detectors: &detectors
-  - name: detectorI
-    components: [cos1,sin1]
-    tags: [group-A]
-    correction-step: rescaled
-  - name: detectorII
+  - name: W1
+    correction-step: RESCALED
     components: [x1,y1]
-    tags: [group-B]
-    correction-step: recentered
-  - name: detectorIII
+    tag: group-A
+  - name: W2
+    correction-step: RESCALED
     components: [x1,y1]
-    tags: [group-B]
-    correction-step: plain
+    tag: group-A
+  - name: W3
+    correction-step: RESCALED
+    components: [x1,y1]
+    tag: group-A
 
 _observables:
-  - observable-for-v1:
-    u-vector: {name: u, components: [x1, y1], correction-step: rescaled}
-    EP-vectors: { tags: { any-in: [ group-A ] } }
-    Q-vectors: { tags: { any-in: [ group-B ] } }
+  - method: three-sub-event
+    QQ-directory: QQ/SP
+    uQ-directory: uQ/SP
+    u-vector: {name: u, components: [x1, y1], correction-step: RESCALED}
+    EP-vectors: group-A
+    resolution-vectors: group-A
     folder: "A"

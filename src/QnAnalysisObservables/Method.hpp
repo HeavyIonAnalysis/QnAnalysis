@@ -10,7 +10,7 @@
 
 #include "FileManager.hpp"
 
-struct VectorConfig {
+struct VectorComponentConfig {
   std::string name;
   std::string component_name;
 };
@@ -43,21 +43,21 @@ public:
   }
 protected:
   Method() = default;
-  Method(VectorConfig u_vector_config,
-         std::vector<VectorConfig> q_vector_config,
-         std::vector<VectorConfig> resolution_q_vectors_configs)
+  Method(VectorComponentConfig u_vector_config,
+         std::vector<VectorComponentConfig> q_vector_config,
+         std::vector<VectorComponentConfig> resolution_q_vectors_configs)
       : u_vector_config_(std::move(u_vector_config)),
         ep_vectors_configs_(std::move(q_vector_config)),
         resolution_q_vectors_configs_(std::move(resolution_q_vectors_configs)) {}
 
-  static Qn::DataContainer<Qn::StatCalculate> ReadContainerFromFile( const std::string&, const std::vector<VectorConfig>& vectors );
-  static std::vector<std::vector<VectorConfig>> GetAllCombinations( std::vector<VectorConfig> elements );
+  static Qn::DataContainer<Qn::StatCalculate> ReadContainerFromFile( const std::string&, const std::vector<VectorComponentConfig>& vectors );
+  static std::vector<std::vector<VectorComponentConfig>> GetAllCombinations( std::vector<VectorComponentConfig> elements );
 
   std::string uq_directory_;
   std::string qq_directory_;
-  VectorConfig u_vector_config_;
-  std::vector<VectorConfig> ep_vectors_configs_;
-  std::vector<VectorConfig> resolution_q_vectors_configs_;
+  VectorComponentConfig u_vector_config_;
+  std::vector<VectorComponentConfig> ep_vectors_configs_;
+  std::vector<VectorComponentConfig> resolution_q_vectors_configs_;
 
   std::vector<std::string> observables_names_;
 

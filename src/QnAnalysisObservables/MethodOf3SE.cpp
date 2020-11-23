@@ -28,10 +28,10 @@ void MethodOf3SE::CalculateObservables(){
   }
 }
 
-std::vector<std::vector<std::vector<VectorConfig>>> MethodOf3SE::ConstructResolution3SECombinations(
-        VectorConfig reff_q, std::vector<VectorConfig> q_combination){
+std::vector<std::vector<std::vector<VectorComponentConfig>>> MethodOf3SE::ConstructResolution3SECombinations(
+    VectorComponentConfig reff_q, std::vector<VectorComponentConfig> q_combination){
   auto q1 = std::move(reff_q);
-  std::vector<std::vector<std::vector<VectorConfig>>> combinations;
+  std::vector<std::vector<std::vector<VectorComponentConfig>>> combinations;
   for (size_t i=0; i<q_combination.size(); ++i ){
     auto q2 = q_combination.at(i);
     if( q1.name == q2.name )
@@ -42,7 +42,7 @@ std::vector<std::vector<std::vector<VectorConfig>>> MethodOf3SE::ConstructResolu
       if( q1.name == q3.name )
         continue;
       q3.component_name = q1.component_name;
-      std::vector<std::vector<VectorConfig>> combination;
+      std::vector<std::vector<VectorComponentConfig>> combination;
       combination.push_back({q1, q2});
       combination.push_back({q1, q3});
       combination.push_back({q2, q3});

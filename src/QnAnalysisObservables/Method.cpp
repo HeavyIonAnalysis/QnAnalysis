@@ -4,7 +4,7 @@
 
 #include "Method.hpp"
 
-Qn::DataContainer<Qn::StatCalculate> Method::ReadContainerFromFile( const std::string& directory, const std::vector<VectorConfig>& vectors ){
+Qn::DataContainer<Qn::StatCalculate> Method::ReadContainerFromFile( const std::string& directory, const std::vector<VectorComponentConfig>& vectors ){
   Qn::DataContainerStatCollect*  obj;
   std::string name;
   std::string component;
@@ -43,14 +43,14 @@ Qn::DataContainer<Qn::StatCalculate> Method::ReadContainerFromFile( const std::s
   throw std::runtime_error( "Method::ReadContainerFromFile: No such a correlation in file "+name );
 }
 
-std::vector<std::vector<VectorConfig>> Method::GetAllCombinations( std::vector<VectorConfig> elements ){
-  std::vector<std::vector<VectorConfig>> result;
+std::vector<std::vector<VectorComponentConfig>> Method::GetAllCombinations( std::vector<VectorComponentConfig> elements ){
+  std::vector<std::vector<VectorComponentConfig>> result;
   if( elements.size() == 1 ){
     result = {elements};
     return result;
   }
   auto el1 = elements.front();
-  std::vector<std::vector<VectorConfig>> prev_combinations;
+  std::vector<std::vector<VectorComponentConfig>> prev_combinations;
   elements.erase(elements.begin());
   prev_combinations=GetAllCombinations(elements);
   for( size_t i=0; i<std::size(prev_combinations); ++i ){

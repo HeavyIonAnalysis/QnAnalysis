@@ -12,6 +12,13 @@
 #include "MethodOf3SE.hpp"
 #include "MethodOfRS.hpp"
 
+struct VectorConfig{
+  std::string name;
+  std::string correction_step;
+  std::vector<std::string> components;
+  std::string tag;
+};
+
 class V1Observables {
  public:
   enum class METHODS{
@@ -20,13 +27,23 @@ class V1Observables {
   };
   explicit V1Observables(METHODS method_type) : method_type_(method_type) {}
   virtual ~V1Observables() = default;
-  void SetUvectors( std::string name, std::vector<std::string> components ){
+  void SetUvector( std::string name, std::vector<std::string> components ){
     u_vector_name_ = std::move(name);
     u_vector_components_ = std::move(components);
   }
+  void SetUvector( const VectorConfig& u_vector ){
+      u_vector_name_ = u_vector.name+"_"+u_vector.correction_step;
+      u_vector_components_ = u_vector.components;
+  };
   void SetEPvectors( std::vector<std::string> names, std::vector<std::string> components ){
     ep_vectors_names_ = std::move(names);
     ep_vectors_components_ = std::move(components);
+  }
+  void SetEPvectors( const std::vector<VectorConfig>& vectors){
+    for( const auto& vector : vectors ) {
+      ep_vectors_names_.emplace_back(vector.name + "_" + vector.correction_step);
+    }
+    ep_vectors_components_ = vectors.front().components;
   }
   void SetResolutionVectors( std::vector<std::string> names){
     resolution_q_vectors_ = std::move(names);
@@ -38,7 +55,7 @@ class V1Observables {
     qq_correlations_directory_ = qq_correlations_directory;
   }
   void Calculate(){
-    std::vector<VectorConfig> resolution_qs;
+    std::vector<VectorComponentConfig> resolution_qs;
     for( const auto& name : resolution_q_vectors_ ){
       resolution_qs.push_back({name});
     }
@@ -76,6 +93,15 @@ class V1Observables {
  std::vector<std::string> ep_vectors_names_;
  std::vector<std::string> ep_vectors_components_;
  std::vector<std::string> resolution_q_vectors_;
+};
+
+struct VnObservablesConfig {
+  V1Observables::METHODS method;
+  std::string uq_correlations_directory;
+  std::string qq_correlations_directory;
+  VectorConfig u_vector;
+  std::string ep_vectors_tag;
+  std::string resolution_vectors_tag;
 };
 
 #endif // OBSERVABLESCALCULATOR_SRC_CALCULATOR_H_

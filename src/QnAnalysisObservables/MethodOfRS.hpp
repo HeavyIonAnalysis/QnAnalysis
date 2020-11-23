@@ -9,7 +9,7 @@
 
 class MethodOfRS : public Method {
  public:
-  MethodOfRS(const VectorConfig& u_vector_config, const std::vector<VectorConfig>& q_vector_config, const std::vector<VectorConfig>& resolution_q_vectors_configs);
+  MethodOfRS(const VectorComponentConfig& u_vector_config, const std::vector<VectorComponentConfig>& q_vector_config, const std::vector<VectorComponentConfig>& resolution_q_vectors_configs);
   ~MethodOfRS() override;
   void CalculateObservables() override;
 };

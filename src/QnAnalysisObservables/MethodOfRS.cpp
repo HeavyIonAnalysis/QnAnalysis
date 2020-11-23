@@ -3,7 +3,7 @@
 //
 
 #include "MethodOfRS.hpp"
-MethodOfRS::MethodOfRS(const VectorConfig& u_vector_config, const std::vector<VectorConfig>& q_vector_config, const std::vector<VectorConfig>& resolution_q_vectors_configs) : Method(u_vector_config, q_vector_config, resolution_q_vectors_configs) {}
+MethodOfRS::MethodOfRS(const VectorComponentConfig& u_vector_config, const std::vector<VectorComponentConfig>& q_vector_config, const std::vector<VectorComponentConfig>& resolution_q_vectors_configs) : Method(u_vector_config, q_vector_config, resolution_q_vectors_configs) {}
 MethodOfRS::~MethodOfRS() = default;
 void MethodOfRS::CalculateObservables() {
   if( std::size(resolution_q_vectors_configs_) != 2 )
