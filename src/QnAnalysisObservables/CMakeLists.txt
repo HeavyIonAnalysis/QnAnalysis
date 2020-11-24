@@ -8,5 +8,5 @@ set(SOURCES
         MethodOfRS.cpp
         ConvertConfigs.cpp)
 
-add_executable(flow Calculate.cpp ${SOURCES})
-target_link_libraries(flow QnTools::Base Boost::program_options ${ROOT_LIBRARIES} yaml-cpp)
+add_executable(BuildObservables Calculate.cpp ${SOURCES})
+target_link_libraries(BuildObservables QnTools::Base Boost::program_options ${ROOT_LIBRARIES} yaml-cpp)
