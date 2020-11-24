@@ -43,12 +43,12 @@ int main(int argv, char** argc){
     observables.back().SetUvector( observable_config.u_vector );
     std::vector<VectorConfig> ep_vectors;
     for( const auto& vector : detectors_configs )
-      if( vector.tag == observable_config.ep_vectors_tag )
+      if( std::count(vector.tags.begin(), vector.tags.end(), observable_config.ep_vectors_tag) > 0 )
         ep_vectors.emplace_back(vector);
     observables.back().SetEPvectors(ep_vectors);
     std::vector<std::string> resolution_vectors;
     for( const auto& vector : detectors_configs )
-      if( vector.tag == observable_config.resolution_vectors_tag )
+      if( std::count(vector.tags.begin(), vector.tags.end(), observable_config.resolution_vectors_tag) > 0 )
         resolution_vectors.emplace_back(vector.name+"_"+vector.correction_step);
     observables.back().SetResolutionVectors(resolution_vectors);
     observables.back().Calculate();

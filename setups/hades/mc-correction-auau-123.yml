@@ -73,5 +73,6 @@ hades_analysis:
       type: psi
       phi: sim_header/reaction_plane
       weight: Ones
+      norm: mag
 #      qa:
 #        - {name: sim_header/reaction_plane, nb: 320, lo: -3.2, hi: 3.2}

@@ -17,7 +17,9 @@ struct convert<VectorConfig> {
     vector_config.name = node["name"].as<std::string>();
     vector_config.components = node["components"].as<std::vector<std::string>>();
     vector_config.correction_step = node["correction-step"].as<std::string>();
-    vector_config.tag = node["tag"].as<std::string>("");
+    try {
+      vector_config.tags = node["tags"].as<std::vector<std::string>>();
+    } catch (std::exception&) {}
     return true;
   }
 };

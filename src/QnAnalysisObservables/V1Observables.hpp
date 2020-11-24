@@ -16,7 +16,7 @@ struct VectorConfig{
   std::string name;
   std::string correction_step;
   std::vector<std::string> components;
-  std::string tag;
+  std::vector<std::string> tags;
 };
 
 class V1Observables {
