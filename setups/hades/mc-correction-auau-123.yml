@@ -69,9 +69,9 @@ hades_analysis:
         - *axis_gen_rapidity
         - [*axis_gen_rapidity, *axis_gen_pT]
 ###########################################################################
-    - name: psi
+    - name: psi_rp
       type: psi
       phi: sim_header/reaction_plane
-#      weight: Ones
+      weight: Ones
 #      qa:
 #        - {name: sim_header/reaction_plane, nb: 320, lo: -3.2, hi: 3.2}
