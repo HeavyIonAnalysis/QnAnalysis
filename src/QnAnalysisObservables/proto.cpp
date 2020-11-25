@@ -29,8 +29,8 @@ int main() {
 
   using namespace Qn::Analysis::Tools;
 
-  for (auto c : Combination(std::vector<std::string>{"psd1", "psd2","psd3"}, std::vector<int>{1,2,3})) {
-    std::cout << std::get<0>(c) << " " << std::to_string(std::get<1>(c)) << std::endl;
+  for (auto c : Permutation(std::vector<int>{1,2,2,3})) {
+    std::cout << c[0] << " " << c[1] << " " << c[2] << " " << c[3] << std::endl;
   }
 
 
