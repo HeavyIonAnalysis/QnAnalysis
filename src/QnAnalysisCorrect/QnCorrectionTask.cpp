@@ -247,29 +247,29 @@ boost::program_options::options_description QnCorrectionTask::GetBoostOptions() 
 */
 
 void QnCorrectionTask::AddQAHisto() {
-  for (const auto& qvec : analysis_setup_->GetQvectorsConfig()) {
-    for (const auto& qa : qvec.GetQAHistograms()) {
+  for (auto qvec : analysis_setup_->q_vectors) {
+    for (const auto& qa : qvec->GetQAHistograms()) {
       if (qa.axes.size() == 1) {
-        manager_.AddHisto1D(qvec.GetName(), qa.axes.at(0).GetQnAxis());
+        manager_.AddHisto1D(qvec->GetName(), qa.axes.at(0).GetQnAxis());
       } else if (qa.axes.size() == 2) {
-        manager_.AddHisto2D(qvec.GetName(), {qa.axes.at(0).GetQnAxis(), qa.axes.at(1).GetQnAxis()});
+        manager_.AddHisto2D(qvec->GetName(), {qa.axes.at(0).GetQnAxis(), qa.axes.at(1).GetQnAxis()});
       } else {
         throw std::runtime_error("QA histograms with more than 2 axis (or less than one) are not supported.");
       }
     }
   }
 
-  for (const auto& qvec : analysis_setup_->GetChannelConfig()) {
-    for (const auto& qa : qvec.GetQAHistograms()) {
-      if (qa.axes.size() == 1) {
-        auto axis = qa.axes.at(0).GetQnAxis();
-        axis.SetName(qvec.GetName() + "_" + axis.Name());
-        manager_.AddHisto1D(qvec.GetName(), axis);
-      } else {
-        throw std::runtime_error("FIX ME");
-      }
-    }
-  }
+//  for (const auto& qvec : analysis_setup_->GetChannelConfig()) {
+//    for (const auto& qa : qvec.GetQAHistograms()) {
+//      if (qa.axes.size() == 1) {
+//        auto axis = qa.axes.at(0).GetQnAxis();
+//        axis.SetName(qvec.GetName() + "_" + axis.Name());
+//        manager_.AddHisto1D(qvec.GetName(), axis);
+//      } else {
+//        throw std::runtime_error("FIX ME");
+//      }
+//    }
+//  }
 
   //  for(const auto& histo : qa_histos_){
   //    const auto& [name, axis] = histo;
