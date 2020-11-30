@@ -1,0 +1,40 @@
+_layouts:
+
+_axes:
+  - &axis_gen_pT
+    name: sim_tracks_rapidity/pT
+    bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
+  - &axis_gen_rapidity
+    name: sim_tracks_rapidity/rapidity
+    nb: 15
+    lo: -0.01
+    hi: 1.49
+
+hades_analysis:
+  event-variables:
+    - event_header/selected_tof_rpc_hits_centrality
+  axes:
+    - { name: event_header/selected_tof_rpc_hits_centrality, nb: 12, lo: 0.0, hi: 60 }
+  q-vectors:
+###########################################################################
+    - name: gen_all
+      type: track
+      phi:  sim_tracks_rapidity/phi
+      weight: Ones
+      axes:
+        - *axis_gen_pT
+        - *axis_gen_rapidity
+      qa:
+        - {name: sim_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_pT
+        - *axis_gen_rapidity
+        - [*axis_gen_rapidity, *axis_gen_pT]
+      norm: m
+###########################################################################
+    - name: psi_rp
+      type: psi
+      phi: sim_header/reaction_plane
+      weight: Ones
+      norm: mag
+#      qa:
+#        - {name: sim_header/reaction_plane, nb: 320, lo: -3.2, hi: 3.2}
