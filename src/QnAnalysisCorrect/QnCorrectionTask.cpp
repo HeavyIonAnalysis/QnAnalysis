@@ -24,7 +24,14 @@ void QnCorrectionTask::InitVariables() {
   short ivar{0}, ibranch{0};
 
   for (auto& entry : var_manager_->VarEntries()) {
-    assert(entry.GetNumberOfBranches() == 1);
+    if (entry.GetNumberOfBranches() > 1) {
+      auto &branches = entry.GetBranches();
+      if (!std::all_of(branches.begin(), branches.end(),[] (AnalysisTree::BranchReader* reader) {
+        return reader->GetType() == AnalysisTree::DetType::kEventHeader;
+      })) {
+        throw std::runtime_error("More than one branch in one entry is allowed only if ALL of them EventHeader-s");
+      }
+    }
 
     if (entry.GetBranches()[0]->GetType() == AnalysisTree::DetType::kModule) {
       ibranch++;
@@ -165,12 +172,12 @@ void QnCorrectionTask::FillTracksQvectors() {
   double* container = manager_.GetVariableContainer();
   short ibranch{0};
   for (const auto& entry : var_manager_->GetVarEntries()) {
-    assert(entry.GetNumberOfBranches() == 1);
     auto type = entry.GetBranches()[0]->GetType();
     if (type == AnalysisTree::DetType::kEventHeader || type == AnalysisTree::DetType::kModule) {
       ibranch++;
       continue;// skip EventHeader and ModuleDetectors
     }
+    assert(entry.GetNumberOfBranches() == 1);
     const int n_channels = entry.GetValues().size();
     for (int i = 0; i < n_channels; ++i) {
       for (auto const& fill : is_filled_) {
@@ -209,6 +216,7 @@ void QnCorrectionTask::PreInit() {
   for (auto& q_psi : this->GetConfig()->psi_qvectors_) {
     q_psi->SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry({q_psi->GetPhiVar()})).first);
   }
+  // Event Variables
   if (!this->GetConfig()->EventVars().empty()) {
     at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(this->GetConfig()->GetEventVars()));
   }
@@ -260,13 +268,15 @@ void QnCorrectionTask::AddQAHisto() {
     }
   }
 
-  //  for(const auto& histo : qa_histos_){
-  //    const auto& [name, axis] = histo;
-  //    if( axis.size() == 1 )
-  //      manager_.AddHisto1D(name, axis.at(0));
-  //    if( axis.size() == 2 )
-  //      manager_.AddHisto2D(name, axis);
-  //  }
+    for(const auto& histo : analysis_setup_->qa_){
+      if (histo.axes.size() == 1) {
+        manager_.AddEventHisto1D(histo.axes[0].GetQnAxis());
+      } else if (histo.axes.size() == 2) {
+        manager_.AddEventHisto2D({histo.axes[0].GetQnAxis(), histo.axes[1].GetQnAxis()});
+      } else {
+        throw std::runtime_error("QA histograms with more than 2 axis (or less than one) are not supported.");
+      }
+    }
 }
 
 void QnCorrectionTask::Finish() {

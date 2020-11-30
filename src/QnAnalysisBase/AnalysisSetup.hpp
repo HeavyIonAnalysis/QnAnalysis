@@ -20,6 +20,7 @@ struct AnalysisSetupConfig : public TObject {
   std::vector<QVectorConfig> q_vectors;
   std::vector<AxisConfig> event_axes;
   std::vector<VariableConfig> event_variables;
+  std::vector<HistogramConfig> qa;
 
   ClassDef(Qn::Analysis::Base::AnalysisSetupConfig, 2);
 };
@@ -82,6 +83,7 @@ struct AnalysisSetup {
   std::vector<Qn::AxisD> correction_axes_{};// fixme it should be Qn::Analysis::Base::Axis
 
   std::vector<AnalysisTree::Variable> event_vars_{};
+  std::vector<Histogram> qa_{};
   // Correlation parameters
   std::vector<std::string> correlation_names_{};
 };

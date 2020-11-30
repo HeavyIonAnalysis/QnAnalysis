@@ -54,6 +54,9 @@ _qa:
 pbpb_13agev_16_025:
   event-variables:
     - Centrality/Centrality_Epsd
+    - RecEventHeader/vtx_x
+  qa:
+    - { name: RecEventHeader/vtx_x, nb: 200, lo: -10., hi: 10}
   axes: [ *centrality ]
   q-vectors:
     - name: protons_pt
