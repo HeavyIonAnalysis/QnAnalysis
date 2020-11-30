@@ -50,16 +50,14 @@ void QnCorrectionTask::InitVariables() {
     ibranch++;
   }
 
-  for (auto& qvec : analysis_setup_->ChannelConfig()) {
-    auto& phi = qvec.PhiVar();
+  for (auto& qvec : analysis_setup_->channel_qvectors_) {
+    auto& phi = qvec->PhiVar();
     phi.SetId(ivar);
-    manager_.AddVariable(qvec.GetName() + "_" + phi.GetName(), phi.GetId(), phi.GetSize());
+    manager_.AddVariable(qvec->GetName() + "_" + phi.GetName(), phi.GetId(), phi.GetSize());
     ivar += phi.GetSize();
-    auto& weight = qvec.WeightVar();
+    auto& weight = qvec->WeightVar();
     weight.SetId(ivar);
-    manager_.AddVariable(qvec.GetName() + "_" + weight.GetName(), weight.GetId(), weight.GetSize());
-    //    weight.Print();
-    //    phi.Print();
+    manager_.AddVariable(qvec->GetName() + "_" + weight.GetName(), weight.GetId(), weight.GetSize());
     ivar += weight.GetSize();
   }
 
@@ -114,15 +112,6 @@ void QnCorrectionTask::Init(std::map<std::string, void*>&) {
     }
   }
 
-  // Add Psi_RP
-  if (analysis_setup_->IsSimulation()) {
-    const auto& qvec = analysis_setup_->GetPsiQvector();
-    const string name = qvec.GetName();
-    auto qn_weight = qvec.GetWeightVar().GetName() == "_Ones" ? "Ones" : name + "_" + qvec.GetWeightVar().GetName();
-    manager_.AddDetector(name, DetectorType::CHANNEL, qvec.GetPhiVar().GetName(), qn_weight, {}, {1, 2});
-    SetCorrectionSteps(qvec);
-  }
-
   AddQAHisto();
 
   //Initialization of framework
@@ -146,12 +135,12 @@ void QnCorrectionTask::Exec() {
       }
     }
   }
-  for (const auto& qvec : analysis_setup_->GetChannelConfig()) {
-    const auto& phi = qvec.GetPhiVar();
-    const auto& weight = qvec.GetWeightVar();
-    const auto& branch = var_manager_->GetVarEntries().at(qvec.GetVarEntryId());
+  for (const auto& qvec : analysis_setup_->channel_qvectors_) {
+    const auto& phi = qvec->GetPhiVar();
+    const auto& weight = qvec->GetWeightVar();
+    const auto& branch = var_manager_->GetVarEntries().at(qvec->GetVarEntryId());
     int i_channel{0};
-    for (int i : qvec.GetModuleIds()) {
+    for (int i : qvec->GetModuleIds()) {
       container[phi.GetId() + i_channel] = data_header_->GetModulePhi(0, i);//TODO fix hardcoded 0
       if (i < branch.GetValues().size()) {
         container[weight.GetId() + i_channel] = branch.GetValues()[i].at(0);//TODO fix hardcoded 0
@@ -207,18 +196,18 @@ void QnCorrectionTask::PreInit() {
   this->analysis_setup_ = new Base::AnalysisSetup(Qn::Analysis::Config::ReadSetupFromFile(yaml_config_file_, yaml_config_node_));
 
   // Variables used by tracking Q-vectors
-  for (auto& qvec : this->GetConfig()->QvectorsConfig()) {
-    const auto& vars = qvec.GetListOfVariables();
-    qvec.SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(vars)).first);
+  for (auto& q_tra : this->GetConfig()->track_qvectors_) {
+    const auto& vars = q_tra->GetListOfVariables();
+    q_tra->SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(vars)).first);
   }
   // Variables used by channelized Q-vectors
-  for (auto& channel : this->GetConfig()->ChannelConfig()) {
-    channel.SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry({channel.GetWeightVar()})).first);
+  for (auto& q_ch : this->GetConfig()->channel_qvectors_) {
+    /* phi variable is 'virtual' and taken from the DataHeader */
+    q_ch->SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry({q_ch->GetWeightVar()})).first);
   }
   // Psi variable
-  if (this->GetConfig()->IsSimulation()) {
-    auto& qvec = this->GetConfig()->PsiQvector();
-    qvec.SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry({qvec.GetPhiVar()})).first);
+  for (auto& q_psi : this->GetConfig()->psi_qvectors_) {
+    q_psi->SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry({q_psi->GetPhiVar()})).first);
   }
   if (!this->GetConfig()->EventVars().empty()) {
     at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(this->GetConfig()->GetEventVars()));
@@ -247,29 +236,29 @@ boost::program_options::options_description QnCorrectionTask::GetBoostOptions() 
 */
 
 void QnCorrectionTask::AddQAHisto() {
-  for (auto qvec : analysis_setup_->q_vectors) {
-    for (const auto& qa : qvec->GetQAHistograms()) {
+  for (auto q_tra : analysis_setup_->track_qvectors_) {
+    for (const auto& qa : q_tra->GetQAHistograms()) {
       if (qa.axes.size() == 1) {
-        manager_.AddHisto1D(qvec->GetName(), qa.axes.at(0).GetQnAxis());
+        manager_.AddHisto1D(q_tra->GetName(), qa.axes.at(0).GetQnAxis());
       } else if (qa.axes.size() == 2) {
-        manager_.AddHisto2D(qvec->GetName(), {qa.axes.at(0).GetQnAxis(), qa.axes.at(1).GetQnAxis()});
+        manager_.AddHisto2D(q_tra->GetName(), {qa.axes.at(0).GetQnAxis(), qa.axes.at(1).GetQnAxis()});
       } else {
         throw std::runtime_error("QA histograms with more than 2 axis (or less than one) are not supported.");
       }
     }
   }
 
-//  for (const auto& qvec : analysis_setup_->GetChannelConfig()) {
-//    for (const auto& qa : qvec.GetQAHistograms()) {
-//      if (qa.axes.size() == 1) {
-//        auto axis = qa.axes.at(0).GetQnAxis();
-//        axis.SetName(qvec.GetName() + "_" + axis.Name());
-//        manager_.AddHisto1D(qvec.GetName(), axis);
-//      } else {
-//        throw std::runtime_error("FIX ME");
-//      }
-//    }
-//  }
+  for (const auto& q_ch : analysis_setup_->channel_qvectors_) {
+    for (const auto& qa : q_ch->GetQAHistograms()) {
+      if (qa.axes.size() == 1) {
+        auto axis = qa.axes.at(0).GetQnAxis();
+        axis.SetName(q_ch->GetName() + "_" + axis.Name());
+        manager_.AddHisto1D(q_ch->GetName(), axis);
+      } else {
+        throw std::runtime_error("FIX ME");
+      }
+    }
+  }
 
   //  for(const auto& histo : qa_histos_){
   //    const auto& [name, axis] = histo;
