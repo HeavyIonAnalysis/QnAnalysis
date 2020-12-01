@@ -156,6 +156,10 @@ Qn::Analysis::Base::AnalysisSetup Qn::Analysis::Config::Utils::Convert(const Qn:
     setup.AddQVector(Convert(config_q_vector));
   }
 
+  for (auto &qa_config : config.qa) {
+    setup.qa_.push_back(Convert(qa_config));
+  }
+
   return setup;
 }
 

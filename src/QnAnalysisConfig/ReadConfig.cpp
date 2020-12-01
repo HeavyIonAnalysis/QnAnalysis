@@ -14,8 +14,8 @@ int main() {
   auto node = YAML::LoadFile("analysis-config.yml");
   auto setup_config = node["test"].as<AnalysisSetupConfig>();
   auto setup = Qn::Analysis::Config::Utils::Convert(setup_config);
-  for (auto& qv : setup.GetQvectorsConfig()) {
-    qv.Print();
+  for (auto& qv : setup.q_vectors) {
+    qv->Print();
   }
   return 0;
 }
