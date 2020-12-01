@@ -82,7 +82,7 @@ hades_analysis:
       cuts-pid:
         *protons_cuts
       qa:
-        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
     #############################################################
     - name: Mb_protons
       type: track
@@ -99,7 +99,7 @@ hades_analysis:
       cuts-pid:
         *protons_cuts
       qa:
-        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
     #############################################################
     - name: R1
       type: track
