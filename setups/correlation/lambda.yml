@@ -1,0 +1,85 @@
+_detectors: &detectors
+  - name: u_rec
+    tags: [ un_vector ]
+    #correction-step: rescaled
+  - name: u_sim
+    tags: [ un_vector ]
+    #correction-step: plain
+  - name: Q_psi
+    tags: [ qn_vector ]
+    #correction-step: plain
+    
+_axes:
+  - &centrality
+    name: AnaEventHeader_tracks_centrality
+    bin-edges: [0, 5, 10, 20, 30, 50, 70, 100]
+    
+_components:
+  - &sp_components
+    [ x1,y1 ]
+  #- &ep_components
+    #[ cos1,sin1 ]
+    
+_queries:
+  - &query_urec
+    name: { equals: u_rec }
+  - &query_usim
+    name: { equals: u_sim }
+  - &query_q
+    tags: { any-in: [qn_vector] }
+    
+_task_args:
+  - &ta_urec
+    query: *query_urec
+    query-list: *detectors
+    correction-steps: [plain, recentered, twist, rescaled]
+    components: *sp_components
+    weight: sumw
+  - &ta_usim
+    query: *query_usim
+    query-list: *detectors
+    correction-steps: [plain]
+    components: *sp_components
+    weight: sumw
+  #- &ta_q_ep
+    #query: *query_q
+    #query-list: *detectors
+    #correction-steps: [plain]
+    #components: *ep_components
+  - &ta_q_sp
+    query: *query_q
+    query-list: *detectors
+    correction-steps: [plain]
+    components: *sp_components
+    weight: ones
+
+_tasks:
+  #- args: [ *ta_urec, *ta_q_ep ]
+    ##actions: [xx, xy, yx, yy]
+    #n-samples: 50
+    #weights-type: observable
+    ##weights-function: auto
+    #folder: "/uQ/EP"
+    #axes: [ *centrality ]
+  - args: [*ta_urec, *ta_q_sp ]
+    #actions: [xx, xy, yx, yy]
+    n-samples: 50
+    weights-type: observable
+    #weights-function: auto
+    folder: "/uQ/SP"
+    axes: [ *centrality ]
+  #- args: [ *ta_usim, *ta_q_ep ]
+    ##actions: [xx, xy, yx, yy]
+    #n-samples: 50
+    #weights-type: observable
+    ##weights-function: auto
+    #folder: "/uQ/EP"
+    #axes: [ *centrality ]
+  - args: [*ta_usim, *ta_q_sp ]
+    #actions: [xx, xy, yx, yy]
+    n-samples: 50
+    weights-type: observable
+    #weights-function: auto
+    folder: "/uQ/SP"
+    axes: [ *centrality ]
+    
