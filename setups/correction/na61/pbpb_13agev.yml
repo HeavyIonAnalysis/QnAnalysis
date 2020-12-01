@@ -58,6 +58,8 @@ pbpb_13agev_16_025:
     - RecEventHeader/vtx_y
     - RecEventHeader/vtx_z
     - RecEventHeader/Epsd
+    - RecEventHeader/s1
+    - RecEventHeader/s2
   qa:
     - &ax-vtx-x-qa { name: RecEventHeader/vtx_x, nb: 200, lo: -10., hi: 10}
     - &ax-vtx-y-qa { name: RecEventHeader/vtx_y, nb: 200, lo: -10., hi: 10}
@@ -67,6 +69,11 @@ pbpb_13agev_16_025:
     - *centrality
     - [*ax-epsd-qa, *centrality]
     - [*ax-vtx-z-qa, *ax-epsd-qa]
+    - &ax-s1-qa { name: RecEventHeader/s1, nb: 500, lo: 0, hi: 500}
+    - &ax-s2-qa { name: RecEventHeader/s2, nb: 500, lo: 0, hi: 500}
+    - [*ax-s1-qa, *ax-s2-qa]
+    - [*ax-s1-qa, *ax-epsd-qa]
+    - [*ax-s2-qa, *ax-epsd-qa]
   axes: [ *centrality ]
   q-vectors:
     - name: protons_pt
