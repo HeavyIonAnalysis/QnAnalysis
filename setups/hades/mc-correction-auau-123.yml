@@ -38,6 +38,7 @@ hades_analysis:
       type: track
       phi:  mdc_vtx_tracks/phi
       weight: Ones
+      norm: m
       corrections:
         - recentering
         - twist-and-rescale
@@ -58,6 +59,7 @@ hades_analysis:
       type: track
       phi:  sim_tracks/phi
       weight: Ones
+      norm: m
       axes:
         - *axis_gen_pT
         - *axis_gen_rapidity
