@@ -110,6 +110,7 @@ void QnCorrectionTask::Init(std::map<std::string, void *> &) {
       auto qn_weight = qvec_ptr->GetWeightVar().GetName() == "_Ones" ? "Ones" : qvec_ptr->GetWeightVar().GetName();
       manager_.AddDetector(name, DetectorType::CHANNEL, qn_phi, qn_weight, {}, {1, 2}, qvec_ptr->GetNormalization());
       Info(__func__, "Add event PSI '%s'", name.c_str());
+      SetCorrectionSteps(qvec_ptr.operator*());
     }
   }
 
