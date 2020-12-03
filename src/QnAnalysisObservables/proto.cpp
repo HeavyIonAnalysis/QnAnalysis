@@ -17,33 +17,9 @@
 
 #include <QnAnalysisTools/QnAnalysisTools.hpp>
 
-#include <DataContainer.hpp>
-#include <StatCollect.hpp>
-
 namespace Details {
 
-struct ResourceAlreadyExists : public std::exception {
-  explicit ResourceAlreadyExists(std::string resource_name_) : resource_name(std::move(resource_name_)) {}
-  ResourceAlreadyExists(const ResourceAlreadyExists &other) = default;
-  const char *what() const
-  _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW
-  override {
-    return resource_name.c_str();
-  }
-  std::string resource_name;
-};
 
-struct NoSuchResource : public std::exception {
-  explicit NoSuchResource(std::string resource_name_) : resource_name(std::move(resource_name_)) {}
-  NoSuchResource(const NoSuchResource &Exception) = default;
-  const char *what() const
-  _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW
-  override {
-    return resource_name.c_str();
-  }
-
-  std::string resource_name;
-};
 
 template<typename T>
 class Singleton {
@@ -75,49 +51,119 @@ struct FunctionTraits<std::function<R(Args...)>> {
 
 }
 
+namespace Predicates {
+
+auto AlwaysTrue = [](const std::string&) -> bool { return true; };
+
+} /// namespace Predicates
+
+namespace Details {
+
+template<typename KeyRepr>
+struct Convert;
+
+template<>
+struct Convert<std::string> {
+  static std::string FromString(const std::string& str) { return str; }
+  static std::string ToString(const std::string& str) { return str; }
+};
+
+template<>
+struct Convert<std::vector<std::string>> {
+  static std::vector<std::string> FromString(const std::string& str) {
+    std::filesystem::path p(str);
+    std::vector<std::string> result;
+    for (auto &path_element : p)
+      if (path_element != "/") result.emplace_back(path_element.string());
+    return result;
+  }
+  static std::string ToString(const std::vector<std::string> &key) {
+    std::string result;
+    for (auto &key_ele : key)
+      result.append("/").append(key_ele);
+    return result;
+  }
+};
+
+}
+
 class ResourceManager : public Details::Singleton<ResourceManager> {
 public:
+  struct ResourceAlreadyExists : public std::exception {
+    explicit ResourceAlreadyExists(std::string resource_name_) : resource_name(std::move(resource_name_)) {}
+    ResourceAlreadyExists(const ResourceAlreadyExists &other) = default;
+    const char *what() const
+    _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW
+    override {
+      return resource_name.c_str();
+    }
+    std::string resource_name;
+  };
+
+  struct NoSuchResource : public std::exception {
+    explicit NoSuchResource(std::string resource_name_) : resource_name(std::move(resource_name_)) {}
+    NoSuchResource(const NoSuchResource &Exception) = default;
+    const char *what() const
+    _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW
+    override {
+      return resource_name.c_str();
+    }
+
+    std::string resource_name;
+  };
+
+
 
   typedef std::string KeyType;
 
-  template<typename T>
-  void Add(const KeyType &key, T &&obj) {
-    auto emplace_result = resources_.template emplace(key, obj);
+  template<typename KeyRepr, typename T>
+  void Add(const KeyRepr &key, T &&obj) {
+    auto emplace_result = resources_.template emplace(
+        Details::Convert<KeyRepr>::ToString(key),
+        obj);
     if (!emplace_result.second) {
-      throw Details::ResourceAlreadyExists(key);
+      throw ResourceAlreadyExists(Details::Convert<KeyRepr>::ToString(key));
     }
   }
 
-  template<typename T>
-  void Add(const KeyType &key, T *ptr) {
+  template<typename KeyRepr, typename T>
+  void Add(const KeyRepr &key, T *ptr) {
     Add(key, *ptr);
   }
 
-  bool Has(const KeyType &key) const {
-    auto it = resources_.find(key);
+  template<typename KeyRepr>
+  bool Has(const KeyRepr &key) const {
+    auto it = resources_.find(Details::Convert<KeyRepr>::ToString(key));
     return it != resources_.end();
   }
 
-  template<typename T>
-  T &GetRef(const KeyType &key) {
+  template<typename KeyRepr, typename T>
+  T &Get(const KeyRepr &key) {
     if (!Has(key)) {
-      throw Details::NoSuchResource(key);
+      throw NoSuchResource(key);
     }
-    return std::any_cast<std::add_lvalue_reference_t<T>>(resources_[key]);
+    return std::any_cast<std::add_lvalue_reference_t<T>>(
+        resources_[Details::Convert<KeyRepr>::ToString(key)]);
   }
 
-  template<typename Function>
-  void ForEach(Function &&fct, bool warn_bad_cast = true) {
+
+
+  template<typename Function, typename Predicate = decltype(Predicates::AlwaysTrue)>
+  void ForEach(Function &&fct, Predicate predicate = Predicates::AlwaysTrue, bool warn_bad_cast = true) {
     using Traits = Details::FunctionTraits<decltype(std::function{fct})>;
     for (auto &element : resources_) {
-      try {
-        static_assert(Traits::N_ARGS == 2);
-        using ArgType = typename Traits::ArgType<1>;
-        fct(element.first, std::any_cast<ArgType>(element.second));
-      } catch (std::bad_any_cast &e) {
-        if (warn_bad_cast)
-          Warning(__func__, "Bad cast for '%s'. Skipping...", element.first.c_str());
-      }
+      if (predicate(element.first)) {
+        try {
+          static_assert(Traits::N_ARGS == 2);
+          using KeyRepr = std::decay_t<typename Traits::template ArgType<0>>;
+          using ArgType = typename Traits::template ArgType<1>;
+          fct(Details::Convert<KeyRepr>::FromString(element.first) /* pass by value to prevent from unintentional change */,
+              std::any_cast<ArgType>(element.second));
+        } catch (std::bad_any_cast &e) {
+          if (warn_bad_cast)
+            Warning(__func__, "Bad cast for '%s'. Skipping...", element.first.c_str());
+        }
+      } // predicate
     }
   }
 
@@ -132,6 +178,79 @@ private:
 
   std::map<KeyType, std::any> resources_;
 };
+
+namespace Tools {
+
+namespace Details {
+
+template<typename Tuple, std::size_t IArg>
+void SetArgI(const std::vector<std::string> &arg_names, Tuple &tuple) {
+  using ArgT = std::tuple_element_t<IArg, Tuple>;
+  auto &manager = ResourceManager::Instance();
+  try {
+    std::get<IArg>(tuple) = manager.Get<std::string, ArgT>(arg_names[IArg]);
+  } catch (std::bad_any_cast &e) {
+    throw ResourceManager::NoSuchResource(arg_names[IArg]);
+  }
+}
+template<typename Tuple, std::size_t ... IArg>
+void SetArgTupleImpl(const std::vector<std::string> &arg_names, Tuple &tuple, std::index_sequence<IArg...>) {
+  (SetArgI<Tuple, IArg>(arg_names, tuple), ...);
+}
+template<typename ... Args>
+void SetArgTuple(const std::vector<std::string> &arg_names, std::tuple<Args...> &tuple) {
+  SetArgTupleImpl(arg_names, tuple, std::make_index_sequence<sizeof...(Args)>());
+}
+}
+
+template<typename KeyRepr, typename Function>
+void Define(const KeyRepr &key, Function &&fct, std::vector<std::string> arg_names, bool warn_at_missing = true) {
+  using ArgsTuple = typename ::Details::FunctionTraits<decltype(std::function{fct})>::ArgumentsTuple;
+  ArgsTuple args;
+  try {
+    Details::SetArgTuple(arg_names, args);
+    AddResource(key, std::apply(fct, args));
+  } catch (ResourceManager::NoSuchResource &e) {
+    if (warn_at_missing) {
+      Warning(__func__, "Resource '%s' required for '%s' is missing, new resource won't be added",
+              e.what(), key.c_str());
+    } else {
+      throw e; /* rethrow */
+    }
+  }
+}
+
+template<typename T>
+void ExportToROOT(const char *filename, const char *mode = "RECREATE") {
+  TFile f(filename, mode);
+  ResourceManager::Instance().ForEach([&f](const std::string &name, T &value) {
+    using ::std::filesystem::path;
+    path p(name);
+
+    auto dname = p.parent_path().relative_path();
+    auto bname = p.filename();
+    auto save_dir = f.GetDirectory(dname.c_str(), true);
+    if (!save_dir) {
+      std::cout << "mkdir " << f.GetName() << ":" << dname.c_str() << std::endl;
+      f.mkdir(dname.c_str(), "");
+      save_dir = f.GetDirectory(dname.c_str(), true);
+    }
+    save_dir->WriteTObject(&value, bname.c_str());
+  }, Predicates::AlwaysTrue, false);
+}
+} /// namespace Tools
+
+namespace Methods {
+
+Qn::DataContainerStatCalculate Resolution3S(const Qn::DataContainerStatCalculate &nom1,
+                                            const Qn::DataContainerStatCalculate &nom2,
+                                            const Qn::DataContainerStatCalculate &denom) {
+  auto nom = nom1 * nom2;
+  nom = 2 * nom;
+  return Qn::Sqrt(nom / denom);
+}
+
+} /// namespace Methods
 
 namespace Details {
 
@@ -151,32 +270,11 @@ std::vector<std::string> FindTDirectory(const TDirectory &dir, const std::string
   return result;
 }
 
-template<typename Tuple, std::size_t IArg>
-void SetArgI(const std::vector<std::string> &arg_names, Tuple &tuple) {
-  using ArgT = std::tuple_element_t<IArg, Tuple>;
-  auto &manager = ResourceManager::Instance();
-  try {
-    std::get<IArg>(tuple) = manager.GetRef<ArgT>(arg_names[IArg]);
-  } catch (std::bad_any_cast &e) {
-    throw Details::NoSuchResource(arg_names[IArg]);
-  }
 }
 
-template<typename Tuple, std::size_t ... IArg>
-void SetArgTupleImpl(const std::vector<std::string> &arg_names, Tuple &tuple, std::index_sequence<IArg...>) {
-  (SetArgI<Tuple, IArg>(arg_names, tuple), ...);
-}
-
-template<typename ... Args>
-void SetArgTuple(const std::vector<std::string> &arg_names, ::std::tuple<Args...> &tuple) {
-  SetArgTupleImpl(arg_names, tuple, std::make_index_sequence<sizeof...(Args)>());
-}
-
-}
-
-template<typename T>
-void AddResource(std::string name, T &&ref) {
-  ResourceManager::Instance().Add(name, std::forward<T>(ref));
+template<typename KeyRepr, typename T>
+void AddResource(const KeyRepr& key, T &&ref) {
+  ResourceManager::Instance().Add(key, std::forward<T>(ref));
 }
 
 template<typename T>
@@ -185,7 +283,7 @@ void AddResource(const std::string &name, T *ref) {
 }
 
 template<typename T>
-void LoadFile(const std::string &file_name, const std::string &manager_prefix = "") {
+void LoadROOTFile(const std::string &file_name, const std::string &manager_prefix = "") {
   TFile f(file_name.c_str(), "READ");
 
   for (const auto &path : Details::FindTDirectory(f)) {
@@ -198,60 +296,17 @@ void LoadFile(const std::string &file_name, const std::string &manager_prefix = 
   }
 }
 
-template<typename T>
-void ExportToROOT(const char *filename, const char *mode = "RECREATE") {
-  TFile f(filename, mode);
-  ResourceManager::Instance().ForEach([&f](const std::string &name, T &value) {
-    using std::filesystem::path;
-    path p(name);
-
-    auto dname = p.parent_path().relative_path();
-    auto bname = p.filename();
-    auto save_dir = f.GetDirectory(dname.c_str(), true);
-    if (!save_dir) {
-      std::cout << "mkdir " << f.GetName() << ":" << dname.c_str() << std::endl;
-      f.mkdir(dname.c_str(), "");
-      save_dir = f.GetDirectory(dname.c_str(), true);
-    }
-    save_dir->WriteTObject(&value, bname.c_str());
-  }, false);
-}
-
-template<typename Function>
-void Define(const std::string &name, Function &&fct, std::vector<std::string> arg_names, bool warn_at_missing = true) {
-  using ArgsTuple = typename Details::FunctionTraits<decltype(std::function{fct})>::ArgumentsTuple;
-  ArgsTuple args;
-  try {
-    Details::SetArgTuple(arg_names, args);
-    AddResource(name, std::apply(fct, args));
-  } catch (Details::NoSuchResource &e) {
-    if (warn_at_missing) {
-      Warning(__func__, "Resource '%s' required for '%s' is missing, new resource won't be added",
-              e.what(), name.c_str());
-    } else {
-      throw e; /* rethrow */
-    }
-  }
-}
-
-Qn::DataContainerStatCalculate Resolution3S(const Qn::DataContainerStatCalculate &nom1,
-                                            const Qn::DataContainerStatCalculate &nom2,
-                                            const Qn::DataContainerStatCalculate &denom) {
-  auto nom = nom1 * nom2;
-  nom = 2 * nom;
-  return Qn::Sqrt(nom / denom);
-}
-
 int main() {
   using std::string;
   using std::get;
   namespace Tools = Qn::Analysis::Tools;
 
   TFile f("correlation.root", "READ");
-  LoadFile<Qn::DataContainerStatCollect>(f.GetName(), "raw");
+  LoadROOTFile<Qn::DataContainerStatCollect>(f.GetName(), "raw");
 
-  ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCollect collect) {
-    AddResource("/calc" + name, Qn::DataContainerStatCalculate(collect));
+  ResourceManager::Instance().ForEach([](std::vector<std::string> key, Qn::DataContainerStatCollect &collect) {
+    key[0] = "calc";
+    AddResource(key, Qn::DataContainerStatCalculate(collect));
   });
 
   ResourceManager::Instance().Print();
@@ -268,16 +323,16 @@ int main() {
   for (auto component : {"x1x1", "y1y1"})
     for (auto &ref_args : args_list) {
       auto arg1_name =
-          "/calc/raw/QQ/" + get<0>(ref_args) + RECENTERED + "." + get<1>(ref_args) + RECENTERED + "." + component;
+          "/calc/QQ/" + get<0>(ref_args) + RECENTERED + "." + get<1>(ref_args) + RECENTERED + "." + component;
       auto arg2_name =
-          "/calc/raw/QQ/" + get<0>(ref_args) + RECENTERED + "." + get<2>(ref_args) + RECENTERED + "." + component;
+          "/calc/QQ/" + get<0>(ref_args) + RECENTERED + "." + get<2>(ref_args) + RECENTERED + "." + component;
       auto arg3_name =
-          "/calc/raw/QQ/" + get<1>(ref_args) + RECENTERED + "." + get<2>(ref_args) + RECENTERED + "." + component;
+          "/calc/QQ/" + get<1>(ref_args) + RECENTERED + "." + get<2>(ref_args) + RECENTERED + "." + component;
       auto resolution = "/resolution/3sub/RES_" + get<0>(ref_args) + "_" + component;
-      Define(resolution, Resolution3S, {arg1_name, arg2_name, arg3_name});
+      ::Tools::Define(resolution, Methods::Resolution3S, {arg1_name, arg2_name, arg3_name});
     }
 
-  ExportToROOT<Qn::DataContainerStatCalculate>("correlation_proc.root");
+  ::Tools::ExportToROOT<Qn::DataContainerStatCalculate>("correlation_proc.root");
 
   return 0;
 }
