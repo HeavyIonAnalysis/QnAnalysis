@@ -3,11 +3,13 @@
 //
 
 #include <DataContainer.hpp>
+#include <DataContainerHelper.hpp>
 
 #include <filesystem>
 #include <utility>
 #include <map>
 #include <any>
+#include <regex>
 #include <tuple>
 
 #include <TFile.h>
@@ -18,8 +20,6 @@
 #include <QnAnalysisTools/QnAnalysisTools.hpp>
 
 namespace Details {
-
-
 
 template<typename T>
 class Singleton {
@@ -53,7 +53,7 @@ struct FunctionTraits<std::function<R(Args...)>> {
 
 namespace Predicates {
 
-auto AlwaysTrue = [](const std::string&) -> bool { return true; };
+auto AlwaysTrue = [](const std::string &) -> bool { return true; };
 
 } /// namespace Predicates
 
@@ -64,17 +64,18 @@ struct Convert;
 
 template<>
 struct Convert<std::string> {
-  static std::string FromString(const std::string& str) { return str; }
-  static std::string ToString(const std::string& str) { return str; }
+  static std::string FromString(const std::string &str) { return str; }
+  static std::string ToString(const std::string &str) { return str; }
 };
 
 template<>
 struct Convert<std::vector<std::string>> {
-  static std::vector<std::string> FromString(const std::string& str) {
+  static std::vector<std::string> FromString(const std::string &str) {
     std::filesystem::path p(str);
     std::vector<std::string> result;
     for (auto &path_element : p)
-      if (path_element != "/") result.emplace_back(path_element.string());
+      if (path_element != "/")
+        result.emplace_back(path_element.string());
     return result;
   }
   static std::string ToString(const std::vector<std::string> &key) {
@@ -112,15 +113,14 @@ public:
     std::string resource_name;
   };
 
-
-
   typedef std::string KeyType;
 
   template<typename KeyRepr, typename T>
   void Add(const KeyRepr &key, T &&obj) {
+    static_assert(std::is_copy_constructible_v<T>, "T must be copy-constructible to be stored in ResourceManager");
     auto emplace_result = resources_.template emplace(
         Details::Convert<KeyRepr>::ToString(key),
-        obj);
+        std::make_shared<std::any>(obj));
     if (!emplace_result.second) {
       throw ResourceAlreadyExists(Details::Convert<KeyRepr>::ToString(key));
     }
@@ -143,22 +143,22 @@ public:
       throw NoSuchResource(key);
     }
     return std::any_cast<std::add_lvalue_reference_t<T>>(
-        resources_[Details::Convert<KeyRepr>::ToString(key)]);
+        (*resources_[Details::Convert<KeyRepr>::ToString(key)]));
   }
-
-
 
   template<typename Function, typename Predicate = decltype(Predicates::AlwaysTrue)>
   void ForEach(Function &&fct, Predicate predicate = Predicates::AlwaysTrue, bool warn_bad_cast = true) {
     using Traits = Details::FunctionTraits<decltype(std::function{fct})>;
-    for (auto &element : resources_) {
+
+    auto resources_copy = resources_;
+    for (auto &element : resources_copy) {
       if (predicate(element.first)) {
         try {
           static_assert(Traits::N_ARGS == 2);
           using KeyRepr = std::decay_t<typename Traits::template ArgType<0>>;
           using ArgType = typename Traits::template ArgType<1>;
           fct(Details::Convert<KeyRepr>::FromString(element.first) /* pass by value to prevent from unintentional change */,
-              std::any_cast<ArgType>(element.second));
+              std::any_cast<ArgType>(*element.second));
         } catch (std::bad_any_cast &e) {
           if (warn_bad_cast)
             Warning(__func__, "Bad cast for '%s'. Skipping...", element.first.c_str());
@@ -176,7 +176,7 @@ public:
 
 private:
 
-  std::map<KeyType, std::any> resources_;
+  std::map<KeyType, std::shared_ptr<std::any>> resources_;
 };
 
 namespace Tools {
@@ -218,6 +218,30 @@ void Define(const KeyRepr &key, Function &&fct, std::vector<std::string> arg_nam
       throw e; /* rethrow */
     }
   }
+}
+
+template<typename KeyRepr, typename Function>
+void Define1(const KeyRepr &key, Function &&fct, std::vector<std::string> arg_names, bool warn_at_missing = true) {
+  using Traits = ::Details::FunctionTraits<decltype(std::function{fct})>;
+  using Container = std::decay_t<typename Traits::template ArgType<0>>;
+  using Entity = typename Container::value_type;
+  Container args_container;
+  /* lookup arguments */
+  auto args_back_inserter = std::back_inserter(args_container);
+  for (auto &arg : arg_names) {
+    try {
+      *args_back_inserter = ResourceManager::Instance().template Get<std::string, Entity>(arg);
+    } catch (ResourceManager::NoSuchResource &e) {
+      if (warn_at_missing) {
+        Warning(__func__, "Resource '%s' required for '%s' is missing, new resource won't be added",
+                e.what(), key.c_str());
+        return;
+      } else {
+        throw e;
+      }
+    }
+  }
+  AddResource(key, fct(args_container));
 }
 
 template<typename T>
@@ -273,7 +297,7 @@ std::vector<std::string> FindTDirectory(const TDirectory &dir, const std::string
 }
 
 template<typename KeyRepr, typename T>
-void AddResource(const KeyRepr& key, T &&ref) {
+void AddResource(const KeyRepr &key, T &&ref) {
   ResourceManager::Instance().Add(key, std::forward<T>(ref));
 }
 
@@ -300,39 +324,74 @@ int main() {
   using std::string;
   using std::get;
   namespace Tools = Qn::Analysis::Tools;
+  using ::Tools::Define;
+  using ::Tools::Define1;
 
   TFile f("correlation.root", "READ");
   LoadROOTFile<Qn::DataContainerStatCollect>(f.GetName(), "raw");
 
+  /* Convert everything to Qn::DataContainerStatCalculate */
   ResourceManager::Instance().ForEach([](std::vector<std::string> key, Qn::DataContainerStatCollect &collect) {
     key[0] = "calc";
     AddResource(key, Qn::DataContainerStatCalculate(collect));
   });
+  /* To check compatibility with old stuff, multiply raw correlations by factor of 2 */
+  ResourceManager::Instance().ForEach([](std::vector<std::string> key, Qn::DataContainerStatCalculate calc) {
+    key[0] = "x2";
+    auto x2 = 2 * calc;
+    x2.SetErrors(Qn::StatCalculate::ErrorType::PROPAGATION);
+    AddResource(key, x2);
+  });
 
   ResourceManager::Instance().Print();
 
-  std::list<std::tuple<string, string, string>> args_list = {
+  std::vector<std::tuple<string, string, string>> args_list = {
       {"psd1", "psd2", "psd3"},
       {"psd2", "psd1", "psd3"},
       {"psd3", "psd1", "psd2"},
   };
-  std::list<std::string> components = {"x1x1", "y1y1"};
+  std::vector<std::string> components = {"x1x1", "y1y1"};
 
   const string RECENTERED = "_RECENTERED";
 
-  for (auto component : {"x1x1", "y1y1"})
-    for (auto &ref_args : args_list) {
-      auto arg1_name =
-          "/calc/QQ/" + get<0>(ref_args) + RECENTERED + "." + get<1>(ref_args) + RECENTERED + "." + component;
-      auto arg2_name =
-          "/calc/QQ/" + get<0>(ref_args) + RECENTERED + "." + get<2>(ref_args) + RECENTERED + "." + component;
-      auto arg3_name =
-          "/calc/QQ/" + get<1>(ref_args) + RECENTERED + "." + get<2>(ref_args) + RECENTERED + "." + component;
-      auto resolution = "/resolution/3sub/RES_" + get<0>(ref_args) + "_" + component;
-      ::Tools::Define(resolution, Methods::Resolution3S, {arg1_name, arg2_name, arg3_name});
-    }
+  for (auto && [component, ref_args] : Tools::Combination(components, args_list)) {
+    auto arg1_name =
+        "/calc/QQ/" + get<0>(ref_args) + RECENTERED + "." + get<1>(ref_args) + RECENTERED + "." + component;
+    auto arg2_name =
+        "/calc/QQ/" + get<0>(ref_args) + RECENTERED + "." + get<2>(ref_args) + RECENTERED + "." + component;
+    auto arg3_name =
+        "/calc/QQ/" + get<1>(ref_args) + RECENTERED + "." + get<2>(ref_args) + RECENTERED + "." + component;
+    auto resolution = "/resolution/3sub/RES_" + get<0>(ref_args) + "_" + component;
+    ::Tools::Define(resolution, Methods::Resolution3S, {arg1_name, arg2_name, arg3_name});
+  }
 
+  /* export everything to TGraph */
+  ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+    AddResource("/profiles" + name, *Qn::ToTGraph(calc));
+  }, [](const std::string &key) { return std::regex_match(key, std::regex("^/x2/QQ/.*$")); });
+  /* export PSD correlations to TGraph for comparison */
+  ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+    const std::regex re(".*(psd[1-3])_RECENTERED.(psd[1-3])_RECENTERED.([a-z])1([a-z])1");
+    std::smatch match_results;
+    auto graph = Qn::ToTGraph(calc);
+    auto asymmgraph = new TGraphAsymmErrors(graph->GetN(),
+                                            graph->GetX(),
+                                            graph->GetY(),
+                                            graph->GetEX(),
+                                            graph->GetEX(),
+                                            graph->GetEY(),
+                                            graph->GetEY());
+    if(std::regex_search(name, match_results, re)) {
+      AddResource("/raw/" +
+        match_results.str(1) + "_" +
+        match_results.str(2) + "_" +
+        string{(char)std::toupper(match_results.str(3)[0])} +
+        string{(char)std::toupper(match_results.str(4)[0])}, asymmgraph);
+    }
+  }, [](const std::string &key) { return std::regex_match(key, std::regex("^/x2.*psd[1-3]_RECENTERED.psd[1-3]_RECENTERED.*")); });
   ::Tools::ExportToROOT<Qn::DataContainerStatCalculate>("correlation_proc.root");
+  ::Tools::ExportToROOT<TGraphErrors>("prof.root");
+  ::Tools::ExportToROOT<TGraphAsymmErrors>("prof.root", "UPDATE");
 
   return 0;
 }
