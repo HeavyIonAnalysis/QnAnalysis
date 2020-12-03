@@ -27,7 +27,7 @@ _tasks_args:
     query: { tags: { any-in: [ un_vector ] } }
     query-list: *detectors
     components: *sp_components
-    correction-steps: [ plain ]
+    correction-steps: [ rescaled ]
     weight: sumw
   - &ta_sim
     query: { tags: { any-in: [ gen_un_vector ] } }
