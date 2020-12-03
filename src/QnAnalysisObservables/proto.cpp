@@ -3,12 +3,11 @@
 //
 
 #include <DataContainer.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/proto/proto.hpp>
 
 #include <filesystem>
 #include <utility>
 #include <map>
+#include <any>
 #include <tuple>
 
 #include <TFile.h>
@@ -28,7 +27,7 @@ struct ResourceAlreadyExists : public std::exception {
   ResourceAlreadyExists(const ResourceAlreadyExists &other) = default;
   const char *what() const
   _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW
-  override{
+  override {
     return resource_name.c_str();
   }
   std::string resource_name;
@@ -39,14 +38,13 @@ struct NoSuchResource : public std::exception {
   NoSuchResource(const NoSuchResource &Exception) = default;
   const char *what() const
   _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW
-  override{
+  override {
     return resource_name.c_str();
   }
 
   std::string resource_name;
 };
 
-}
 template<typename T>
 class Singleton {
 
@@ -61,21 +59,38 @@ public:
 };
 
 template<typename T>
-class ResourceManager : public Singleton<ResourceManager<T>> {
-public:
-  typedef std::string KeyType;
-  typedef T ResourceType;
-  typedef T *PointerType;
-  typedef T &ReferenceType;
+struct FunctionTraits {};
 
-  void Add(const KeyType &key, PointerType pointer) {
-    auto emplace_result = resources_.emplace(key, pointer);
+template<typename R, typename ...Args>
+struct FunctionTraits<std::function<R(Args...)>> {
+  using ReturnType = R;
+
+  enum { N_ARGS = sizeof...(Args) };
+
+  template<size_t I>
+  using ArgType = std::tuple_element_t<I, std::tuple<Args...>>;
+
+  using ArgumentsTuple = std::tuple<std::decay_t<Args>...>;
+};
+
+}
+
+class ResourceManager : public Details::Singleton<ResourceManager> {
+public:
+
+  typedef std::string KeyType;
+
+  template<typename T>
+  void Add(const KeyType &key, T &&obj) {
+    auto emplace_result = resources_.template emplace(key, obj);
     if (!emplace_result.second) {
       throw Details::ResourceAlreadyExists(key);
     }
   }
-  void Add(const KeyType &key, ReferenceType ref) {
-    Add(key, new ResourceType(ref));
+
+  template<typename T>
+  void Add(const KeyType &key, T *ptr) {
+    Add(key, *ptr);
   }
 
   bool Has(const KeyType &key) const {
@@ -83,22 +98,26 @@ public:
     return it != resources_.end();
   }
 
-  ReferenceType GetRef(const KeyType &key) const {
-    return *GetPtr(key);
-  }
-
-  PointerType GetPtr(const KeyType &key) const {
-    try {
-      return resources_.at(key);
-    } catch (std::out_of_range &) {
+  template<typename T>
+  T &GetRef(const KeyType &key) {
+    if (!Has(key)) {
       throw Details::NoSuchResource(key);
     }
+    return std::any_cast<std::add_lvalue_reference_t<T>>(resources_[key]);
   }
 
   template<typename Function>
-  void ForEach(Function &&f) {
-    for (auto[key, value] : resources_) {
-      f(key, GetRef(key));
+  void ForEach(Function &&fct, bool warn_bad_cast = true) {
+    using Traits = Details::FunctionTraits<decltype(std::function{fct})>;
+    for (auto &element : resources_) {
+      try {
+        static_assert(Traits::N_ARGS == 2);
+        using ArgType = typename Traits::ArgType<1>;
+        fct(element.first, std::any_cast<ArgType>(element.second));
+      } catch (std::bad_any_cast &e) {
+        if (warn_bad_cast)
+          Warning(__func__, "Bad cast for '%s'. Skipping...", element.first.c_str());
+      }
     }
   }
 
@@ -111,18 +130,10 @@ public:
 
 private:
 
-  std::map<KeyType, PointerType> resources_;
+  std::map<KeyType, std::any> resources_;
 };
 
 namespace Details {
-
-template<typename T>
-struct FunctionTraits {
-  template<typename R, typename ... As>
-  static ::std::tuple<std::decay_t<As>...> pro_args(std::function<R(As...)>);
-
-  using ArgumentsTuple = decltype(pro_args(std::function{std::declval<T>()}));
-};
 
 std::vector<std::string> FindTDirectory(const TDirectory &dir, const std::string &cwd = "") {
   std::vector<std::string> result;
@@ -143,8 +154,12 @@ std::vector<std::string> FindTDirectory(const TDirectory &dir, const std::string
 template<typename Tuple, std::size_t IArg>
 void SetArgI(const std::vector<std::string> &arg_names, Tuple &tuple) {
   using ArgT = std::tuple_element_t<IArg, Tuple>;
-  auto &manager = ResourceManager<ArgT>::Instance();
-  std::get<IArg>(tuple) = manager.GetRef(arg_names[IArg]);
+  auto &manager = ResourceManager::Instance();
+  try {
+    std::get<IArg>(tuple) = manager.GetRef<ArgT>(arg_names[IArg]);
+  } catch (std::bad_any_cast &e) {
+    throw Details::NoSuchResource(arg_names[IArg]);
+  }
 }
 
 template<typename Tuple, std::size_t ... IArg>
@@ -161,22 +176,22 @@ void SetArgTuple(const std::vector<std::string> &arg_names, ::std::tuple<Args...
 
 template<typename T>
 void AddResource(std::string name, T &&ref) {
-  ResourceManager<T>::Instance().Add(name, ref);
+  ResourceManager::Instance().Add(name, std::forward<T>(ref));
 }
 
 template<typename T>
-void AddResource(std::string name, T *ref) {
-  ResourceManager<T>::Instance().Add(name, ref);
+void AddResource(const std::string &name, T *ref) {
+  ResourceManager::Instance().Add(name, ref);
 }
 
 template<typename T>
-void LoadFile(const std::string &file_name, const std::string& manager_prefix = "") {
+void LoadFile(const std::string &file_name, const std::string &manager_prefix = "") {
   TFile f(file_name.c_str(), "READ");
 
   for (const auto &path : Details::FindTDirectory(f)) {
     auto ptr = f.Get<T>(path.c_str());
     if (ptr) {
-      auto manager_path = manager_prefix.empty()? path : "/" + manager_prefix + path;
+      auto manager_path = manager_prefix.empty() ? path : "/" + manager_prefix + path;
       std::cout << "Adding path '" << manager_path << "'" << std::endl;
       AddResource(manager_path, ptr);
     }
@@ -184,9 +199,9 @@ void LoadFile(const std::string &file_name, const std::string& manager_prefix = 
 }
 
 template<typename T>
-void ExportToROOT(const char *filename) {
-  TFile f(filename, "RECREATE");
-  ResourceManager<T>::Instance().ForEach([&f](const std::string &name, const T &value) {
+void ExportToROOT(const char *filename, const char *mode = "RECREATE") {
+  TFile f(filename, mode);
+  ResourceManager::Instance().ForEach([&f](const std::string &name, T &value) {
     using std::filesystem::path;
     path p(name);
 
@@ -199,16 +214,16 @@ void ExportToROOT(const char *filename) {
       save_dir = f.GetDirectory(dname.c_str(), true);
     }
     save_dir->WriteTObject(&value, bname.c_str());
-  });
+  }, false);
 }
 
 template<typename Function>
-void Define(const std::string &name, Function &&function, std::vector<std::string> arg_names, bool warn_at_missing = true) {
-  using ArgsTuple = typename Details::FunctionTraits<Function>::ArgumentsTuple;
+void Define(const std::string &name, Function &&fct, std::vector<std::string> arg_names, bool warn_at_missing = true) {
+  using ArgsTuple = typename Details::FunctionTraits<decltype(std::function{fct})>::ArgumentsTuple;
   ArgsTuple args;
   try {
     Details::SetArgTuple(arg_names, args);
-    AddResource(name, std::apply(function, args));
+    AddResource(name, std::apply(fct, args));
   } catch (Details::NoSuchResource &e) {
     if (warn_at_missing) {
       Warning(__func__, "Resource '%s' required for '%s' is missing, new resource won't be added",
@@ -235,12 +250,11 @@ int main() {
   TFile f("correlation.root", "READ");
   LoadFile<Qn::DataContainerStatCollect>(f.GetName(), "raw");
 
-  ResourceManager<Qn::DataContainerStatCollect>::Instance().ForEach([](const std::string &name,
-                                                                       Qn::DataContainerStatCollect collect) {
-    AddResource(name, Qn::DataContainerStatCalculate(collect));
+  ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCollect collect) {
+    AddResource("/calc" + name, Qn::DataContainerStatCalculate(collect));
   });
 
-  ResourceManager<Qn::DataContainerStatCalculate>::Instance().Print();
+  ResourceManager::Instance().Print();
 
   std::list<std::tuple<string, string, string>> args_list = {
       {"psd1", "psd2", "psd3"},
@@ -253,9 +267,12 @@ int main() {
 
   for (auto component : {"x1x1", "y1y1"})
     for (auto &ref_args : args_list) {
-      auto arg1_name = "/raw/QQ/" + get<0>(ref_args) + RECENTERED + "." + get<1>(ref_args) + RECENTERED + "." + component;
-      auto arg2_name = "/raw/QQ/" + get<0>(ref_args) + RECENTERED + "." + get<2>(ref_args) + RECENTERED + "." + component;
-      auto arg3_name = "/raw/QQ/" + get<1>(ref_args) + RECENTERED + "." + get<2>(ref_args) + RECENTERED + "." + component;
+      auto arg1_name =
+          "/calc/raw/QQ/" + get<0>(ref_args) + RECENTERED + "." + get<1>(ref_args) + RECENTERED + "." + component;
+      auto arg2_name =
+          "/calc/raw/QQ/" + get<0>(ref_args) + RECENTERED + "." + get<2>(ref_args) + RECENTERED + "." + component;
+      auto arg3_name =
+          "/calc/raw/QQ/" + get<1>(ref_args) + RECENTERED + "." + get<2>(ref_args) + RECENTERED + "." + component;
       auto resolution = "/resolution/3sub/RES_" + get<0>(ref_args) + "_" + component;
       Define(resolution, Resolution3S, {arg1_name, arg2_name, arg3_name});
     }
