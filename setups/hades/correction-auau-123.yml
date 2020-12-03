@@ -58,6 +58,7 @@ hades_analysis:
       type: track
       phi:  mdc_vtx_tracks/phi
       weight: Ones
+      norm: m
       corrections:
         - recentering
         - twist-and-rescale
@@ -78,6 +79,7 @@ hades_analysis:
       type: track
       phi:  mdc_vtx_tracks/phi
       weight: Ones
+      norm: m
       corrections:
         - recentering
         - twist-and-rescale
@@ -94,6 +96,7 @@ hades_analysis:
       type: track
       phi:  mdc_vtx_tracks/phi
       weight: Ones
+      norm: m
       corrections:
         - recentering
         - twist-and-rescale
@@ -110,6 +113,7 @@ hades_analysis:
       type: track
       phi:  forward_wall_hits/phi
       weight: forward_wall_hits/signal
+      norm: m
       corrections:
         - recentering
         - twist-and-rescale
@@ -120,6 +124,7 @@ hades_analysis:
       type: track
       phi:  forward_wall_hits/phi
       weight: forward_wall_hits/signal
+      norm: m
       corrections:
         - recentering
         - twist-and-rescale
@@ -130,6 +135,7 @@ hades_analysis:
       type: track
       phi:  forward_wall_hits/phi
       weight: forward_wall_hits/signal
+      norm: m
       corrections:
         - recentering
         - twist-and-rescale
@@ -140,6 +146,7 @@ hades_analysis:
       type: track
       phi:  forward_wall_hits/phi
       weight: forward_wall_hits/signal
+      norm: m
       corrections:
         - recentering
         - twist-and-rescale
@@ -150,6 +157,7 @@ hades_analysis:
       type: track
       phi:  forward_wall_hits/phi
       weight: forward_wall_hits/signal
+      norm: m
       corrections:
         - recentering
         - twist-and-rescale
