@@ -103,7 +103,7 @@ _tasks:
       - query: { tags: { any-in: [ wall_angles ] } }
         query-list: *detectors
         components: *ep_components # <un.x1*Qn.x1/|Qn|>
-        correction-steps: [ rescaled ]
+        correction-steps: [ plain ]
         weight: ones
     n-samples: 100
     weights-type: observable
