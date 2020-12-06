@@ -54,7 +54,7 @@ hades_analysis:
     - { name: event_header/selected_tof_rpc_hits_centrality, nb: 12, lo: 0.0, hi: 60 }
   q-vectors:
     #############################################################
-    - name: u
+    - name: protons
       type: track
       phi:  mdc_vtx_tracks/phi
       weight: Ones
@@ -75,7 +75,49 @@ hades_analysis:
         - *axis_rapidity
         - [*axis_rapidity, *axis_pT]
     #############################################################
-    - name: Mf_protons
+    - name: pi_plus
+      type: track
+      phi:  mdc_vtx_tracks/phi
+      weight: Ones
+      norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *axis_pT
+        - *axis_rapidity
+      cuts-pid:
+        *pion_plus_cuts
+      cuts-quality:
+        *good_particle_cuts
+      qa:
+        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_pT
+        - *axis_rapidity
+        - [*axis_rapidity, *axis_pT]
+    #############################################################
+    - name: pi_minus
+      type: track
+      phi:  mdc_vtx_tracks/phi
+      weight: Ones
+      norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *axis_pT
+        - *axis_rapidity
+      cuts-pid:
+        *pion_minus_cuts
+      cuts-quality:
+        *good_particle_cuts
+      qa:
+        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_pT
+        - *axis_rapidity
+        - [*axis_rapidity, *axis_pT]
+    #############################################################
+    - name: Mf
       type: track
       phi:  mdc_vtx_tracks/phi
       weight: Ones
@@ -92,7 +134,7 @@ hades_analysis:
       qa:
         - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
     #############################################################
-    - name: Mb_protons
+    - name: Mb
       type: track
       phi:  mdc_vtx_tracks/phi
       weight: Ones
