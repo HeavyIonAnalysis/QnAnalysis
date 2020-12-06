@@ -18,10 +18,20 @@ _axes:
     lo: -0.01
     hi: 1.49
 _cuts:
-  - &pid_cut
+  - &pid_protons_cut
     mdc_vtx_tracks/pid: { equals: 2212 }
-  - &gen_prim_cut
+  - &pid_pi_plus_cut
+    mdc_vtx_tracks/pid: { equals: 211 }
+  - &pid_pi_minus_cut
+    mdc_vtx_tracks/pid: { equals: -211 }
+  - &gen_prim_protons_cut
     sim_tracks/pid: { equals: 2212 }
+    sim_tracks/is_primary: { equals: 1 }
+  - &gen_prim_pi_plus_cut
+    sim_tracks/pid: { equals: 211 }
+    sim_tracks/is_primary: { equals: 1 }
+  - &gen_prim_pi_minus_cut
+    sim_tracks/pid: { equals: -211 }
     sim_tracks/is_primary: { equals: 1 }
   - &good_track_cuts
     mdc_vtx_tracks/dca_xy: {range: [-10.0, 10.0]}
@@ -34,7 +44,8 @@ hades_analysis:
   axes:
     - { name: event_header/selected_tof_rpc_hits_centrality, nb: 12, lo: 0.0, hi: 60 }
   q-vectors:
-    - name: pid
+    ###########################################################################
+    - name: pid_protons
       type: track
       phi:  mdc_vtx_tracks/phi
       weight: Ones
@@ -46,7 +57,7 @@ hades_analysis:
         - *axis_pT
         - *axis_rapidity
       cuts-pid:
-        *pid_cut
+        *pid_protons_cut
       cuts-quality:
         *good_track_cuts
       qa:
@@ -54,8 +65,50 @@ hades_analysis:
         - *axis_pT
         - *axis_rapidity
         - [*axis_rapidity, *axis_pT]
-###########################################################################
-    - name: gen_prim
+  ###########################################################################
+    - name: pid_pi_plus
+      type: track
+      phi:  mdc_vtx_tracks/phi
+      weight: Ones
+      norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *axis_pT
+        - *axis_rapidity
+      cuts-pid:
+        *pid_pi_plus_cut
+      cuts-quality:
+        *good_track_cuts
+      qa:
+        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_pT
+        - *axis_rapidity
+        - [*axis_rapidity, *axis_pT]
+  ###########################################################################
+    - name: pid_pi_minus
+      type: track
+      phi:  mdc_vtx_tracks/phi
+      weight: Ones
+      norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *axis_pT
+        - *axis_rapidity
+      cuts-pid:
+        *pid_pi_minus_cut
+      cuts-quality:
+        *good_track_cuts
+      qa:
+        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_pT
+        - *axis_rapidity
+        - [*axis_rapidity, *axis_pT]
+  ###########################################################################
+    - name: gen_prim_protons
       type: track
       phi:  sim_tracks/phi
       weight: Ones
@@ -64,13 +117,45 @@ hades_analysis:
         - *axis_gen_pT
         - *axis_gen_rapidity
       cuts-pid:
-        *gen_prim_cut
+        *gen_prim_protons_cut
       qa:
         - {name: sim_tracks/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_gen_pT
         - *axis_gen_rapidity
         - [*axis_gen_rapidity, *axis_gen_pT]
-###########################################################################
+  ###########################################################################
+    - name: gen_prim_pi_plus
+      type: track
+      phi:  sim_tracks/phi
+      weight: Ones
+      norm: m
+      axes:
+        - *axis_gen_pT
+        - *axis_gen_rapidity
+      cuts-pid:
+        *gen_prim_pi_plus_cut
+      qa:
+        - {name: sim_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_pT
+        - *axis_gen_rapidity
+        - [*axis_gen_rapidity, *axis_gen_pT]
+  ###########################################################################
+    - name: gen_prim_pi_minus
+      type: track
+      phi:  sim_tracks/phi
+      weight: Ones
+      norm: m
+      axes:
+        - *axis_gen_pT
+        - *axis_gen_rapidity
+      cuts-pid:
+        *gen_prim_pi_minus_cut
+      qa:
+        - {name: sim_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_pT
+        - *axis_gen_rapidity
+        - [*axis_gen_rapidity, *axis_gen_pT]
+  ###########################################################################
     - name: psi_rp
       type: psi
       phi: sim_header/reaction_plane
