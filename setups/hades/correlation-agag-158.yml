@@ -11,10 +11,10 @@ _detectors: &detectors
     tags: [ rnd_vector ]
   - name: R2
     tags: [ rnd_vector ]
-#  - name: wall_plain
-#    tags: [ wall_angles ]
-  - name: wall_bk_corr
+  - name: wall_plain
     tags: [ wall_angles ]
+#  - name: wall_bk_corr
+#    tags: [ wall_angles ]
   - name: Mf_protons
     tags: [ qn_vector ]
   - name: Mb_protons
