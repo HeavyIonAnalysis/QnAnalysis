@@ -53,7 +53,7 @@ hades_analysis:
     - name: u
       type: track
       phi:  mdc_vtx_tracks_rapidity/phi
-      weight: Ones
+      weight: mdc_vtx_tracks_rapidity/efficiency
       norm: m
       corrections:
         - recentering
