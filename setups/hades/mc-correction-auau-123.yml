@@ -2,13 +2,13 @@ _layouts:
 
 _axes:
   - &axis_pT
-    name: mdc_vtx_tracks/pT
+    name: mdc_vtx_tracks_rapidity/pT
     bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
   - &axis_gen_pT
     name: sim_tracks/pT
     bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
   - &axis_rapidity
-    name: mdc_vtx_tracks/rapidity
+    name: mdc_vtx_tracks_rapidity/rapidity
     nb: 15
     lo: -0.01
     hi: 1.49
@@ -19,11 +19,11 @@ _axes:
     hi: 1.49
 _cuts:
   - &pid_protons_cut
-    mdc_vtx_tracks/pid: { equals: 2212 }
+    mdc_vtx_tracks_rapidity/pid: { equals: 2212 }
   - &pid_pi_plus_cut
-    mdc_vtx_tracks/pid: { equals: 211 }
+    mdc_vtx_tracks_rapidity/pid: { equals: 211 }
   - &pid_pi_minus_cut
-    mdc_vtx_tracks/pid: { equals: -211 }
+    mdc_vtx_tracks_rapidity/pid: { equals: -211 }
   - &gen_prim_protons_cut
     sim_tracks/pid: { equals: 2212 }
     sim_tracks/is_primary: { equals: 1 }
@@ -34,9 +34,9 @@ _cuts:
     sim_tracks/pid: { equals: -211 }
     sim_tracks/is_primary: { equals: 1 }
   - &good_track_cuts
-    mdc_vtx_tracks/dca_xy: {range: [-10.0, 10.0]}
-    mdc_vtx_tracks/dca_z: {range: [-10.0, 10.0]}
-    mdc_vtx_tracks/chi2: {range: [0.0, 100.0]}
+    mdc_vtx_tracks_rapidity/dca_xy: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks_rapidity/dca_z: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks_rapidity/chi2: {range: [0.0, 100.0]}
 
 hades_analysis:
   event-variables:
@@ -47,7 +47,7 @@ hades_analysis:
     ###########################################################################
     - name: pid_protons
       type: track
-      phi:  mdc_vtx_tracks/phi
+      phi:  mdc_vtx_tracks_rapidity/phi
       weight: Ones
       norm: m
       corrections:
@@ -61,14 +61,14 @@ hades_analysis:
       cuts-quality:
         *good_track_cuts
       qa:
-        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_pT
         - *axis_rapidity
         - [*axis_rapidity, *axis_pT]
   ###########################################################################
     - name: pid_pi_plus
       type: track
-      phi:  mdc_vtx_tracks/phi
+      phi:  mdc_vtx_tracks_rapidity/phi
       weight: Ones
       norm: m
       corrections:
@@ -82,14 +82,14 @@ hades_analysis:
       cuts-quality:
         *good_track_cuts
       qa:
-        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_pT
         - *axis_rapidity
         - [*axis_rapidity, *axis_pT]
   ###########################################################################
     - name: pid_pi_minus
       type: track
-      phi:  mdc_vtx_tracks/phi
+      phi:  mdc_vtx_tracks_rapidity/phi
       weight: Ones
       norm: m
       corrections:
@@ -103,7 +103,7 @@ hades_analysis:
       cuts-quality:
         *good_track_cuts
       qa:
-        - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_pT
         - *axis_rapidity
         - [*axis_rapidity, *axis_pT]
