@@ -56,8 +56,8 @@ namespace Predicates {
 auto AlwaysTrue = [](const std::string &) -> bool { return true; };
 
 struct RegexMatch {
-  explicit RegexMatch(const std::string &expr_str) : expr(expr_str) {}
-  explicit RegexMatch(std::regex re_expr) : expr(std::move(re_expr)) {}
+  explicit RegexMatch(const std::string &regex_str) : expr(regex_str) {}
+  explicit RegexMatch(std::regex expr) : expr(std::move(expr)) {}
 
   bool operator () (const std::string &str) const {
     return std::regex_match(str, expr);
@@ -293,9 +293,9 @@ std::vector<std::string> FindTDirectory(const TDirectory &dir, const std::string
   std::vector<std::string> result;
 
   for (auto o : *dir.GetListOfKeys()) {
-    auto key_ptr = static_cast<TKey *>(o);
+    auto key_ptr = dynamic_cast<TKey *>(o);
     if (TClass::GetClass(key_ptr->GetClassName())->InheritsFrom(TDirectory::Class())) {
-      auto nested_dir = static_cast<TDirectory *>(key_ptr->ReadObj());
+      auto nested_dir = dynamic_cast<TDirectory *>(key_ptr->ReadObj());
       auto nested_contents = FindTDirectory(*nested_dir, cwd + "/" + nested_dir->GetName());
       std::move(std::begin(nested_contents), std::end(nested_contents), std::back_inserter(result));
     } else {
@@ -334,9 +334,11 @@ void LoadROOTFile(const std::string &file_name, const std::string &manager_prefi
 int main() {
   using std::string;
   using std::get;
-  namespace Tools = Qn::Analysis::Tools;
   using ::Tools::Define;
   using ::Tools::Define1;
+  namespace Tools = Qn::Analysis::Tools;
+
+  using namespace Predicates;
 
   TFile f("correlation.root", "READ");
   LoadROOTFile<Qn::DataContainerStatCollect>(f.GetName(), "raw");
@@ -380,7 +382,8 @@ int main() {
   ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
     auto graph = Qn::ToTGraph(calc);
     AddResource("/profiles" + name, graph);
-  }, [](const std::string &key) { return std::regex_match(key, std::regex("^(/x2/QQ/|/resolution).*$")); });
+  }, RegexMatch("^(/x2/QQ/|/resolution).*$"));
+
   /* export PSD correlations to TGraph for comparison */
   ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
     const std::regex re(".*(psd[1-3])_RECENTERED.(psd[1-3])_RECENTERED.([a-z])1([a-z])1");
@@ -404,7 +407,12 @@ int main() {
         string{(char)std::toupper(I1[0])} +
         string{(char)std::toupper(I2[0])}, asymmgraph);
     }
-  }, ::Predicates::RegexMatch("^/x2.*psd[1-3]_RECENTERED.psd[1-3]_RECENTERED.*"));
+  }, RegexMatch("^/x2.*psd[1-3]_RECENTERED.psd[1-3]_RECENTERED.*"));
+
+
+
+
+
   ::Tools::ExportToROOT<Qn::DataContainerStatCalculate>("correlation_proc.root");
   ::Tools::ExportToROOT<TGraphErrors>("prof.root");
   ::Tools::ExportToROOT<TGraphAsymmErrors>("prof.root", "UPDATE");
