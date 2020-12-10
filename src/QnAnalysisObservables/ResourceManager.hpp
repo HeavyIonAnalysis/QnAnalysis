@@ -8,9 +8,12 @@
 #include <tuple>
 #include <functional>
 #include <string>
+#include <utility>
 #include <vector>
 #include <any>
 #include <memory>
+
+#include <boost/property_tree/ptree.hpp>
 
 namespace Details {
 
@@ -78,6 +81,16 @@ struct Convert<std::vector<std::string>> {
 
 class ResourceManager : public Details::Singleton<ResourceManager> {
 public:
+  typedef boost::property_tree::ptree MetaType;
+
+  struct Resource {
+    Resource(std::any o, const MetaType &m) : obj(std::move(o)), meta(m) {}
+    std::any obj;
+    MetaType meta;
+  };
+
+  typedef std::shared_ptr<Resource> ResourcePtr;
+
   struct ResourceAlreadyExists : public std::exception {
     explicit ResourceAlreadyExists(std::string resource_name_) : resource_name(std::move(resource_name_)) {}
     ResourceAlreadyExists(const ResourceAlreadyExists &other) = default;
@@ -104,19 +117,19 @@ public:
   typedef std::string KeyType;
 
   template<typename KeyRepr, typename T>
-  void Add(const KeyRepr &key, T &&obj) {
-    static_assert(std::is_copy_constructible_v<T>, "T must be copy-constructible to be stored in ResourceManager");
+  void Add(const KeyRepr &key, T &&obj, MetaType m = MetaType()) {
+    static_assert(std::is_copy_constructible_v<T>, "T must be copy-constructable to be stored in ResourceManager");
     auto emplace_result = resources_.template emplace(
         Details::Convert<KeyRepr>::ToString(key),
-        std::make_shared<std::any>(obj));
+        std::make_shared<Resource>(obj, m));
     if (!emplace_result.second) {
       throw ResourceAlreadyExists(Details::Convert<KeyRepr>::ToString(key));
     }
   }
 
   template<typename KeyRepr, typename T>
-  void Add(const KeyRepr &key, T *ptr) {
-    Add(key, *ptr);
+  void Add(const KeyRepr &key, T *ptr, MetaType m = MetaType()) {
+    Add(key, *ptr, m);
   }
 
   template<typename KeyRepr>
@@ -131,7 +144,7 @@ public:
       throw NoSuchResource(key);
     }
     return std::any_cast<std::add_lvalue_reference_t<T>>(
-        (*resources_[Details::Convert<KeyRepr>::ToString(key)]));
+        (resources_[Details::Convert<KeyRepr>::ToString(key)]->obj));
   }
 
   template<typename Function, typename Predicate = decltype(Predicates::AlwaysTrue)>
@@ -146,7 +159,7 @@ public:
           using KeyRepr = std::decay_t<typename Traits::template ArgType<0>>;
           using ArgType = typename Traits::template ArgType<1>;
           fct(Details::Convert<KeyRepr>::FromString(element.first) /* pass by value to prevent from unintentional change */,
-              std::any_cast<ArgType>(*element.second));
+              Get<std::string, ArgType>(element.first));
         } catch (std::bad_any_cast &e) {
           if (warn_bad_cast)
             Warning(__func__, "Bad cast for '%s'. Skipping...", element.first.c_str());
@@ -164,7 +177,7 @@ public:
 
 private:
 
-  std::map<KeyType, std::shared_ptr<std::any>> resources_;
+  std::map<KeyType, ResourcePtr> resources_;
 };
 
 #endif //QNANALYSIS_SRC_QNANALYSISOBSERVABLES_RESOURCEMANAGER_HPP
