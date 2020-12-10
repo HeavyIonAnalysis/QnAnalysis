@@ -14,6 +14,7 @@
 #include <memory>
 
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 namespace Details {
 
@@ -142,20 +143,23 @@ public:
     return it != resources_.end();
   }
 
-  template<typename KeyRepr, typename T>
-  T &Get(const KeyRepr &key, ResTag<T>) {
+  template<typename KeyRepr>
+  void CheckResource(const KeyRepr& key) {
     if (!Has(key)) {
       throw NoSuchResource(key);
     }
+  }
+
+  template<typename KeyRepr, typename T>
+  T &Get(const KeyRepr &key, ResTag<T> tag) {
+    CheckResource(key);
     return std::any_cast<std::add_lvalue_reference_t<T>>(
         (resources_[Details::Convert<KeyRepr>::ToString(key)]->obj));
   }
 
   template<typename KeyRepr>
   MetaType &Get(const KeyRepr& key, ResTag<MetaType>) {
-    if (!Has(key)) {
-      throw NoSuchResource(key);
-    }
+    CheckResource(key);
     return resources_[Details::Convert<KeyRepr>::ToString(key)]->meta;
   }
 
@@ -183,7 +187,9 @@ public:
   void Print() {
     std::cout << "Keys: " << std::endl;
     for (auto &element : resources_) {
-      std::cout << "\t" << element.first << std::endl;
+      std::cout << "\t" << element.first;
+      std::cout << " meta: ";
+      boost::property_tree::write_json(std::cout, element.second->meta, false);
     }
   }
 
