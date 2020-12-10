@@ -87,7 +87,7 @@ public:
   typedef std::shared_ptr<Resource> ResourcePtr;
 
   struct Resource {
-    Resource(std::any o, const MetaType &m) : obj(std::move(o)), meta(m) {}
+    Resource(std::any && o, const MetaType &m) : obj(o), meta(m) {}
     std::any obj;
     MetaType meta;
   };
@@ -126,7 +126,7 @@ public:
     static_assert(std::is_copy_constructible_v<T>, "T must be copy-constructable to be stored in ResourceManager");
     auto emplace_result = resources_.template emplace(
         Details::Convert<KeyRepr>::ToString(key),
-        std::make_shared<Resource>(obj, m));
+        std::make_shared<Resource>(std::forward<T>(obj), m));
     if (!emplace_result.second) {
       throw ResourceAlreadyExists(Details::Convert<KeyRepr>::ToString(key));
     }
@@ -161,6 +161,12 @@ public:
   MetaType &Get(const KeyRepr& key, ResTag<MetaType>) {
     CheckResource(key);
     return resources_[Details::Convert<KeyRepr>::ToString(key)]->meta;
+  }
+
+  template<typename KeyRepr>
+  Resource &Get(const KeyRepr& key, ResTag<Resource>) {
+    CheckResource(key);
+    return *resources_[Details::Convert<KeyRepr>::ToString(key)];
   }
 
   template<typename Function, typename Predicate = decltype(Predicates::AlwaysTrue)>
