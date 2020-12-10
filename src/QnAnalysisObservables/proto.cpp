@@ -32,7 +32,7 @@ void SetArgI(const std::vector<std::string> &arg_names, Tuple &tuple) {
   using ArgT = std::tuple_element_t<IArg, Tuple>;
   auto &manager = ResourceManager::Instance();
   try {
-    std::get<IArg>(tuple) = manager.Get<std::string, ArgT>(arg_names[IArg]);
+    std::get<IArg>(tuple) = manager.Get(arg_names[IArg], ResourceManager::ResTag<ArgT>());
   } catch (std::bad_any_cast &e) {
     throw ResourceManager::NoSuchResource(arg_names[IArg]);
   }
@@ -165,6 +165,12 @@ int main() {
   TFile f("correlation.root", "READ");
   LoadROOTFile<Qn::DataContainerStatCollect>(f.GetName(), "raw");
 
+  ResourceManager::Instance().ForEach([] (const std::string &name, ResourceManager::MetaType &m) {
+    m.put("name", name);
+  });
+  ResourceManager::Instance().ForEach([] (const std::string &name, ResourceManager::MetaType &m) {
+    std::cout << m.get<std::string>("name") << std::endl;
+  });
   /* Convert everything to Qn::DataContainerStatCalculate */
   ResourceManager::Instance().ForEach([](std::vector<std::string> key, Qn::DataContainerStatCollect &collect) {
     key[0] = "calc";
