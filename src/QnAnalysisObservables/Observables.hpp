@@ -1,0 +1,12 @@
+//
+// Created by eugene on 10/12/2020.
+//
+
+#ifndef QNANALYSIS_SRC_QNANALYSISOBSERVABLES_OBSERVABLES_HPP
+#define QNANALYSIS_SRC_QNANALYSISOBSERVABLES_OBSERVABLES_HPP
+
+#include "Predicates.hpp"
+#include "Methods.hpp"
+#include "ResourceManager.hpp"
+
+#endif //QNANALYSIS_SRC_QNANALYSISOBSERVABLES_OBSERVABLES_HPP
