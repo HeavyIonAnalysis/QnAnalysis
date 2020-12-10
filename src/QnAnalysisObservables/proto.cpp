@@ -55,6 +55,17 @@ namespace Predicates {
 
 auto AlwaysTrue = [](const std::string &) -> bool { return true; };
 
+struct RegexMatch {
+  explicit RegexMatch(const std::string &expr_str) : expr(expr_str) {}
+  explicit RegexMatch(std::regex re_expr) : expr(std::move(re_expr)) {}
+
+  bool operator () (const std::string &str) const {
+    return std::regex_match(str, expr);
+  }
+
+  const std::regex expr;
+};
+
 } /// namespace Predicates
 
 namespace Details {
@@ -367,8 +378,9 @@ int main() {
 
   /* export everything to TGraph */
   ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
-    AddResource("/profiles" + name, *Qn::ToTGraph(calc));
-  }, [](const std::string &key) { return std::regex_match(key, std::regex("^/x2/QQ/.*$")); });
+    auto graph = Qn::ToTGraph(calc);
+    AddResource("/profiles" + name, graph);
+  }, [](const std::string &key) { return std::regex_match(key, std::regex("^(/x2/QQ/|/resolution).*$")); });
   /* export PSD correlations to TGraph for comparison */
   ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
     const std::regex re(".*(psd[1-3])_RECENTERED.(psd[1-3])_RECENTERED.([a-z])1([a-z])1");
@@ -382,13 +394,17 @@ int main() {
                                             graph->GetEY(),
                                             graph->GetEY());
     if(std::regex_search(name, match_results, re)) {
-      AddResource("/raw/" +
-        match_results.str(1) + "_" +
-        match_results.str(2) + "_" +
-        string{(char)std::toupper(match_results.str(3)[0])} +
-        string{(char)std::toupper(match_results.str(4)[0])}, asymmgraph);
+      auto Q1 = match_results.str(1);
+      auto Q2 = match_results.str(2);
+      auto I1 = match_results.str(3);
+      auto I2 = match_results.str(4);
+      asymmgraph->SetTitle(("Q^{" + Q1 + "}_{1," + I1 + "} " +  "Q^{" + Q2 + "}_{1," + I2 + "} new soft").c_str());
+      asymmgraph->GetXaxis()->SetTitle("PSD Centrality (%)");
+      AddResource("/raw/" + Q1 + "_" + Q2 + "_" +
+        string{(char)std::toupper(I1[0])} +
+        string{(char)std::toupper(I2[0])}, asymmgraph);
     }
-  }, [](const std::string &key) { return std::regex_match(key, std::regex("^/x2.*psd[1-3]_RECENTERED.psd[1-3]_RECENTERED.*")); });
+  }, ::Predicates::RegexMatch("^/x2.*psd[1-3]_RECENTERED.psd[1-3]_RECENTERED.*"));
   ::Tools::ExportToROOT<Qn::DataContainerStatCalculate>("correlation_proc.root");
   ::Tools::ExportToROOT<TGraphErrors>("prof.root");
   ::Tools::ExportToROOT<TGraphAsymmErrors>("prof.root", "UPDATE");
