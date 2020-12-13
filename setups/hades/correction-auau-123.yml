@@ -1,9 +1,12 @@
 _layouts:
 
 _axes:
-  - &axis_pT
+  - &axis_protons_pT
     name: mdc_vtx_tracks_rapidity/pT
     bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
+  - &axis_pions_pT
+    name: mdc_vtx_tracks_rapidity/pT
+    bin-edges: [0, 0.0825, 0.1075, 0.1275, 0.1525, 0.1775, 0.2075, 0.2475, 0.3075, 0.4725, 1.0]
   - &axis_rapidity
     name: mdc_vtx_tracks_rapidity/rapidity
     nb: 15
@@ -63,7 +66,7 @@ hades_analysis:
         - recentering
         - twist-and-rescale
       axes:
-        - *axis_pT
+        - *axis_protons_pT
         - *axis_rapidity
       cuts-pid:
         *protons_cuts
@@ -71,9 +74,9 @@ hades_analysis:
         *good_particle_cuts
       qa:
         - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
-        - *axis_pT
+        - *axis_protons_pT
         - *axis_rapidity
-        - [*axis_rapidity, *axis_pT]
+        - [*axis_rapidity, *axis_protons_pT]
     #############################################################
     - name: pi_plus
       type: track
@@ -84,7 +87,7 @@ hades_analysis:
         - recentering
         - twist-and-rescale
       axes:
-        - *axis_pT
+        - *axis_pions_pT
         - *axis_rapidity
       cuts-pid:
         *pion_plus_cuts
@@ -92,9 +95,9 @@ hades_analysis:
         *good_particle_cuts
       qa:
         - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
-        - *axis_pT
+        - *axis_pions_pT
         - *axis_rapidity
-        - [*axis_rapidity, *axis_pT]
+        - [*axis_rapidity, *axis_pions_pT]
     #############################################################
     - name: pi_minus
       type: track
@@ -105,7 +108,7 @@ hades_analysis:
         - recentering
         - twist-and-rescale
       axes:
-        - *axis_pT
+        - *axis_pions_pT
         - *axis_rapidity
       cuts-pid:
         *pion_minus_cuts
@@ -113,9 +116,9 @@ hades_analysis:
         *good_particle_cuts
       qa:
         - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
-        - *axis_pT
+        - *axis_pions_pT
         - *axis_rapidity
-        - [*axis_rapidity, *axis_pT]
+        - [*axis_rapidity, *axis_pions_pT]
     #############################################################
     - name: Mf
       type: track
