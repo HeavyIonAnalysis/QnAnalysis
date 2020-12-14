@@ -103,6 +103,11 @@ public:
     T *Ptr() {
       return std::any_cast<T>(&obj);
     }
+
+    void Print(std::ostream& os = std::cout) const {
+      os << "meta: ";
+      boost::property_tree::write_json(os, meta, false);
+    }
   };
 
   template<typename T>
@@ -206,9 +211,8 @@ public:
   void Print() {
     std::cout << "Keys: " << std::endl;
     for (auto &element : resources_) {
-      std::cout << "\t" << element.first;
-      std::cout << " meta: ";
-      boost::property_tree::write_json(std::cout, element.second->meta, false);
+      std::cout << "\t" << element.first << "\t";
+      element.second->Print(std::cout);
     }
   }
 

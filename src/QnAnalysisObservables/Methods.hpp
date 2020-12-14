@@ -24,7 +24,7 @@ Resolution3S(Resource nom1, Resource nom2, Resource denom) {
   meta.put("method", "3sub");
   meta.put("source", __func__);
   meta.put("reference", ""); // TODO
-  meta.put("component", ""); // TODO
+  meta.put("projection", ""); // TODO
 
   return ResourceManager::Resource(
       Qn::Sqrt(nom / denom.As<Qn::DataContainerStatCalculate>()),
