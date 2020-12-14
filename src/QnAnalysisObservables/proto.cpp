@@ -129,15 +129,7 @@ std::vector<std::string> FindTDirectory(const TDirectory &dir, const std::string
 
 }
 
-template<typename KeyRepr, typename T>
-void AddResource(const KeyRepr &key, T &&ref) {
-  ResourceManager::Instance().Add(key, std::forward<T>(ref));
-}
 
-template<typename T>
-void AddResource(const std::string &name, T *ref) {
-  ResourceManager::Instance().Add(name, ref);
-}
 
 template<typename T>
 void LoadROOTFile(const std::string &file_name, const std::string &manager_prefix = "") {
@@ -165,12 +157,6 @@ int main() {
   TFile f("correlation.root", "READ");
   LoadROOTFile<Qn::DataContainerStatCollect>(f.GetName(), "raw");
 
-  ResourceManager::Instance().ForEach([] (const std::string &name, ResourceManager::MetaType &m) {
-    m.put("name", name);
-  });
-  ResourceManager::Instance().ForEach([] (const std::string &name, ResourceManager::MetaType &m) {
-    std::cout << m.get<std::string>("name") << std::endl;
-  });
   /* Convert everything to Qn::DataContainerStatCalculate */
   ResourceManager::Instance().ForEach([](std::vector<std::string> key, Qn::DataContainerStatCollect &collect) {
     key[0] = "calc";
@@ -184,7 +170,6 @@ int main() {
     AddResource(key, x2);
   });
 
-  ResourceManager::Instance().Print();
 
   std::vector<std::tuple<string, string, string>> args_list = {
       {"psd1", "psd2", "psd3"},
@@ -240,6 +225,7 @@ int main() {
 
 
 
+  ResourceManager::Instance().Print();
 
   ::Tools::ExportToROOT<Qn::DataContainerStatCalculate>("correlation_proc.root");
   ::Tools::ExportToROOT<TGraphErrors>("prof.root");
