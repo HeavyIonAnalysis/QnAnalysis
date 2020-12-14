@@ -105,7 +105,7 @@ public:
     }
 
     void Print(std::ostream& os = std::cout) const {
-      os << "meta: ";
+      os << "name:" << name << "\t" << "meta:";
       boost::property_tree::write_json(os, meta, false);
     }
   };
@@ -211,7 +211,6 @@ public:
   void Print() {
     std::cout << "Keys: " << std::endl;
     for (auto &element : resources_) {
-      std::cout << "\t" << element.first << "\t";
       element.second->Print(std::cout);
     }
   }

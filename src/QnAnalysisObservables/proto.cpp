@@ -159,6 +159,7 @@ int main() {
 
   /* Convert everything to Qn::DataContainerStatCalculate */
   ResourceManager::Instance().ForEach([](std::vector<std::string> key, Qn::DataContainerStatCollect &collect) {
+    /* replacing /raw with /calc */
     key[0] = "calc";
     AddResource(key, Qn::DataContainerStatCalculate(collect));
   });
@@ -166,11 +167,11 @@ int main() {
   ResourceManager::Instance().ForEach([](std::vector<std::string> key, Qn::DataContainerStatCalculate calc) {
     key[0] = "x2";
     auto x2 = 2 * calc;
-    x2.SetErrors(Qn::StatCalculate::ErrorType::PROPAGATION);
+    x2.SetErrors(Qn::StatCalculate::ErrorType::PROPAGATION); // Errors
     AddResource(key, x2);
   });
 
-
+  /* RESOLUTION 3-sub */
   std::vector<std::tuple<string, string, string>> args_list = {
       {"psd1", "psd2", "psd3"},
       {"psd2", "psd1", "psd3"},
@@ -190,6 +191,18 @@ int main() {
     auto resolution = "/resolution/3sub/RES_" + get<0>(ref_args) + "_" + component;
     ::Tools::Define(resolution, Methods::Resolution3S, {arg1_name, arg2_name, arg3_name});
   }
+
+  /* Projection _y correlations to pT axis  */
+  ResourceManager::Instance().ForEach([] (const std::string& name, Qn::DataContainerStatCalculate& calc) {
+    calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_y_cm"});
+  }, RegexMatch(R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
+  /* Projection _pT correlations to 'y' axis  */
+  ResourceManager::Instance().ForEach([] (const std::string& name, Qn::DataContainerStatCalculate& calc) {
+    calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_pT"});
+  }, RegexMatch(R"(/calc/uQ/(\w+)_pt_(\w+)\..*)"));
+
+
+  /****************** DRAWING *********************/
 
   /* export everything to TGraph */
   ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
