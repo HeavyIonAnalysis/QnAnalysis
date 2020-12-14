@@ -11,11 +11,11 @@ _detectors: &detectors
     correction-step: RESCALED
     components: [x1,y1]
     tags: [ep-vectors, res-vectors]
-  - name: Mf
+  - name: Mf_protons
     correction-step: RESCALED
     components: [x1,y1]
     tags: [res-vectors]
-  - name: Mb
+  - name: Mb_protons
     correction-step: RESCALED
     components: [x1,y1]
     tags: [res-vectors]
@@ -24,6 +24,6 @@ _observables:
   - method: three-sub-event
     QQ-directory: QQ/SP
     uQ-directory: uQ/SP
-    u-vector: {name: pi_plus, components: [x1, y1], correction-step: RESCALED}
+    u-vector: {name: u, components: [x1, y1], correction-step: RESCALED}
     EP-vectors: ep-vectors
     resolution-vectors: res-vectors
