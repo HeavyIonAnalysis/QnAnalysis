@@ -87,10 +87,23 @@ public:
   typedef std::shared_ptr<Resource> ResourcePtr;
 
   struct Resource {
-    Resource(std::any && o, const MetaType &m) : obj(o), meta(m) {}
+    Resource() = default;
+    Resource(std::string n, std::any &&o, const MetaType &m) : name(std::move(n)), obj(o), meta(m) {}
+    std::string name;
     std::any obj;
     MetaType meta;
+
+    template<typename T>
+    T& Ref() {
+      return std::any_cast<T&>(obj);
+    }
+
+    template<typename T>
+    T* Ptr() {
+      return std::any_cast<T>(&obj);
+    }
   };
+
 
   template <typename T>
   struct ResTag {};
@@ -126,7 +139,7 @@ public:
     static_assert(std::is_copy_constructible_v<T>, "T must be copy-constructable to be stored in ResourceManager");
     auto emplace_result = resources_.template emplace(
         Details::Convert<KeyRepr>::ToString(key),
-        std::make_shared<Resource>(std::forward<T>(obj), m));
+        std::make_shared<Resource>(Details::Convert<KeyRepr>::ToString(key), std::forward<T>(obj) , m));
     if (!emplace_result.second) {
       throw ResourceAlreadyExists(Details::Convert<KeyRepr>::ToString(key));
     }
@@ -151,7 +164,7 @@ public:
   }
 
   template<typename KeyRepr, typename T>
-  T &Get(const KeyRepr &key, ResTag<T> tag) {
+  T &Get(const KeyRepr &key, ResTag<T>) {
     CheckResource(key);
     return std::any_cast<std::add_lvalue_reference_t<T>>(
         (resources_[Details::Convert<KeyRepr>::ToString(key)]->obj));

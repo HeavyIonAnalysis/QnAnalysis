@@ -11,12 +11,12 @@ namespace Methods {
 
 inline
 Qn::DataContainerStatCalculate
-Resolution3S(const Qn::DataContainerStatCalculate &nom1,
-             const Qn::DataContainerStatCalculate &nom2,
-             const Qn::DataContainerStatCalculate &denom) {
-  auto nom = nom1 * nom2;
+Resolution3S(ResourceManager::Resource nom1,
+             ResourceManager::Resource nom2,
+             ResourceManager::Resource denom) {
+  auto nom = nom1.Ref<Qn::DataContainerStatCalculate>() * nom2.Ref<Qn::DataContainerStatCalculate>();
   nom = 2 * nom;
-  return Qn::Sqrt(nom / denom);
+  return Qn::Sqrt(nom / denom.Ref<Qn::DataContainerStatCalculate>());
 }
 
 } /// namespace Methods
