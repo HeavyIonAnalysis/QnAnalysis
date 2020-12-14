@@ -150,6 +150,7 @@ int main() {
   using std::get;
   using ::Tools::Define;
   using ::Tools::Define1;
+  using ::Tools::Format;
   namespace Tools = Qn::Analysis::Tools;
 
   using namespace Predicates;
@@ -179,17 +180,14 @@ int main() {
   };
   std::vector<std::string> components = {"x1x1", "y1y1"};
 
-  const string RECENTERED = "_RECENTERED";
-
   for (auto && [component, ref_args] : Tools::Combination(components, args_list)) {
-    auto arg1_name =
-        "/calc/QQ/" + get<0>(ref_args) + RECENTERED + "." + get<1>(ref_args) + RECENTERED + "." + component;
-    auto arg2_name =
-        "/calc/QQ/" + get<0>(ref_args) + RECENTERED + "." + get<2>(ref_args) + RECENTERED + "." + component;
-    auto arg3_name =
-        "/calc/QQ/" + get<1>(ref_args) + RECENTERED + "." + get<2>(ref_args) + RECENTERED + "." + component;
-    auto resolution = "/resolution/3sub/RES_" + get<0>(ref_args) + "_" + component;
-    ::Tools::Define(resolution, Methods::Resolution3S, {arg1_name, arg2_name, arg3_name});
+    std::string subA, subB, subC;
+    std::tie(subA, subB, subC) = ref_args;
+    auto arg1_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subB % component).str();
+    auto arg2_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subC % component).str();
+    auto arg3_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subB % subC % component).str();
+    auto resolution = Format("/resolution/3sub/RES_%1%_%2%") % subA % component;
+    ::Tools::Define(resolution.str(), Methods::Resolution3S, {arg1_name, arg2_name, arg3_name});
   }
 
   /* Projection _y correlations to pT axis  */
