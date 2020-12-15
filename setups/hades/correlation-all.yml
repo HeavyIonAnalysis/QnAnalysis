@@ -1,5 +1,7 @@
 _detectors: &detectors
-  - name: u
+  - name: protons
+    tags: [ un_vector ]
+  - name: pions
     tags: [ un_vector ]
   - name: W1
     tags: [ qn_vector ]
@@ -11,9 +13,9 @@ _detectors: &detectors
     tags: [ rnd_vector ]
   - name: R2
     tags: [ rnd_vector ]
-  - name: Mf_protons
+  - name: Mf
     tags: [ qn_vector ]
-  - name: Mb_protons
+  - name: Mb
     tags: [ qn_vector ]
 
 _axes:

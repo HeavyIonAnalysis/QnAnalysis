@@ -7,11 +7,16 @@ _axes:
   - &axis_pions_pT
     name: mdc_vtx_tracks_rapidity/pT
     bin-edges: [0, 0.0825, 0.1075, 0.1275, 0.1525, 0.1775, 0.2075, 0.2475, 0.3075, 0.4725, 1.0]
-  - &axis_rapidity
-    name: mdc_vtx_tracks_rapidity/rapidity
+  - &axis_protons_rapidity
+    name: mdc_vtx_tracks_rapidity/protons_rapidity
     nb: 15
     lo: -0.01
     hi: 1.49
+  - &axis_pions_rapidity
+    name: mdc_vtx_tracks_rapidity/pions_rapidity
+    nb: 17
+    lo: 0.09
+    hi: 1.79
 _cuts:
   - &protons_cuts
     mdc_vtx_tracks/pid: { equals: 2212 }
@@ -53,7 +58,26 @@ hades_analysis:
     - { name: event_header/selected_tof_rpc_hits_centrality, nb: 12, lo: 0.0, hi: 60 }
   q-vectors:
     #############################################################
-    - name: u
+    - name: protons
+      type: track
+      phi:  mdc_vtx_tracks_rapidity/phi
+      weight: mdc_vtx_tracks_rapidity/efficiency
+      norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *axis_protons_pT
+        - *axis_protons_rapidity
+      cuts:
+        mdc_vtx_tracks_rapidity/chi2: {range: [0.0, 100.0]}
+      qa:
+        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_protons_pT
+        - *axis_protons_rapidity
+        - [*axis_protons_rapidity, *axis_protons_pT]
+    #############################################################
+    - name: pions
       type: track
       phi:  mdc_vtx_tracks_rapidity/phi
       weight: mdc_vtx_tracks_rapidity/efficiency
@@ -63,16 +87,16 @@ hades_analysis:
         - twist-and-rescale
       axes:
         - *axis_pions_pT
-        - *axis_rapidity
+        - *axis_pions_rapidity
       cuts:
         mdc_vtx_tracks_rapidity/chi2: {range: [0.0, 100.0]}
       qa:
         - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_pions_pT
-        - *axis_rapidity
-        - [*axis_rapidity, *axis_pions_pT]
+        - *axis_pions_rapidity
+        - [*axis_pions_rapidity, *axis_pions_pT]
     #############################################################
-    - name: Mf_protons
+    - name: Mf
       type: track
       phi:  mdc_vtx_tracks/phi
       weight: Ones
@@ -89,7 +113,7 @@ hades_analysis:
       qa:
         - {name: mdc_vtx_tracks/phi, nb: 100, lo: -4., hi: 4.}
     #############################################################
-    - name: Mb_protons
+    - name: Mb
       type: track
       phi:  mdc_vtx_tracks/phi
       weight: Ones
