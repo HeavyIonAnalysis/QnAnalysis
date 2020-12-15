@@ -152,6 +152,10 @@ public:
 
   template<typename KeyRepr, typename T>
   void Add(const KeyRepr &key, T *ptr, MetaType m = MetaType()) {
+    if (!ptr) {
+      Warning(__func__, "Ignoring nullptr object");
+      return;
+    }
     Add(key, *ptr, std::move(m));
   }
 

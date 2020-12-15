@@ -5,23 +5,21 @@
 #include <DataContainer.hpp>
 #include <DataContainerHelper.hpp>
 
-#include <filesystem>
-#include <utility>
-#include <map>
 #include <any>
+#include <filesystem>
+#include <map>
 #include <regex>
 #include <tuple>
+#include <utility>
 
+#include <TClass.h>
+#include <TDirectory.h>
 #include <TFile.h>
 #include <TKey.h>
-#include <TDirectory.h>
-#include <TClass.h>
 
 #include <QnAnalysisTools/QnAnalysisTools.hpp>
 
 #include "Observables.hpp"
-
-
 
 namespace Tools {
 
@@ -37,15 +35,15 @@ void SetArgI(const std::vector<std::string> &arg_names, Tuple &tuple) {
     throw ResourceManager::NoSuchResource(arg_names[IArg]);
   }
 }
-template<typename Tuple, std::size_t ... IArg>
+template<typename Tuple, std::size_t... IArg>
 void SetArgTupleImpl(const std::vector<std::string> &arg_names, Tuple &tuple, std::index_sequence<IArg...>) {
   (SetArgI<Tuple, IArg>(arg_names, tuple), ...);
 }
-template<typename ... Args>
+template<typename... Args>
 void SetArgTuple(const std::vector<std::string> &arg_names, std::tuple<Args...> &tuple) {
   SetArgTupleImpl(arg_names, tuple, std::make_index_sequence<sizeof...(Args)>());
 }
-}
+}// namespace Details
 
 template<typename KeyRepr, typename Function>
 void Define(const KeyRepr &key, Function &&fct, std::vector<std::string> arg_names, bool warn_at_missing = true) {
@@ -92,22 +90,22 @@ template<typename T>
 void ExportToROOT(const char *filename, const char *mode = "RECREATE") {
   TFile f(filename, mode);
   ResourceManager::Instance().ForEach([&f](const std::string &name, T &value) {
-    using ::std::filesystem::path;
-    path p(name);
+                                        using ::std::filesystem::path;
+                                        path p(name);
 
-    auto dname = p.parent_path().relative_path();
-    auto bname = p.filename();
-    auto save_dir = f.GetDirectory(dname.c_str(), true);
-    if (!save_dir) {
-      std::cout << "mkdir " << f.GetName() << ":" << dname.c_str() << std::endl;
-      f.mkdir(dname.c_str(), "");
-      save_dir = f.GetDirectory(dname.c_str(), true);
-    }
-    save_dir->WriteTObject(&value, bname.c_str());
-  }, Predicates::AlwaysTrue, false);
+                                        auto dname = p.parent_path().relative_path();
+                                        auto bname = p.filename();
+                                        auto save_dir = f.GetDirectory(dname.c_str(), true);
+                                        if (!save_dir) {
+                                          std::cout << "mkdir " << f.GetName() << ":" << dname.c_str() << std::endl;
+                                          f.mkdir(dname.c_str(), "");
+                                          save_dir = f.GetDirectory(dname.c_str(), true);
+                                        }
+                                        save_dir->WriteTObject(&value, bname.c_str());
+                                      },
+                                      Predicates::AlwaysTrue, false);
 }
-} /// namespace Tools
-
+}// namespace Tools
 
 namespace Details {
 
@@ -127,9 +125,7 @@ std::vector<std::string> FindTDirectory(const TDirectory &dir, const std::string
   return result;
 }
 
-}
-
-
+}// namespace Details
 
 template<typename T>
 void LoadROOTFile(const std::string &file_name, const std::string &manager_prefix = "") {
@@ -146,8 +142,8 @@ void LoadROOTFile(const std::string &file_name, const std::string &manager_prefi
 }
 
 int main() {
-  using std::string;
   using std::get;
+  using std::string;
   using ::Tools::Define;
   using ::Tools::Define1;
   using ::Tools::Format;
@@ -168,7 +164,7 @@ int main() {
   ResourceManager::Instance().ForEach([](std::vector<std::string> key, Qn::DataContainerStatCalculate calc) {
     key[0] = "x2";
     auto x2 = 2 * calc;
-    x2.SetErrors(Qn::StatCalculate::ErrorType::PROPAGATION); // Errors
+    x2.SetErrors(Qn::StatCalculate::ErrorType::PROPAGATION);// Errors
     AddResource(key, x2);
   });
 
@@ -180,7 +176,7 @@ int main() {
   };
   std::vector<std::string> components = {"x1x1", "y1y1"};
 
-  for (auto && [component, ref_args] : Tools::Combination(components, args_list)) {
+  for (auto&&[component, ref_args] : Tools::Combination(components, args_list)) {
     std::string subA, subB, subC;
     std::tie(subA, subB, subC) = ref_args;
     auto arg1_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subB % component).str();
@@ -191,50 +187,50 @@ int main() {
   }
 
   /* Projection _y correlations to pT axis  */
-  ResourceManager::Instance().ForEach([] (const std::string& name, Qn::DataContainerStatCalculate& calc) {
-    calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_y_cm"});
-  }, RegexMatch(R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
+  ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+                                        calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_y_cm"});
+                                      },
+                                      RegexMatch(R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
   /* Projection _pT correlations to 'y' axis  */
-  ResourceManager::Instance().ForEach([] (const std::string& name, Qn::DataContainerStatCalculate& calc) {
-    calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_pT"});
-  }, RegexMatch(R"(/calc/uQ/(\w+)_pt_(\w+)\..*)"));
-
+  ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+                                        calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_pT"});
+                                      },
+                                      RegexMatch(R"(/calc/uQ/(\w+)_pt_(\w+)\..*)"));
 
   /****************** DRAWING *********************/
 
   /* export everything to TGraph */
   ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
-    auto graph = Qn::ToTGraph(calc);
-    AddResource("/profiles" + name, graph);
-  }, RegexMatch("^(/x2/QQ/|/resolution).*$"));
+                                        auto graph = Qn::ToTGraph(calc);
+                                        AddResource("/profiles" + name, graph);
+                                      },
+                                      RegexMatch("^(/x2/QQ/|/resolution).*$"));
 
   /* export PSD correlations to TGraph for comparison */
   ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
-    const std::regex re(".*(psd[1-3])_RECENTERED.(psd[1-3])_RECENTERED.([a-z])1([a-z])1");
-    std::smatch match_results;
-    auto graph = Qn::ToTGraph(calc);
-    auto asymmgraph = new TGraphAsymmErrors(graph->GetN(),
-                                            graph->GetX(),
-                                            graph->GetY(),
-                                            graph->GetEX(),
-                                            graph->GetEX(),
-                                            graph->GetEY(),
-                                            graph->GetEY());
-    if(std::regex_search(name, match_results, re)) {
-      auto Q1 = match_results.str(1);
-      auto Q2 = match_results.str(2);
-      auto I1 = match_results.str(3);
-      auto I2 = match_results.str(4);
-      asymmgraph->SetTitle(("Q^{" + Q1 + "}_{1," + I1 + "} " +  "Q^{" + Q2 + "}_{1," + I2 + "} new soft").c_str());
-      asymmgraph->GetXaxis()->SetTitle("PSD Centrality (%)");
-      AddResource("/raw/" + Q1 + "_" + Q2 + "_" +
-        string{(char)std::toupper(I1[0])} +
-        string{(char)std::toupper(I2[0])}, asymmgraph);
-    }
-  }, RegexMatch("^/x2.*psd[1-3]_RECENTERED.psd[1-3]_RECENTERED.*"));
-
-
-
+                                        const std::regex re(".*(psd[1-3])_RECENTERED.(psd[1-3])_RECENTERED.([a-z])1([a-z])1");
+                                        std::smatch match_results;
+                                        auto graph = Qn::ToTGraph(calc);
+                                        auto asymmgraph = new TGraphAsymmErrors(graph->GetN(),
+                                                                                graph->GetX(),
+                                                                                graph->GetY(),
+                                                                                graph->GetEX(),
+                                                                                graph->GetEX(),
+                                                                                graph->GetEY(),
+                                                                                graph->GetEY());
+                                        if (std::regex_search(name, match_results, re)) {
+                                          auto Q1 = match_results.str(1);
+                                          auto Q2 = match_results.str(2);
+                                          auto I1 = match_results.str(3);
+                                          auto I2 = match_results.str(4);
+                                          asymmgraph->SetTitle(("Q^{" + Q1 + "}_{1," + I1 + "} " + "Q^{" + Q2 + "}_{1," + I2 + "} new soft").c_str());
+                                          asymmgraph->GetXaxis()->SetTitle("PSD Centrality (%)");
+                                          AddResource(
+                                              "/raw/" + Q1 + "_" + Q2 + "_" + string{(char) std::toupper(I1[0])} + string{(char) std::toupper(I2[0])},
+                                              asymmgraph);
+                                        }
+                                      },
+                                      RegexMatch("^/x2.*psd[1-3]_RECENTERED.psd[1-3]_RECENTERED.*"));
 
   ResourceManager::Instance().Print();
 
@@ -244,4 +240,3 @@ int main() {
 
   return 0;
 }
-
