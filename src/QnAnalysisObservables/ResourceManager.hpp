@@ -191,6 +191,16 @@ public:
     return *resources_[Details::Convert<KeyRepr>::ToString(key)];
   }
 
+  template <typename Predicate = decltype(Predicates::AlwaysTrue)>
+  std::vector<std::string> GetMatching(Predicate predicate = Predicates::AlwaysTrue) {
+    std::vector<std::string> result;
+    for (auto & element : resources_) {
+      if (predicate(element.first))
+        result.emplace_back(element.first);
+    }
+    return result;
+  }
+
   template<typename Function, typename Predicate = decltype(Predicates::AlwaysTrue)>
   void ForEach(Function &&fct, Predicate predicate = Predicates::AlwaysTrue, bool warn_bad_cast = true) {
     using Traits = Details::FunctionTraits<decltype(std::function{fct})>;

@@ -12,6 +12,9 @@ namespace Methods {
 using Resource = ResourceManager::Resource;
 using ResourceMeta = ResourceManager::MetaType;
 
+
+/*************** RESOLUTION *****************/
+
 inline
 Resource
 Resolution3S(Resource nom1, Resource nom2, Resource denom) {
@@ -23,13 +26,28 @@ Resolution3S(Resource nom1, Resource nom2, Resource denom) {
   meta.put("type", "resolution");
   meta.put("method", "3sub");
   meta.put("source", __func__);
-  meta.put("reference", ""); // TODO
-  meta.put("projection", ""); // TODO
 
   return ResourceManager::Resource(
       Qn::Sqrt(nom / denom.As<Qn::DataContainerStatCalculate>()),
       meta);
 }
+
+/*************** v1 *****************/
+
+inline
+Resource
+v1(Qn::DataContainerStatCalculate &uQ, Resource & resolution) {
+  auto result = 2*uQ;
+  result = result / resolution.As<Qn::DataContainerStatCalculate>();
+  result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
+
+  ResourceMeta meta;
+  meta.put("type", "v1");
+  meta.put("source", __func__);
+  meta.put_child("resolution", resolution.meta);
+  return Resource(result, meta);
+}
+
 
 } /// namespace Methods
 

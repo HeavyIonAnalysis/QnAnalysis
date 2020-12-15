@@ -55,7 +55,7 @@ void Define(const KeyRepr &key, Function &&fct, std::vector<std::string> arg_nam
   } catch (ResourceManager::NoSuchResource &e) {
     if (warn_at_missing) {
       Warning(__func__, "Resource '%s' required for '%s' is missing, new resource won't be added",
-              e.what(), key.c_str());
+              e.what(), ::Details::Convert<KeyRepr>::ToString(key).c_str());
     } else {
       throw e; /* rethrow */
     }
@@ -168,35 +168,66 @@ int main() {
     AddResource(key, x2);
   });
 
-  /* RESOLUTION 3-sub */
-  std::vector<std::tuple<string, string, string>> args_list = {
-      {"psd1", "psd2", "psd3"},
-      {"psd2", "psd1", "psd3"},
-      {"psd3", "psd1", "psd2"},
-  };
-  std::vector<std::string> components = {"x1x1", "y1y1"};
+  {
+    /***************** RESOLUTION 3-sub ******************/
+    std::vector<std::tuple<string, string, string>> args_list = {
+        {"psd1", "psd2", "psd3"},
+        {"psd2", "psd1", "psd3"},
+        {"psd3", "psd1", "psd2"},
+    };
+    std::vector<std::string> components = {"x1x1", "y1y1"};
 
-  for (auto&&[component, ref_args] : Tools::Combination(components, args_list)) {
-    std::string subA, subB, subC;
-    std::tie(subA, subB, subC) = ref_args;
-    auto arg1_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subB % component).str();
-    auto arg2_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subC % component).str();
-    auto arg3_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subB % subC % component).str();
-    auto resolution = Format("/resolution/3sub/RES_%1%_%2%") % subA % component;
-    ::Tools::Define(resolution.str(), Methods::Resolution3S, {arg1_name, arg2_name, arg3_name});
+    for (auto&&[component, ref_args] : Tools::Combination(components, args_list)) {
+      std::string subA, subB, subC;
+      std::tie(subA, subB, subC) = ref_args;
+      auto arg1_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subB % component).str();
+      auto arg2_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subC % component).str();
+      auto arg3_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subB % subC % component).str();
+      auto resolution = Format("/resolution/3sub/RES_%1%_%2%") % subA % component;
+      ::Tools::Define(resolution.str(), Methods::Resolution3S, {arg1_name, arg2_name, arg3_name});
+    }
+
+    /* Projection _y correlations to pT axis  */
+    ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+                                          calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_y_cm"});
+                                        },
+                                        RegexMatch(R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
+    /* Projection _pT correlations to 'y' axis  */
+    ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+                                          calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_pT"});
+                                        },
+                                        RegexMatch(R"(/calc/uQ/(\w+)_pt_(\w+)\..*)"));
   }
 
-  /* Projection _y correlations to pT axis  */
-  ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
-                                        calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_y_cm"});
-                                      },
-                                      RegexMatch(R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
-  /* Projection _pT correlations to 'y' axis  */
-  ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
-                                        calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_pT"});
-                                      },
-                                      RegexMatch(R"(/calc/uQ/(\w+)_pt_(\w+)\..*)"));
+  {
+    std::vector<std::string> resolution_methods{"3sub"};
+    std::vector<std::string> references{"psd1", "psd2", "psd3"};
+    std::vector<std::string> u_correction_step{"RECENTERED", "RESCALED"};
+    std::vector<std::string> axes{"pt", "y"};
+    std::vector<std::string> particles{"protons", "pion_neg"};
+    std::vector<std::string> projections{"x1x1", "y1y1"};
 
+    for (auto&&[resolution_method, reference, u_cstep, projection, axis, particle] : Tools::Combination(
+        resolution_methods,
+        references,
+        u_correction_step,
+        projections,
+        axes,
+        particles)) {
+      auto u_query =
+          RegexMatch((Format("/calc/uQ/%4%_%5%_%1%\\.%2%_RECENTERED.%3%") % u_cstep % reference % projection % particle
+              % axis).str());
+      auto res_query = RegexMatch((Format("/resolution/3sub/RES_%1%_%2%") % reference % projection).str());
+      for (auto &&[u_vector, resolution] : Tools::Combination(
+          ResourceManager::Instance().GetMatching(u_query),
+          ResourceManager::Instance().GetMatching(res_query))) {
+        std::vector<std::string> key = {"v1", resolution_method, "u-" + u_cstep,
+                                        (Format("v1_%1%_%2%_%4%_%3%") % particle % axis % projection
+                                            % reference).str()};
+        Define(key, Methods::v1, {u_vector, resolution});
+      }
+    }
+  }
   /****************** DRAWING *********************/
 
   /* export everything to TGraph */
@@ -205,6 +236,16 @@ int main() {
                                         AddResource("/profiles" + name, graph);
                                       },
                                       RegexMatch("^(/x2/QQ/|/resolution).*$"));
+  /* export everything to TGraph */
+  ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+                                        for (auto &ax: calc.GetAxes()) {
+                                          auto proj = calc.Projection({ax.Name()});
+                                          auto graph = Qn::ToTGraph(proj);
+                                          graph->GetYaxis()->SetRangeUser(-0.3, 0.3);
+                                          AddResource("/profiles" + name + "_" + ax.Name(), graph);
+                                        }
+                                      },
+                                      RegexMatch("^/v1.*$"));
 
   /* export PSD correlations to TGraph for comparison */
   ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
