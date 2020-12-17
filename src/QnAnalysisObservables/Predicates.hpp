@@ -11,8 +11,6 @@
 
 namespace Predicates {
 
-auto AlwaysTrue = [](const std::string &) -> bool { return true; };
-
 struct RegexMatch {
   explicit RegexMatch(const std::string &regex_str) : expr(regex_str) {}
   explicit RegexMatch(std::regex expr) : expr(std::move(expr)) {}

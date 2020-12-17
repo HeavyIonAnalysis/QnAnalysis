@@ -113,6 +113,12 @@ public:
   template<typename T>
   struct ResTag {};
 
+  struct AlwaysTrue {
+    bool operator () (const std::string& key) {
+      return true;
+    }
+  };
+
   struct ResourceAlreadyExists : public std::exception {
     explicit ResourceAlreadyExists(std::string resource_name_) : resource_name(std::move(resource_name_)) {}
     ResourceAlreadyExists(const ResourceAlreadyExists &other) = default;
@@ -191,8 +197,8 @@ public:
     return *resources_[Details::Convert<KeyRepr>::ToString(key)];
   }
 
-  template <typename Predicate = decltype(Predicates::AlwaysTrue)>
-  std::vector<std::string> GetMatching(Predicate predicate = Predicates::AlwaysTrue) {
+  template <typename Predicate = AlwaysTrue>
+  std::vector<std::string> GetMatching(Predicate && predicate = AlwaysTrue()) {
     std::vector<std::string> result;
     for (auto & element : resources_) {
       if (predicate(element.first))
@@ -201,8 +207,8 @@ public:
     return result;
   }
 
-  template<typename Function, typename Predicate = decltype(Predicates::AlwaysTrue)>
-  void ForEach(Function &&fct, Predicate predicate = Predicates::AlwaysTrue, bool warn_bad_cast = true) {
+  template<typename Function, typename Predicate = AlwaysTrue>
+  void ForEach(Function &&fct, Predicate && predicate = AlwaysTrue(), bool warn_bad_cast = true) {
     using Traits = Details::FunctionTraits<decltype(std::function{fct})>;
 
     auto resources_copy = resources_;

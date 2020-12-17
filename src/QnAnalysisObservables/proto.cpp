@@ -103,7 +103,7 @@ void ExportToROOT(const char *filename, const char *mode = "RECREATE") {
                                         }
                                         save_dir->WriteTObject(&value, bname.c_str());
                                       },
-                                      Predicates::AlwaysTrue, false);
+                                      ResourceManager::AlwaysTrue(), false);
 }
 }// namespace Tools
 
