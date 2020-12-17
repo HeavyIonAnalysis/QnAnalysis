@@ -299,6 +299,15 @@ struct convert<Qn::Analysis::Base::AnalysisSetupConfig> {
       config.event_axes = node["axes"].as<std::vector<AxisConfig>>(EmptyVector<AxisConfig>());
       config.event_variables = node["event-variables"].as<std::vector<VariableConfig>>(EmptyVector<VariableConfig>());
       config.q_vectors = node["q-vectors"].as<std::vector<QVectorConfig>>();
+
+      for (auto &node_element : node) {
+        const std::regex re_qa("^qa(-.+)?$");
+        auto node_name = node_element.first.Scalar();
+        if (!std::regex_match(node_name, re_qa)) continue;
+
+        auto qa = node_element.second.as<std::vector<HistogramConfig>>();
+        std::move(qa.begin(), qa.end(), std::back_inserter(config.qa));
+      }
       return true;
     }// IsMap
 

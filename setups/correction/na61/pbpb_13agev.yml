@@ -7,9 +7,7 @@ _layouts:
     [ 28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43 ]
 
 _axes:
-  - &centrality
-    name: Centrality/Centrality_Epsd
-    bin-edges: [ 0., 5., 10., 15., 25., 35., 45., 60., 80., 100. ]
+  - &centrality {name: Centrality/Centrality_Epsd, nb: 20, lo: 0, hi: 100}
   - &ax-pt {name: RecParticles/pT, bin-edges: [0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0]}
   - &ax-pt-corr-1 {name: RecParticles/pT, nb: 1, lo: 0., hi: 2.}
   - &ax-y-cm {name: RecParticles/y_cm, nb: 15, lo: -0.6, hi: 2.4}
@@ -54,6 +52,26 @@ _qa:
 pbpb_13agev_16_025:
   event-variables:
     - Centrality/Centrality_Epsd
+    - RecEventHeader/vtx_x
+    - RecEventHeader/vtx_y
+    - RecEventHeader/vtx_z
+    - RecEventHeader/Epsd
+    - RecEventHeader/s1
+    - RecEventHeader/s2
+  qa:
+    - &ax-vtx-x-qa { name: RecEventHeader/vtx_x, nb: 200, lo: -10., hi: 10}
+    - &ax-vtx-y-qa { name: RecEventHeader/vtx_y, nb: 200, lo: -10., hi: 10}
+    - [*ax-vtx-x-qa, *ax-vtx-y-qa]
+    - &ax-vtx-z-qa { name: RecEventHeader/vtx_z, nb: 400, lo: -594., hi: -590.}
+    - &ax-epsd-qa { name: RecEventHeader/Epsd, nb: 500, lo: 0, hi: 5000}
+    - *centrality
+    - [*ax-epsd-qa, *centrality]
+    - [*ax-vtx-z-qa, *ax-epsd-qa]
+    - &ax-s1-qa { name: RecEventHeader/s1, nb: 500, lo: 0, hi: 500}
+    - &ax-s2-qa { name: RecEventHeader/s2, nb: 500, lo: 0, hi: 500}
+    - [*ax-s1-qa, *ax-s2-qa]
+    - [*ax-s1-qa, *ax-epsd-qa]
+    - [*ax-s2-qa, *ax-epsd-qa]
   axes: [ *centrality ]
   q-vectors:
     - name: protons_pt
