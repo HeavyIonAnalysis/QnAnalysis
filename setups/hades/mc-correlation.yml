@@ -49,12 +49,12 @@ _tasks_args:
 
 _tasks:
   - args: [*ta_reco, *ta_psi]
-    n-samples: 50
+    n-samples: 100
     weights-type: observable
     folder: "/uQ/reco"
     axes: [ *centrality ]
   - args: [*ta_sim, *ta_psi]
-    n-samples: 50
+    n-samples: 100
     weights-type: observable
     folder: "/uQ/gen"
     axes: [ *centrality ]
