@@ -169,6 +169,19 @@ int main() {
   });
 
   {
+    /* Projection _y correlations to pT axis  */
+    ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+                                          calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_y_cm"});
+                                        },
+                                        RegexMatch(R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
+    /* Projection _pT correlations to 'y' axis  */
+    ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+                                          calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_pT"});
+                                        },
+                                        RegexMatch(R"(/calc/uQ/(\w+)_pt_(\w+)\..*)"));
+  }
+
+  {
     /***************** RESOLUTION 3-sub ******************/
     std::vector<std::tuple<string, string, string>> args_list = {
         {"psd1", "psd2", "psd3"},
@@ -186,94 +199,216 @@ int main() {
       auto resolution = Format("/resolution/3sub/RES_%1%_%2%") % subA % component;
       ::Tools::Define(resolution.str(), Methods::Resolution3S, {arg1_name, arg2_name, arg3_name});
     }
-
-    /* Projection _y correlations to pT axis  */
-    ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
-                                          calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_y_cm"});
-                                        },
-                                        RegexMatch(R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
-    /* Projection _pT correlations to 'y' axis  */
-    ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
-                                          calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_pT"});
-                                        },
-                                        RegexMatch(R"(/calc/uQ/(\w+)_pt_(\w+)\..*)"));
   }
 
   {
-    std::vector<std::string> resolution_methods{"3sub"};
+    /***************** RESOLUTION 4-sub ******************/
+    ResourceManager::Instance().ForEach([](const std::vector<std::string> &key, Qn::DataContainerStatCalculate &calc) {
+      auto selected = calc.Select(Qn::AxisD("RecParticles_pT", 1, 0., 0.5));
+      std::vector<std::string> new_key = {"resolution", "4sub_pion_neg", key.back()};
+      AddResource(new_key, selected);
+    }, RegexMatch("/calc/uQ/pion_neg_pt_RESCALED\\.(psd1|psd3)_RECENTERED\\.(x1x1|y1y1)$"));
+
+    Define(std::string("/resolution/4sub_pion_neg/RES_TPC.x1x1"), Methods::Resolution3S, {
+        std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.x1x1"),
+        std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.x1x1"),
+        std::string("/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1")
+    });
+    Define(std::string("/resolution/4sub_pion_neg/RES_TPC.y1y1"), Methods::Resolution3S, {
+        std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.y1y1"),
+        std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.y1y1"),
+        std::string("/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1")
+    });
+
+    Define(std::string("/resolution/4sub_pion_neg/RES_psd1_x1x1"),
+           [](const Qn::DataContainerStatCalculate& qq, const Qn::DataContainerStatCalculate& rt, const Qn::DataContainerStatCalculate& uQ) {
+             auto result = qq * rt / uQ;
+             result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
+             return result;
+           }, {
+               std::string("/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1"),
+               std::string("/resolution/4sub_pion_neg/RES_TPC.x1x1"),
+               std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.x1x1"),
+           });
+    Define(std::string("/resolution/4sub_pion_neg/RES_psd3_x1x1"),
+           [](const Qn::DataContainerStatCalculate& qq, const Qn::DataContainerStatCalculate& rt, const Qn::DataContainerStatCalculate& uQ) {
+             auto result = qq * rt / uQ;
+             result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
+             return result;
+           }, {
+               std::string("/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1"),
+               std::string("/resolution/4sub_pion_neg/RES_TPC.x1x1"),
+               std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.x1x1"),
+           });
+    Define(std::string("/resolution/4sub_pion_neg/RES_psd1_y1y1"),
+           [](const Qn::DataContainerStatCalculate& qq, const Qn::DataContainerStatCalculate& rt, const Qn::DataContainerStatCalculate& uQ) {
+             auto result = qq * rt / uQ;
+             result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
+             return result;
+           }, {
+               std::string("/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1"),
+               std::string("/resolution/4sub_pion_neg/RES_TPC.y1y1"),
+               std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.y1y1"),
+           });
+    Define(std::string("/resolution/4sub_pion_neg/RES_psd3_y1y1"),
+           [](const Qn::DataContainerStatCalculate& qq, const Qn::DataContainerStatCalculate& rt, const Qn::DataContainerStatCalculate& uQ) {
+             auto result = qq * rt / uQ;
+             result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
+             return result;
+           }, {
+               std::string("/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1"),
+               std::string("/resolution/4sub_pion_neg/RES_TPC.y1y1"),
+               std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.y1y1"),
+           });
+  }
+
+  {
+    std::vector<std::string> resolution_methods{"3sub", "4sub_protons", "4sub_pion_neg"};
     std::vector<std::string> references{"psd1", "psd2", "psd3"};
     std::vector<std::string> u_correction_step{"RECENTERED", "RESCALED"};
     std::vector<std::string> axes{"pt", "y"};
     std::vector<std::string> particles{"protons", "pion_neg"};
     std::vector<std::string> projections{"x1x1", "y1y1"};
 
-    for (auto&&[resolution_method, reference, u_cstep, projection, axis, particle] : Tools::Combination(
-        resolution_methods,
-        references,
-        u_correction_step,
-        projections,
-        axes,
-        particles)) {
+    for (auto&&[resolution_method, reference, u_cstep, projection, axis, particle] :
+        Tools::Combination(
+            resolution_methods,
+            references,
+            u_correction_step,
+            projections,
+            axes,
+            particles
+        )) {
       auto u_query =
           RegexMatch((Format("/calc/uQ/%4%_%5%_%1%\\.%2%_RECENTERED.%3%") % u_cstep % reference % projection % particle
               % axis).str());
-      auto res_query = RegexMatch((Format("/resolution/3sub/RES_%1%_%2%") % reference % projection).str());
-      for (auto &&[u_vector, resolution] : Tools::Combination(
-          ResourceManager::Instance().GetMatching(u_query),
-          ResourceManager::Instance().GetMatching(res_query))) {
+      auto res_query =
+          RegexMatch((Format("/resolution/%3%/RES_%1%_%2%") % reference % projection % resolution_method).str());
+      for (auto &&[u_vector, resolution] :
+          Tools::Combination(
+              ResourceManager::Instance()
+                  .
+                      GetMatching(u_query),
+              ResourceManager::Instance()
+                  .
+                      GetMatching(res_query)
+          )) {
         std::vector<std::string> key = {"v1", resolution_method, "u-" + u_cstep,
                                         (Format("v1_%1%_%2%_%4%_%3%") % particle % axis % projection
                                             % reference).str()};
-        Define(key, Methods::v1, {u_vector, resolution});
+        Define(key, Methods::v1,
+               {
+                   u_vector, resolution});
       }
     }
   }
-  /****************** DRAWING *********************/
+/****************** DRAWING *********************/
 
-  /* export everything to TGraph */
-  ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
-                                        auto graph = Qn::ToTGraph(calc);
-                                        AddResource("/profiles" + name, graph);
-                                      },
-                                      RegexMatch("^(/x2/QQ/|/resolution).*$"));
-  /* export everything to TGraph */
-  ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
-                                        for (auto &ax: calc.GetAxes()) {
-                                          auto proj = calc.Projection({ax.Name()});
-                                          auto graph = Qn::ToTGraph(proj);
-                                          graph->GetYaxis()->SetRangeUser(-0.3, 0.3);
-                                          AddResource("/profiles" + name + "_" + ax.Name(), graph);
-                                        }
-                                      },
-                                      RegexMatch("^/v1.*$"));
+/* export everything to TGraph */
+  ResourceManager::Instance()
+      .ForEach([](
+                   const std::string &name, Qn::DataContainerStatCalculate
+               &calc) {
+                 auto graph = Qn::ToTGraph(calc);
+                 AddResource("/profiles" + name, graph);
+               },
+               RegexMatch("^/x2/QQ/.*$"));
 
-  /* export PSD correlations to TGraph for comparison */
-  ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
-                                        const std::regex re(".*(psd[1-3])_RECENTERED.(psd[1-3])_RECENTERED.([a-z])1([a-z])1");
-                                        std::smatch match_results;
-                                        auto graph = Qn::ToTGraph(calc);
-                                        auto asymmgraph = new TGraphAsymmErrors(graph->GetN(),
-                                                                                graph->GetX(),
-                                                                                graph->GetY(),
-                                                                                graph->GetEX(),
-                                                                                graph->GetEX(),
-                                                                                graph->GetEY(),
-                                                                                graph->GetEY());
-                                        if (std::regex_search(name, match_results, re)) {
-                                          auto Q1 = match_results.str(1);
-                                          auto Q2 = match_results.str(2);
-                                          auto I1 = match_results.str(3);
-                                          auto I2 = match_results.str(4);
-                                          asymmgraph->SetTitle(("Q^{" + Q1 + "}_{1," + I1 + "} " + "Q^{" + Q2 + "}_{1," + I2 + "} new soft").c_str());
-                                          asymmgraph->GetXaxis()->SetTitle("PSD Centrality (%)");
-                                          AddResource(
-                                              "/raw/" + Q1 + "_" + Q2 + "_" + string{(char) std::toupper(I1[0])} + string{(char) std::toupper(I2[0])},
-                                              asymmgraph);
-                                        }
-                                      },
-                                      RegexMatch("^/x2.*psd[1-3]_RECENTERED.psd[1-3]_RECENTERED.*"));
+/* export everything to TGraph */
+  ResourceManager::Instance()
+      .ForEach([](
+                   const std::string &name, Qn::DataContainerStatCalculate
+               &calc) {
+                 auto graph = Qn::ToTGraph(calc);
+                 graph->GetYaxis()->SetRangeUser(-0.1, 1.0);
+                 AddResource("/profiles" + name, graph);
+               },
+               RegexMatch(".*RES_.*"));
 
-  ResourceManager::Instance().Print();
+/* v1 vs Centrality */
+  ResourceManager::Instance()
+      .ForEach([](
+                   const std::string &name, Qn::DataContainerStatCalculate
+               &calc) {
+                 auto centrality_axis = calc.GetAxes()[0];
+                 for (
+                     size_t ic = 0;
+                     ic < centrality_axis.
+                         size();
+                     ++ic) {
+                   auto c_lo = centrality_axis.GetLowerBinEdge(ic);
+                   auto c_hi = centrality_axis.GetUpperBinEdge(ic);
+                   auto selected = calc.Select(Qn::AxisD(centrality_axis.Name(), 1, c_lo, c_hi));
+                   auto selected_graph = Qn::ToTGraph(selected);
+                   selected_graph->
+                       SetTitle((Format("%1%-%2%")
+                       % c_lo % c_hi).
+                           str()
+                                    .
+                                        c_str()
+                   );
+                   selected_graph->GetXaxis()->
+                       SetTitle(calc
+                                    .
+                                        GetAxes()[1]
+                                    .
+                                        Name()
+                                    .
+                                        c_str()
+                   );
+                   selected_graph->GetYaxis()->SetRangeUser(-0.2, 0.2);
+                   AddResource((Format("/profiles%1%/%2%_%3%")
+                       % name % centrality_axis.
+                       Name()
+                       % ic).
+                       str(), selected_graph
+                   );
+                 }
+               },
+               RegexMatch("^/v1.*$"));
+
+/* export PSD correlations to TGraph for comparison */
+  ResourceManager::Instance()
+      .ForEach([](
+                   const std::string &name, Qn::DataContainerStatCalculate
+               &calc) {
+                 const std::regex re(".*(psd[1-3])_RECENTERED.(psd[1-3])_RECENTERED.([a-z])1([a-z])1");
+                 std::smatch match_results;
+                 auto graph = Qn::ToTGraph(calc);
+                 auto asymmgraph = new TGraphAsymmErrors(graph->GetN(),
+                                                         graph->GetX(),
+                                                         graph->GetY(),
+                                                         graph->GetEX(),
+                                                         graph->GetEX(),
+                                                         graph->GetEY(),
+                                                         graph->GetEY());
+                 if (
+                     std::regex_search(name, match_results, re
+                     )) {
+                   auto Q1 = match_results.str(1);
+                   auto Q2 = match_results.str(2);
+                   auto I1 = match_results.str(3);
+                   auto I2 = match_results.str(4);
+                   asymmgraph->SetTitle(("Q^{" + Q1 + "}_{1," + I1 + "} " + "Q^{" + Q2 + "}_{1," + I2 + "} new soft").
+                       c_str()
+                   );
+                   asymmgraph->GetXaxis()->SetTitle("PSD Centrality (%)");
+                   AddResource(
+                       "/raw/" + Q1 + "_" + Q2 + "_" + string{
+                           (char)
+                               std::toupper(I1[0])
+                       } + string{
+                           (char)
+                               std::toupper(I2[0])
+                       },
+                       asymmgraph);
+                 }
+               },
+               RegexMatch("^/x2.*psd[1-3]_RECENTERED.psd[1-3]_RECENTERED.*"));
+
+  ResourceManager::Instance()
+      .
+          Print();
 
   ::Tools::ExportToROOT<Qn::DataContainerStatCalculate>("correlation_proc.root");
   ::Tools::ExportToROOT<TGraphErrors>("prof.root");

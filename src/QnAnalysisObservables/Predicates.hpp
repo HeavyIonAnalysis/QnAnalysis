@@ -7,6 +7,7 @@
 
 #include <string>
 #include <regex>
+#include <boost/proto/proto.hpp>
 
 namespace Predicates {
 

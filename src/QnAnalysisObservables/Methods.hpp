@@ -27,8 +27,11 @@ Resolution3S(Resource nom1, Resource nom2, Resource denom) {
   meta.put("method", "3sub");
   meta.put("source", __func__);
 
+  auto result = Qn::Sqrt(nom / denom.As<Qn::DataContainerStatCalculate>());
+  result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
+
   return ResourceManager::Resource(
-      Qn::Sqrt(nom / denom.As<Qn::DataContainerStatCalculate>()),
+      result,
       meta);
 }
 
@@ -37,8 +40,7 @@ Resolution3S(Resource nom1, Resource nom2, Resource denom) {
 inline
 Resource
 v1(Qn::DataContainerStatCalculate &uQ, Resource & resolution) {
-  auto result = 2*uQ;
-  result = result / resolution.As<Qn::DataContainerStatCalculate>();
+  auto result = 2 * uQ / resolution.As<Qn::DataContainerStatCalculate>();
   result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
 
   ResourceMeta meta;
