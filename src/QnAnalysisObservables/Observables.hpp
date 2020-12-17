@@ -6,8 +6,8 @@
 #define QNANALYSIS_SRC_QNANALYSISOBSERVABLES_OBSERVABLES_HPP
 
 #include "Format.hpp"
-#include "Predicates.hpp"
 #include "ResourceManager.hpp"
+#include "Predicates.hpp"
 #include "Methods.hpp"
 
 #endif //QNANALYSIS_SRC_QNANALYSISOBSERVABLES_OBSERVABLES_HPP

@@ -89,7 +89,8 @@ public:
   struct Resource {
     Resource() = default;
     Resource(std::string n, std::any &&o, const MetaType &m) : name(std::move(n)), obj(o), meta(m) {}
-    Resource(const std::any &Obj, const MetaType &Meta) : obj(Obj), meta(Meta) {}
+    Resource(std::any Obj, const MetaType &Meta) : obj(std::move(Obj)), meta(Meta) {}
+
     std::string name;
     std::any obj;
     MetaType meta;
@@ -110,11 +111,21 @@ public:
     }
   };
 
+  struct NameTag {
+    explicit NameTag(std::string name) : name(std::move(name)) {}
+
+    std::string name;
+
+    operator std::string () const {
+      return name;
+    }
+  };
+
   template<typename T>
   struct ResTag {};
 
   struct AlwaysTrue {
-    bool operator () (const std::string& key) {
+    bool operator () (const NameTag&) {
       return true;
     }
   };
@@ -185,6 +196,13 @@ public:
         (resources_[Details::Convert<KeyRepr>::ToString(key)]->obj));
   }
 
+  template <typename KeyRepr>
+  NameTag Get(const KeyRepr& key, ResTag<NameTag>) {
+    CheckResource(key);
+    return NameTag(Details::Convert<KeyRepr>::ToString(key));
+  }
+
+
   template<typename KeyRepr>
   MetaType &Get(const KeyRepr &key, ResTag<MetaType>) {
     CheckResource(key);
@@ -197,11 +215,19 @@ public:
     return *resources_[Details::Convert<KeyRepr>::ToString(key)];
   }
 
+  template<typename Predicate>
+  bool TestPredicate(Predicate && predicate, const std::string& key) {
+    using PredicateTraits = Details::FunctionTraits<decltype(std::function{predicate})>;
+    static_assert(PredicateTraits::N_ARGS == 1);
+    using ArgType = std::decay_t<typename PredicateTraits::template ArgType<0>>;
+    return predicate(Get(key, ResTag<ArgType>()));
+  }
+
   template <typename Predicate = AlwaysTrue>
   std::vector<std::string> GetMatching(Predicate && predicate = AlwaysTrue()) {
     std::vector<std::string> result;
     for (auto & element : resources_) {
-      if (predicate(element.first))
+      if (TestPredicate(std::forward<Predicate>(predicate), element.first))
         result.emplace_back(element.first);
     }
     return result;
@@ -213,7 +239,7 @@ public:
 
     auto resources_copy = resources_;
     for (auto &element : resources_copy) {
-      if (predicate(element.first)) {
+      if (TestPredicate(std::forward<Predicate>(predicate), element.first)) {
         try {
           static_assert(Traits::N_ARGS == 2);
           using KeyRepr = std::decay_t<typename Traits::template ArgType<0>>;

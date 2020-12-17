@@ -414,5 +414,12 @@ int main() {
   ::Tools::ExportToROOT<TGraphErrors>("prof.root");
   ::Tools::ExportToROOT<TGraphAsymmErrors>("prof.root", "UPDATE");
 
+  using namespace ::Predicates::Resource;
+
+  ResourceManager::Instance().ForEach([] (const std::string &name, const ResourceManager::Resource& r) {
+    std::cout << name << std::endl;
+  }, Builder(NAME == "test"));
+
+
   return 0;
 }
