@@ -418,7 +418,7 @@ int main() {
 
   ResourceManager::Instance().ForEach([] (const std::string &name, const ResourceManager::Resource& r) {
     std::cout << name << std::endl;
-  }, Builder(NAME == "test"));
+  }, META["type"] == "resolution");
 
 
   return 0;
