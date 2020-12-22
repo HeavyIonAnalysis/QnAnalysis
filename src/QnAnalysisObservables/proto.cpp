@@ -210,14 +210,14 @@ int main() {
     }, RegexMatch("/calc/uQ/pion_neg_pt_RESCALED\\.(psd1|psd3)_RECENTERED\\.(x1x1|y1y1)$"));
 
     Define(std::string("/resolution/4sub_pion_neg/RES_TPC.x1x1"), Methods::Resolution3S, {
-        std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.x1x1"),
-        std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.x1x1"),
-        std::string("/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1")
+        "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.x1x1",
+        "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.x1x1",
+        "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1"
     });
     Define(std::string("/resolution/4sub_pion_neg/RES_TPC.y1y1"), Methods::Resolution3S, {
-        std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.y1y1"),
-        std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.y1y1"),
-        std::string("/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1")
+        "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.y1y1",
+        "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.y1y1",
+        "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1"
     });
 
     Define(std::string("/resolution/4sub_pion_neg/RES_psd1_x1x1"),
@@ -225,30 +225,24 @@ int main() {
              auto result = qq * rt / uQ;
              result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
              return result;
-           }, {
-               std::string("/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1"),
-               std::string("/resolution/4sub_pion_neg/RES_TPC.x1x1"),
-               std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.x1x1"),
-           });
-    Define(std::string("/resolution/4sub_pion_neg/RES_psd3_x1x1"),
-           [](const Qn::DataContainerStatCalculate& qq, const Qn::DataContainerStatCalculate& rt, const Qn::DataContainerStatCalculate& uQ) {
+           }, {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1", "/resolution/4sub_pion_neg/RES_TPC.x1x1", "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.x1x1"});
+    Define(std::string("/resolution/4sub_pion_neg/RES_psd3_x1x1"),          [](const Qn::DataContainerStatCalculate& qq, const Qn::DataContainerStatCalculate& rt, const Qn::DataContainerStatCalculate& uQ) {
              auto result = qq * rt / uQ;
              result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
              return result;
            }, {
-               std::string("/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1"),
-               std::string("/resolution/4sub_pion_neg/RES_TPC.x1x1"),
-               std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.x1x1"),
+               "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1",
+               "/resolution/4sub_pion_neg/RES_TPC.x1x1",
+               "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.x1x1",
            });
-    Define(std::string("/resolution/4sub_pion_neg/RES_psd1_y1y1"),
-           [](const Qn::DataContainerStatCalculate& qq, const Qn::DataContainerStatCalculate& rt, const Qn::DataContainerStatCalculate& uQ) {
+    Define(std::string("/resolution/4sub_pion_neg/RES_psd1_y1y1"),          [](const Qn::DataContainerStatCalculate& qq, const Qn::DataContainerStatCalculate& rt, const Qn::DataContainerStatCalculate& uQ) {
              auto result = qq * rt / uQ;
              result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
              return result;
            }, {
-               std::string("/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1"),
-               std::string("/resolution/4sub_pion_neg/RES_TPC.y1y1"),
-               std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.y1y1"),
+               "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1",
+               "/resolution/4sub_pion_neg/RES_TPC.y1y1",
+               "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.y1y1"
            });
     Define(std::string("/resolution/4sub_pion_neg/RES_psd3_y1y1"),
            [](const Qn::DataContainerStatCalculate& qq, const Qn::DataContainerStatCalculate& rt, const Qn::DataContainerStatCalculate& uQ) {
@@ -256,9 +250,9 @@ int main() {
              result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
              return result;
            }, {
-               std::string("/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1"),
-               std::string("/resolution/4sub_pion_neg/RES_TPC.y1y1"),
-               std::string("/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.y1y1"),
+               "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1",
+               "/resolution/4sub_pion_neg/RES_TPC.y1y1",
+               "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.y1y1",
            });
   }
 
@@ -284,14 +278,9 @@ int main() {
               % axis).str());
       auto res_query =
           RegexMatch((Format("/resolution/%3%/RES_%1%_%2%") % reference % projection % resolution_method).str());
-      for (auto &&[u_vector, resolution] :
-          Tools::Combination(
-              ResourceManager::Instance()
-                  .
-                      GetMatching(u_query),
-              ResourceManager::Instance()
-                  .
-                      GetMatching(res_query)
+      for (auto &&[u_vector, resolution] : Tools::Combination(
+              ResourceManager::Instance().GetMatching(u_query),
+              ResourceManager::Instance().GetMatching(res_query)
           )) {
         std::vector<std::string> key = {"v1", resolution_method, "u-" + u_cstep,
                                         (Format("v1_%1%_%2%_%4%_%3%") % particle % axis % projection
@@ -418,7 +407,7 @@ int main() {
 
   ResourceManager::Instance().ForEach([] (const std::string &name, const ResourceManager::Resource& r) {
     std::cout << name << std::endl;
-  }, META["type"] == "resolution");
+  }, META["type"] == "resolution" && META["method"] == "3sub");
 
 
   return 0;
