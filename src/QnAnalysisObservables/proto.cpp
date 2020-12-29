@@ -142,6 +142,16 @@ void LoadROOTFile(const std::string &file_name, const std::string &manager_prefi
 }
 
 int main() {
+
+  /*********************************
+   *
+   * 
+   *
+   *
+   *
+   *********************************/
+
+
   using std::get;
   using std::string;
   using ::Tools::Define;
@@ -221,31 +231,44 @@ int main() {
     });
 
     Define(std::string("/resolution/4sub_pion_neg/RES_psd1_x1x1"),
-           [](const Qn::DataContainerStatCalculate& qq, const Qn::DataContainerStatCalculate& rt, const Qn::DataContainerStatCalculate& uQ) {
+           [](const Qn::DataContainerStatCalculate &qq,
+              const Qn::DataContainerStatCalculate &rt,
+              const Qn::DataContainerStatCalculate &uQ) {
              auto result = qq * rt / uQ;
              result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
              return result;
-           }, {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1", "/resolution/4sub_pion_neg/RES_TPC.x1x1", "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.x1x1"});
-    Define(std::string("/resolution/4sub_pion_neg/RES_psd3_x1x1"),          [](const Qn::DataContainerStatCalculate& qq, const Qn::DataContainerStatCalculate& rt, const Qn::DataContainerStatCalculate& uQ) {
+           },
+           {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1", "/resolution/4sub_pion_neg/RES_TPC.x1x1",
+            "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.x1x1"});
+    Define(std::string("/resolution/4sub_pion_neg/RES_psd3_x1x1"),
+           [](const Qn::DataContainerStatCalculate &qq,
+              const Qn::DataContainerStatCalculate &rt,
+              const Qn::DataContainerStatCalculate &uQ) {
              auto result = qq * rt / uQ;
              result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
              return result;
-           }, {
-               "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1",
-               "/resolution/4sub_pion_neg/RES_TPC.x1x1",
-               "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.x1x1",
+           },
+           {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1",
+            "/resolution/4sub_pion_neg/RES_TPC.x1x1",
+            "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.x1x1",
            });
-    Define(std::string("/resolution/4sub_pion_neg/RES_psd1_y1y1"),          [](const Qn::DataContainerStatCalculate& qq, const Qn::DataContainerStatCalculate& rt, const Qn::DataContainerStatCalculate& uQ) {
+    Define(std::string("/resolution/4sub_pion_neg/RES_psd1_y1y1"),
+           [](const Qn::DataContainerStatCalculate &qq,
+              const Qn::DataContainerStatCalculate &rt,
+              const Qn::DataContainerStatCalculate &uQ) {
              auto result = qq * rt / uQ;
              result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
              return result;
-           }, {
+           },
+           {
                "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1",
                "/resolution/4sub_pion_neg/RES_TPC.y1y1",
                "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.y1y1"
            });
     Define(std::string("/resolution/4sub_pion_neg/RES_psd3_y1y1"),
-           [](const Qn::DataContainerStatCalculate& qq, const Qn::DataContainerStatCalculate& rt, const Qn::DataContainerStatCalculate& uQ) {
+           [](const Qn::DataContainerStatCalculate &qq,
+              const Qn::DataContainerStatCalculate &rt,
+              const Qn::DataContainerStatCalculate &uQ) {
              auto result = qq * rt / uQ;
              result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
              return result;
@@ -278,16 +301,12 @@ int main() {
               % axis).str());
       auto res_query =
           RegexMatch((Format("/resolution/%3%/RES_%1%_%2%") % reference % projection % resolution_method).str());
-      for (auto &&[u_vector, resolution] : Tools::Combination(
-              ResourceManager::Instance().GetMatching(u_query),
-              ResourceManager::Instance().GetMatching(res_query)
-          )) {
+      for (auto &&[u_vector, resolution] : Tools::Combination(ResourceManager::Instance().GetMatching(u_query),
+                                                              ResourceManager::Instance().GetMatching(res_query))) {
         std::vector<std::string> key = {"v1", resolution_method, "u-" + u_cstep,
                                         (Format("v1_%1%_%2%_%4%_%3%") % particle % axis % projection
                                             % reference).str()};
-        Define(key, Methods::v1,
-               {
-                   u_vector, resolution});
+        Define(key, Methods::v1,{u_vector, resolution});
       }
     }
   }
@@ -316,42 +335,18 @@ int main() {
 
 /* v1 vs Centrality */
   ResourceManager::Instance()
-      .ForEach([](
-                   const std::string &name, Qn::DataContainerStatCalculate
-               &calc) {
+      .ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
                  auto centrality_axis = calc.GetAxes()[0];
-                 for (
-                     size_t ic = 0;
-                     ic < centrality_axis.
-                         size();
-                     ++ic) {
+                 for (size_t ic = 0; ic < centrality_axis.size(); ++ic) {
                    auto c_lo = centrality_axis.GetLowerBinEdge(ic);
                    auto c_hi = centrality_axis.GetUpperBinEdge(ic);
                    auto selected = calc.Select(Qn::AxisD(centrality_axis.Name(), 1, c_lo, c_hi));
                    auto selected_graph = Qn::ToTGraph(selected);
-                   selected_graph->
-                       SetTitle((Format("%1%-%2%")
-                       % c_lo % c_hi).
-                           str()
-                                    .
-                                        c_str()
-                   );
-                   selected_graph->GetXaxis()->
-                       SetTitle(calc
-                                    .
-                                        GetAxes()[1]
-                                    .
-                                        Name()
-                                    .
-                                        c_str()
-                   );
+                   selected_graph->SetTitle((Format("%1%-%2%") % c_lo % c_hi).str().c_str());
+                   selected_graph->GetXaxis()->SetTitle(calc.GetAxes()[1].Name().c_str());
                    selected_graph->GetYaxis()->SetRangeUser(-0.2, 0.2);
-                   AddResource((Format("/profiles%1%/%2%_%3%")
-                       % name % centrality_axis.
-                       Name()
-                       % ic).
-                       str(), selected_graph
-                   );
+                   AddResource((Format("/profiles%1%/%2%_%3%") % name % centrality_axis.Name() % ic).str(),
+                               selected_graph);
                  }
                },
                RegexMatch("^/v1.*$"));
@@ -371,9 +366,7 @@ int main() {
                                                          graph->GetEX(),
                                                          graph->GetEY(),
                                                          graph->GetEY());
-                 if (
-                     std::regex_search(name, match_results, re
-                     )) {
+                 if (std::regex_search(name, match_results, re)) {
                    auto Q1 = match_results.str(1);
                    auto Q2 = match_results.str(2);
                    auto I1 = match_results.str(3);
@@ -395,9 +388,7 @@ int main() {
                },
                RegexMatch("^/x2.*psd[1-3]_RECENTERED.psd[1-3]_RECENTERED.*"));
 
-  ResourceManager::Instance()
-      .
-          Print();
+  ResourceManager::Instance().Print();
 
   ::Tools::ExportToROOT<Qn::DataContainerStatCalculate>("correlation_proc.root");
   ::Tools::ExportToROOT<TGraphErrors>("prof.root");
@@ -405,10 +396,9 @@ int main() {
 
   using namespace ::Predicates::Resource;
 
-  ResourceManager::Instance().ForEach([] (const std::string &name, const ResourceManager::Resource& r) {
+  ResourceManager::Instance().ForEach([](const std::string &name, const ResourceManager::Resource &r) {
     std::cout << name << std::endl;
   }, META["type"] == "resolution" && META["method"] == "3sub");
-
 
   return 0;
 }
