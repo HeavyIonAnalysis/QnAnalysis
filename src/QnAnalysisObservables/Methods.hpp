@@ -24,15 +24,13 @@ Resolution3S(Resource nom1, Resource nom2, Resource denom) {
   /* populating meta information */
   auto meta = ResourceMeta();
   meta.put("type", "resolution");
-  meta.put("method", "3sub");
+  meta.put("resolution.method", "3sub");
   meta.put("source", __func__);
 
   auto result = Qn::Sqrt(nom / denom.As<Qn::DataContainerStatCalculate>());
   result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
 
-  return ResourceManager::Resource(
-      result,
-      meta);
+  return {result, meta};
 }
 
 /*************** v1 *****************/
@@ -46,8 +44,8 @@ v1(Qn::DataContainerStatCalculate &uQ, Resource & resolution) {
   ResourceMeta meta;
   meta.put("type", "v1");
   meta.put("source", __func__);
-  meta.put_child("resolution", resolution.meta);
-  return Resource(result, meta);
+  meta.put_child("v1.resolution", resolution.meta.get_child("resolution", {}));
+  return {result, meta};
 }
 
 

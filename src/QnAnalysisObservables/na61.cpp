@@ -46,16 +46,17 @@ void SetArgTuple(const std::vector<std::string> &arg_names, std::tuple<Args...> 
 }// namespace Details
 
 template<typename KeyRepr, typename Function>
-void Define(const KeyRepr &key, Function &&fct, std::vector<std::string> arg_names, bool warn_at_missing = true) {
+auto Define(const KeyRepr &key, Function &&fct, std::vector<std::string> arg_names, bool warn_at_missing = true) {
   using ArgsTuple = typename ::Details::FunctionTraits<decltype(std::function{fct})>::ArgumentsTuple;
   ArgsTuple args;
   try {
     Details::SetArgTuple(arg_names, args);
-    AddResource(key, std::apply(fct, args));
+    return AddResource(key, std::apply(fct, args));
   } catch (ResourceManager::NoSuchResource &e) {
     if (warn_at_missing) {
       Warning(__func__, "Resource '%s' required for '%s' is missing, new resource won't be added",
               e.what(), ::Details::Convert<KeyRepr>::ToString(key).c_str());
+      return ResourceManager::ResourcePtr();
     } else {
       throw e; /* rethrow */
     }
@@ -143,15 +144,6 @@ void LoadROOTFile(const std::string &file_name, const std::string &manager_prefi
 
 int main() {
 
-  /*********************************
-   *
-   * 
-   *
-   *
-   *
-   *********************************/
-
-
   using std::get;
   using std::string;
   using ::Tools::Define;
@@ -159,7 +151,9 @@ int main() {
   using ::Tools::Format;
   namespace Tools = Qn::Analysis::Tools;
 
-  using namespace Predicates;
+  using Predicates::Resource::META;
+  using Predicates::RegexMatch;
+
 
   TFile f("correlation.root", "READ");
   LoadROOTFile<Qn::DataContainerStatCollect>(f.GetName(), "raw");
@@ -206,8 +200,12 @@ int main() {
       auto arg1_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subB % component).str();
       auto arg2_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subC % component).str();
       auto arg3_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subB % subC % component).str();
-      auto resolution = Format("/resolution/3sub/RES_%1%_%2%") % subA % component;
-      ::Tools::Define(resolution.str(), Methods::Resolution3S, {arg1_name, arg2_name, arg3_name});
+      auto resolution = (Format("/resolution/3sub/RES_%1%_%2%") % subA % component).str();
+      auto result = ::Tools::Define(resolution, Methods::Resolution3S, {arg1_name, arg2_name, arg3_name});
+      if (result) {
+        result->meta.put("resolution.ref", subA);
+        result->meta.put("resolution.projection", component);
+      }
     }
   }
 
@@ -288,14 +286,7 @@ int main() {
     std::vector<std::string> projections{"x1x1", "y1y1"};
 
     for (auto&&[resolution_method, reference, u_cstep, projection, axis, particle] :
-        Tools::Combination(
-            resolution_methods,
-            references,
-            u_correction_step,
-            projections,
-            axes,
-            particles
-        )) {
+        Tools::Combination(resolution_methods, references, u_correction_step, projections, axes, particles)) {
       auto u_query =
           RegexMatch((Format("/calc/uQ/%4%_%5%_%1%\\.%2%_RECENTERED.%3%") % u_cstep % reference % projection % particle
               % axis).str());
@@ -306,7 +297,13 @@ int main() {
         std::vector<std::string> key = {"v1", resolution_method, "u-" + u_cstep,
                                         (Format("v1_%1%_%2%_%4%_%3%") % particle % axis % projection
                                             % reference).str()};
-        Define(key, Methods::v1,{u_vector, resolution});
+        auto result = Define(key, Methods::v1, {u_vector, resolution});
+        if (result) {
+          result->meta.put("v1.ref",reference);
+          result->meta.put("v1.particle", particle);
+          result->meta.put("v1.component", projection);
+          result->meta.put("v1.axis", axis);
+        }
       }
     }
   }
@@ -349,44 +346,7 @@ int main() {
                                selected_graph);
                  }
                },
-               RegexMatch("^/v1.*$"));
-
-/* export PSD correlations to TGraph for comparison */
-  ResourceManager::Instance()
-      .ForEach([](
-                   const std::string &name, Qn::DataContainerStatCalculate
-               &calc) {
-                 const std::regex re(".*(psd[1-3])_RECENTERED.(psd[1-3])_RECENTERED.([a-z])1([a-z])1");
-                 std::smatch match_results;
-                 auto graph = Qn::ToTGraph(calc);
-                 auto asymmgraph = new TGraphAsymmErrors(graph->GetN(),
-                                                         graph->GetX(),
-                                                         graph->GetY(),
-                                                         graph->GetEX(),
-                                                         graph->GetEX(),
-                                                         graph->GetEY(),
-                                                         graph->GetEY());
-                 if (std::regex_search(name, match_results, re)) {
-                   auto Q1 = match_results.str(1);
-                   auto Q2 = match_results.str(2);
-                   auto I1 = match_results.str(3);
-                   auto I2 = match_results.str(4);
-                   asymmgraph->SetTitle(("Q^{" + Q1 + "}_{1," + I1 + "} " + "Q^{" + Q2 + "}_{1," + I2 + "} new soft").
-                       c_str()
-                   );
-                   asymmgraph->GetXaxis()->SetTitle("PSD Centrality (%)");
-                   AddResource(
-                       "/raw/" + Q1 + "_" + Q2 + "_" + string{
-                           (char)
-                               std::toupper(I1[0])
-                       } + string{
-                           (char)
-                               std::toupper(I2[0])
-                       },
-                       asymmgraph);
-                 }
-               },
-               RegexMatch("^/x2.*psd[1-3]_RECENTERED.psd[1-3]_RECENTERED.*"));
+               META["type"] == "v1");
 
   ResourceManager::Instance().Print();
 
@@ -396,9 +356,6 @@ int main() {
 
   using namespace ::Predicates::Resource;
 
-  ResourceManager::Instance().ForEach([](const std::string &name, const ResourceManager::Resource &r) {
-    std::cout << name << std::endl;
-  }, META["type"] == "resolution" && META["method"] == "3sub");
 
   return 0;
 }

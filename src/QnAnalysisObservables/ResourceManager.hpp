@@ -153,27 +153,27 @@ public:
     std::string resource_name;
   };
 
-  void Add(Resource &&resource) {
+  ResourcePtr Add(Resource &&resource) {
     auto key = resource.name;
     auto emplace_result = resources_.emplace(key, std::make_shared<Resource>(std::move(resource)));
     if (!emplace_result.second) {
       throw ResourceAlreadyExists(key);
     }
+    return (emplace_result.first)->second;
   }
 
   template<typename KeyRepr, typename T>
-  void Add(const KeyRepr &key, T &&obj, MetaType m = MetaType()) {
+  auto Add(const KeyRepr &key, T &&obj, MetaType m = MetaType()) {
     static_assert(std::is_copy_constructible_v<T>, "T must be copy-constructable to be stored in ResourceManager");
-    Add(Resource(Details::Convert<KeyRepr>::ToString(key), std::forward<T>(obj), std::move(m)));
+    return Add(Resource(Details::Convert<KeyRepr>::ToString(key), std::forward<T>(obj), std::move(m)));
   }
 
   template<typename KeyRepr, typename T>
-  void Add(const KeyRepr &key, T *ptr, MetaType m = MetaType()) {
+  auto Add(const KeyRepr &key, T *ptr, MetaType m = MetaType()) {
     if (!ptr) {
-      Warning(__func__, "Ignoring nullptr object");
-      return;
+      throw std::runtime_error("nullptr");
     }
-    Add(key, *ptr, std::move(m));
+    return Add(key, *ptr, std::move(m));
   }
 
   template<typename KeyRepr>
@@ -268,12 +268,12 @@ private:
 };
 
 template<typename KeyRepr, typename T>
-void AddResource(const KeyRepr &key, T &&ref) {
-  ResourceManager::Instance().Add(key, std::forward<T>(ref));
+auto AddResource(const KeyRepr &key, T &&ref) {
+  return ResourceManager::Instance().Add(key, std::forward<T>(ref));
 }
 
 template<typename KeyRepr>
-void AddResource(const KeyRepr& key, ResourceManager::Resource res) {
+auto AddResource(const KeyRepr& key, ResourceManager::Resource res) {
   std::string name = Details::Convert<KeyRepr>::ToString(key);
   if (!res.name.empty()) {
     Warning(__func__ , "Name of resource '%s' will be replaced to '%s'",
@@ -281,11 +281,11 @@ void AddResource(const KeyRepr& key, ResourceManager::Resource res) {
             name.c_str());
   }
   res.name = name;
-  ResourceManager::Instance().Add(std::move(res));
+  return ResourceManager::Instance().Add(std::move(res));
 }
 
 template<typename T>
-void AddResource(const std::string &name, T *ref) {
-  ResourceManager::Instance().Add(name, ref);
+auto AddResource(const std::string &name, T *ref) {
+  return ResourceManager::Instance().Add(name, ref);
 }
 #endif //QNANALYSIS_SRC_QNANALYSISOBSERVABLES_RESOURCEMANAGER_HPP
