@@ -13,9 +13,9 @@
 namespace Predicates {
 
 template<typename Expr>
-struct ResourceExpr;
+struct ResourceQueryExpr;
 
-struct ResourceExprDomain : boost::proto::domain<boost::proto::generator<ResourceExpr>> {};
+struct ResourceExprDomain : boost::proto::domain<boost::proto::generator<ResourceQueryExpr>> {};
 
 namespace Resource {
 
@@ -26,15 +26,15 @@ struct MetaTag {};
 } // namespace Resource
 
 template<typename Expr>
-struct ResourceExpr {
+struct ResourceQueryExpr {
 
-  BOOST_PROTO_BASIC_EXTENDS(Expr, ResourceExpr<Expr>, ResourceExprDomain);
+  BOOST_PROTO_BASIC_EXTENDS(Expr, ResourceQueryExpr<Expr>, ResourceExprDomain);
 
   BOOST_PROTO_EXTENDS_SUBSCRIPT_CONST();
 
   typedef bool result_type;
 
-  ResourceExpr(Expr proto_expr = Expr()) : proto_expr_(proto_expr) {}
+  ResourceQueryExpr(Expr proto_expr = Expr()) : proto_expr_(proto_expr) {}
 
   result_type operator()(const ResourceManager::Resource &r) const;
 
@@ -42,9 +42,9 @@ struct ResourceExpr {
 
 namespace Resource {
 
-ResourceExpr<boost::proto::terminal<KeyTag>::type> const KEY;
+ResourceQueryExpr<boost::proto::terminal<KeyTag>::type> const KEY;
 
-ResourceExpr<boost::proto::terminal<MetaTag>::type> const META;
+ResourceQueryExpr<boost::proto::terminal<MetaTag>::type> const META;
 
 }
 
@@ -99,7 +99,7 @@ struct ResourceContext {
 };
 
 template<typename Expr>
-bool ResourceExpr<Expr>::operator()(const ResourceManager::Resource &r) const {
+bool ResourceQueryExpr<Expr>::operator()(const ResourceManager::Resource &r) const {
   ResourceContext ctx(r);
   return boost::proto::eval(*this, ctx);
 }
