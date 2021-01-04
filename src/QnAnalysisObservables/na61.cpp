@@ -141,13 +141,13 @@ int main() {
   LoadROOTFile<Qn::DataContainerStatCollect>(f.GetName(), "raw");
 
   /* Convert everything to Qn::DataContainerStatCalculate */
-  gResourceManager.ForEach([](std::vector<std::string> key, Qn::DataContainerStatCollect &collect) {
+  gResourceManager.ForEach([](VectorKey key, Qn::DataContainerStatCollect &collect) {
     /* replacing /raw with /calc */
     key[0] = "calc";
     AddResource(key, Qn::DataContainerStatCalculate(collect));
   });
   /* To check compatibility with old stuff, multiply raw correlations by factor of 2 */
-  gResourceManager.ForEach([](std::vector<std::string> key, Qn::DataContainerStatCalculate calc) {
+  gResourceManager.ForEach([](VectorKey key, Qn::DataContainerStatCalculate calc) {
     key[0] = "x2";
     auto x2 = 2 * calc;
     x2.SetErrors(Qn::StatCalculate::ErrorType::PROPAGATION);// Errors
@@ -156,12 +156,12 @@ int main() {
 
   {
     /* Projection _y correlations to pT axis  */
-    gResourceManager.ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+    gResourceManager.ForEach([](StringKey name, Qn::DataContainerStatCalculate &calc) {
                                           calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_y_cm"});
                                         },
                                         RegexMatch(R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
     /* Projection _pT correlations to 'y' axis  */
-    gResourceManager.ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+    gResourceManager.ForEach([](StringKey name, Qn::DataContainerStatCalculate &calc) {
                                           calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_pT"});
                                         },
                                         RegexMatch(R"(/calc/uQ/(\w+)_pt_(\w+)\..*)"));
@@ -193,24 +193,24 @@ int main() {
 
   {
     /***************** RESOLUTION 4-sub ******************/
-    gResourceManager.ForEach([](const std::vector<std::string> &key, Qn::DataContainerStatCalculate &calc) {
+    gResourceManager.ForEach([](VectorKey key, Qn::DataContainerStatCalculate &calc) {
       auto selected = calc.Select(Qn::AxisD("RecParticles_pT", 1, 0., 0.5));
       std::vector<std::string> new_key = {"resolution", "4sub_pion_neg", key.back()};
       AddResource(new_key, selected);
     }, RegexMatch("/calc/uQ/pion_neg_pt_RESCALED\\.(psd1|psd3)_RECENTERED\\.(x1x1|y1y1)$"));
 
-    Define(std::string("/resolution/4sub_pion_neg/RES_TPC.x1x1"), Methods::Resolution3S, {
+    Define(StringKey("/resolution/4sub_pion_neg/RES_TPC.x1x1"), Methods::Resolution3S, {
         "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.x1x1",
         "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.x1x1",
         "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1"
     });
-    Define(std::string("/resolution/4sub_pion_neg/RES_TPC.y1y1"), Methods::Resolution3S, {
+    Define(StringKey("/resolution/4sub_pion_neg/RES_TPC.y1y1"), Methods::Resolution3S, {
         "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.y1y1",
         "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.y1y1",
         "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1"
     });
 
-    Define(std::string("/resolution/4sub_pion_neg/RES_psd1_x1x1"),
+    Define(StringKey("/resolution/4sub_pion_neg/RES_psd1_x1x1"),
            [](const Qn::DataContainerStatCalculate &qq,
               const Qn::DataContainerStatCalculate &rt,
               const Qn::DataContainerStatCalculate &uQ) {
@@ -220,7 +220,7 @@ int main() {
            },
            {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1", "/resolution/4sub_pion_neg/RES_TPC.x1x1",
             "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.x1x1"});
-    Define(std::string("/resolution/4sub_pion_neg/RES_psd3_x1x1"),
+    Define(StringKey("/resolution/4sub_pion_neg/RES_psd3_x1x1"),
            [](const Qn::DataContainerStatCalculate &qq,
               const Qn::DataContainerStatCalculate &rt,
               const Qn::DataContainerStatCalculate &uQ) {
@@ -232,7 +232,7 @@ int main() {
             "/resolution/4sub_pion_neg/RES_TPC.x1x1",
             "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.x1x1",
            });
-    Define(std::string("/resolution/4sub_pion_neg/RES_psd1_y1y1"),
+    Define(StringKey("/resolution/4sub_pion_neg/RES_psd1_y1y1"),
            [](const Qn::DataContainerStatCalculate &qq,
               const Qn::DataContainerStatCalculate &rt,
               const Qn::DataContainerStatCalculate &uQ) {
@@ -245,7 +245,7 @@ int main() {
                "/resolution/4sub_pion_neg/RES_TPC.y1y1",
                "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.y1y1"
            });
-    Define(std::string("/resolution/4sub_pion_neg/RES_psd3_y1y1"),
+    Define(StringKey("/resolution/4sub_pion_neg/RES_psd3_y1y1"),
            [](const Qn::DataContainerStatCalculate &qq,
               const Qn::DataContainerStatCalculate &rt,
               const Qn::DataContainerStatCalculate &uQ) {
@@ -276,7 +276,7 @@ int main() {
           RegexMatch((Format("/resolution/%3%/RES_%1%_%2%") % reference % projection % resolution_method).str());
       for (auto &&[u_vector, resolution] : Tools::Combination(gResourceManager.GetMatching(u_query),
                                                               gResourceManager.GetMatching(res_query))) {
-        std::vector<std::string> key = {"v1", resolution_method, "u-" + u_cstep,
+        VectorKey key = {"v1", resolution_method, "u-" + u_cstep,
                                         (Format("v1_%1%_%2%_%4%_%3%") % particle % axis % projection
                                             % reference).str()};
         auto result = Define(key, Methods::v1, {u_vector, resolution});
@@ -292,14 +292,14 @@ int main() {
 /****************** DRAWING *********************/
 
 /* export everything to TGraph */
-  gResourceManager.ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+  gResourceManager.ForEach([](StringKey name, Qn::DataContainerStatCalculate &calc) {
                              auto graph = Qn::ToTGraph(calc);
                              AddResource("/profiles" + name, graph);
                            },
                            RegexMatch("^/x2/QQ/.*$"));
 
 /* export everything to TGraph */
-  gResourceManager.ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+  gResourceManager.ForEach([](StringKey name, Qn::DataContainerStatCalculate &calc) {
                              auto graph = Qn::ToTGraph(calc);
                              graph->GetYaxis()->SetRangeUser(-0.1, 1.0);
                              AddResource("/profiles" + name, graph);
@@ -307,7 +307,7 @@ int main() {
                            RegexMatch(".*RES_.*"));
 
 /* v1 vs Centrality */
-  gResourceManager.ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+  gResourceManager.ForEach([](StringKey name, Qn::DataContainerStatCalculate &calc) {
                              auto centrality_axis = calc.GetAxes()[0];
                              for (size_t ic = 0; ic < centrality_axis.size(); ++ic) {
                                auto c_lo = centrality_axis.GetLowerBinEdge(ic);
@@ -325,11 +325,12 @@ int main() {
 
   gResourceManager.Print();
 
-  using ::Tools::ToRoot;
-
-  gResourceManager.ForEach(ToRoot<Qn::DataContainerStatCalculate>("correlation_proc.root"));
-  gResourceManager.ForEach(ToRoot<TGraphErrors>("prof.root"));
-  gResourceManager.ForEach(ToRoot<TGraphAsymmErrors>("prof.root", "UPDATE"));
-
+  /***************** SAVING OUTPUT *****************/
+  {
+    using ::Tools::ToRoot;
+    gResourceManager.ForEach(ToRoot<Qn::DataContainerStatCalculate>("correlation_proc.root"));
+    gResourceManager.ForEach(ToRoot<TGraphErrors>("prof.root"));
+    gResourceManager.ForEach(ToRoot<TGraphAsymmErrors>("prof.root", "UPDATE"));
+  }
   return 0;
 }

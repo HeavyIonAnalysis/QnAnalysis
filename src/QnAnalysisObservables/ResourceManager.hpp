@@ -79,8 +79,12 @@ struct Convert<std::vector<std::string>> {
 
 }
 
+typedef std::string StringKey ;
+typedef std::vector<std::string> VectorKey;
+
 class ResourceManager : public Details::Singleton<ResourceManager> {
 public:
+
   struct Resource; /// fwd
   typedef boost::property_tree::ptree MetaType;
   typedef std::shared_ptr<Resource> ResourcePtr;
