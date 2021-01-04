@@ -141,13 +141,13 @@ int main() {
   LoadROOTFile<Qn::DataContainerStatCollect>(f.GetName(), "raw");
 
   /* Convert everything to Qn::DataContainerStatCalculate */
-  ResourceManager::Instance().ForEach([](std::vector<std::string> key, Qn::DataContainerStatCollect &collect) {
+  gResourceManager.ForEach([](std::vector<std::string> key, Qn::DataContainerStatCollect &collect) {
     /* replacing /raw with /calc */
     key[0] = "calc";
     AddResource(key, Qn::DataContainerStatCalculate(collect));
   });
   /* To check compatibility with old stuff, multiply raw correlations by factor of 2 */
-  ResourceManager::Instance().ForEach([](std::vector<std::string> key, Qn::DataContainerStatCalculate calc) {
+  gResourceManager.ForEach([](std::vector<std::string> key, Qn::DataContainerStatCalculate calc) {
     key[0] = "x2";
     auto x2 = 2 * calc;
     x2.SetErrors(Qn::StatCalculate::ErrorType::PROPAGATION);// Errors
@@ -156,12 +156,12 @@ int main() {
 
   {
     /* Projection _y correlations to pT axis  */
-    ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+    gResourceManager.ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
                                           calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_y_cm"});
                                         },
                                         RegexMatch(R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
     /* Projection _pT correlations to 'y' axis  */
-    ResourceManager::Instance().ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+    gResourceManager.ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
                                           calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_pT"});
                                         },
                                         RegexMatch(R"(/calc/uQ/(\w+)_pt_(\w+)\..*)"));
@@ -193,7 +193,7 @@ int main() {
 
   {
     /***************** RESOLUTION 4-sub ******************/
-    ResourceManager::Instance().ForEach([](const std::vector<std::string> &key, Qn::DataContainerStatCalculate &calc) {
+    gResourceManager.ForEach([](const std::vector<std::string> &key, Qn::DataContainerStatCalculate &calc) {
       auto selected = calc.Select(Qn::AxisD("RecParticles_pT", 1, 0., 0.5));
       std::vector<std::string> new_key = {"resolution", "4sub_pion_neg", key.back()};
       AddResource(new_key, selected);
@@ -274,14 +274,14 @@ int main() {
               % axis).str());
       auto res_query =
           RegexMatch((Format("/resolution/%3%/RES_%1%_%2%") % reference % projection % resolution_method).str());
-      for (auto &&[u_vector, resolution] : Tools::Combination(ResourceManager::Instance().GetMatching(u_query),
-                                                              ResourceManager::Instance().GetMatching(res_query))) {
+      for (auto &&[u_vector, resolution] : Tools::Combination(gResourceManager.GetMatching(u_query),
+                                                              gResourceManager.GetMatching(res_query))) {
         std::vector<std::string> key = {"v1", resolution_method, "u-" + u_cstep,
                                         (Format("v1_%1%_%2%_%4%_%3%") % particle % axis % projection
                                             % reference).str()};
         auto result = Define(key, Methods::v1, {u_vector, resolution});
         if (result) {
-          result->meta.put("v1.ref",reference);
+          result->meta.put("v1.ref", reference);
           result->meta.put("v1.particle", particle);
           result->meta.put("v1.component", projection);
           result->meta.put("v1.axis", axis);
@@ -292,52 +292,44 @@ int main() {
 /****************** DRAWING *********************/
 
 /* export everything to TGraph */
-  ResourceManager::Instance()
-      .ForEach([](
-                   const std::string &name, Qn::DataContainerStatCalculate
-               &calc) {
-                 auto graph = Qn::ToTGraph(calc);
-                 AddResource("/profiles" + name, graph);
-               },
-               RegexMatch("^/x2/QQ/.*$"));
+  gResourceManager.ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+                             auto graph = Qn::ToTGraph(calc);
+                             AddResource("/profiles" + name, graph);
+                           },
+                           RegexMatch("^/x2/QQ/.*$"));
 
 /* export everything to TGraph */
-  ResourceManager::Instance()
-      .ForEach([](
-                   const std::string &name, Qn::DataContainerStatCalculate
-               &calc) {
-                 auto graph = Qn::ToTGraph(calc);
-                 graph->GetYaxis()->SetRangeUser(-0.1, 1.0);
-                 AddResource("/profiles" + name, graph);
-               },
-               RegexMatch(".*RES_.*"));
+  gResourceManager.ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+                             auto graph = Qn::ToTGraph(calc);
+                             graph->GetYaxis()->SetRangeUser(-0.1, 1.0);
+                             AddResource("/profiles" + name, graph);
+                           },
+                           RegexMatch(".*RES_.*"));
 
 /* v1 vs Centrality */
-  ResourceManager::Instance()
-      .ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
-                 auto centrality_axis = calc.GetAxes()[0];
-                 for (size_t ic = 0; ic < centrality_axis.size(); ++ic) {
-                   auto c_lo = centrality_axis.GetLowerBinEdge(ic);
-                   auto c_hi = centrality_axis.GetUpperBinEdge(ic);
-                   auto selected = calc.Select(Qn::AxisD(centrality_axis.Name(), 1, c_lo, c_hi));
-                   auto selected_graph = Qn::ToTGraph(selected);
-                   selected_graph->SetTitle((Format("%1%-%2%") % c_lo % c_hi).str().c_str());
-                   selected_graph->GetXaxis()->SetTitle(calc.GetAxes()[1].Name().c_str());
-                   selected_graph->GetYaxis()->SetRangeUser(-0.2, 0.2);
-                   AddResource((Format("/profiles%1%/%2%_%3%") % name % centrality_axis.Name() % ic).str(),
-                               selected_graph);
-                 }
-               },
-               META["type"] == "v1");
+  gResourceManager.ForEach([](const std::string &name, Qn::DataContainerStatCalculate &calc) {
+                             auto centrality_axis = calc.GetAxes()[0];
+                             for (size_t ic = 0; ic < centrality_axis.size(); ++ic) {
+                               auto c_lo = centrality_axis.GetLowerBinEdge(ic);
+                               auto c_hi = centrality_axis.GetUpperBinEdge(ic);
+                               auto selected = calc.Select(Qn::AxisD(centrality_axis.Name(), 1, c_lo, c_hi));
+                               auto selected_graph = Qn::ToTGraph(selected);
+                               selected_graph->SetTitle((Format("%1%-%2%") % c_lo % c_hi).str().c_str());
+                               selected_graph->GetXaxis()->SetTitle(calc.GetAxes()[1].Name().c_str());
+                               selected_graph->GetYaxis()->SetRangeUser(-0.2, 0.2);
+                               AddResource((Format("/profiles%1%/%2%_%3%") % name % centrality_axis.Name() % ic).str(),
+                                           selected_graph);
+                             }
+                           },
+                           META["type"] == "v1");
 
-  ResourceManager::Instance().Print();
+  gResourceManager.Print();
 
-  ::Tools::ExportToROOT<Qn::DataContainerStatCalculate>("correlation_proc.root");
-  ::Tools::ExportToROOT<TGraphErrors>("prof.root");
-  ::Tools::ExportToROOT<TGraphAsymmErrors>("prof.root", "UPDATE");
+  using ::Tools::ToRoot;
 
-  using namespace ::Predicates::Resource;
-
+  gResourceManager.ForEach(ToRoot<Qn::DataContainerStatCalculate>("correlation_proc.root"));
+  gResourceManager.ForEach(ToRoot<TGraphErrors>("prof.root"));
+  gResourceManager.ForEach(ToRoot<TGraphAsymmErrors>("prof.root", "UPDATE"));
 
   return 0;
 }

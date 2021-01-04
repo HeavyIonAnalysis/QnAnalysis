@@ -267,6 +267,8 @@ private:
       resources_; /// Pointers are used to allow simultaneous iteration and definition new objects
 };
 
+#define gResourceManager (ResourceManager::Instance())
+
 template<typename KeyRepr, typename T>
 auto AddResource(const KeyRepr &key, T &&ref) {
   return ResourceManager::Instance().Add(key, std::forward<T>(ref));
