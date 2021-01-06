@@ -33,6 +33,34 @@ Resolution3S(Resource nom1, Resource nom2, Resource denom) {
   return {result, meta};
 }
 
+inline
+Resource
+Resolution4S(Qn::DataContainerStatCalculate QQ,
+             Qn::DataContainerStatCalculate RT,
+             Qn::DataContainerStatCalculate uQ) {
+  auto result = QQ * RT / uQ;
+  result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
+
+  auto meta = ResourceMeta();
+  meta.put("type", "resolution");
+  meta.put("resolution.method", "4sub");
+  meta.put("source", __func__);
+  return {result, meta};
+}
+
+inline
+Resource
+Resolution4S_1(Qn::DataContainerStatCalculate Qu,
+             Qn::DataContainerStatCalculate RT) {
+  auto result = Qu / RT;
+  result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
+
+  auto meta = ResourceMeta();
+  meta.put("type", "resolution");
+  meta.put("resolution.method", "4sub");
+  meta.put("source", __func__);
+  return {result, meta};
+}
 /*************** v1 *****************/
 
 inline

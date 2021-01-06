@@ -136,35 +136,38 @@ int main() {
   using Predicates::Resource::META;
   using Predicates::RegexMatch;
 
+  using DTCalc = Qn::DataContainerStatCalculate;
+  using DTColl = Qn::DataContainerStatCollect;
+
+
 
   TFile f("correlation.root", "READ");
   LoadROOTFile<Qn::DataContainerStatCollect>(f.GetName(), "raw");
 
   /* Convert everything to Qn::DataContainerStatCalculate */
-  gResourceManager.ForEach([](VectorKey key, Qn::DataContainerStatCollect &collect) {
+  gResourceManager.ForEach([](VectorKey key, DTColl &collect) {
     /* replacing /raw with /calc */
     key[0] = "calc";
     AddResource(key, Qn::DataContainerStatCalculate(collect));
   });
   /* To check compatibility with old stuff, multiply raw correlations by factor of 2 */
-  gResourceManager.ForEach([](VectorKey key, Qn::DataContainerStatCalculate calc) {
+  gResourceManager.ForEach([](VectorKey key, DTCalc calc) {
     key[0] = "x2";
     auto x2 = 2 * calc;
-    x2.SetErrors(Qn::StatCalculate::ErrorType::PROPAGATION);// Errors
     AddResource(key, x2);
   });
 
   {
     /* Projection _y correlations to pT axis  */
-    gResourceManager.ForEach([](StringKey name, Qn::DataContainerStatCalculate &calc) {
-                                          calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_y_cm"});
-                                        },
-                                        RegexMatch(R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
+    gResourceManager.ForEach([](StringKey name, DTCalc &calc) {
+                               calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_y_cm"});
+                             },
+                             RegexMatch(R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
     /* Projection _pT correlations to 'y' axis  */
-    gResourceManager.ForEach([](StringKey name, Qn::DataContainerStatCalculate &calc) {
-                                          calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_pT"});
-                                        },
-                                        RegexMatch(R"(/calc/uQ/(\w+)_pt_(\w+)\..*)"));
+    gResourceManager.ForEach([](StringKey name, DTCalc &calc) {
+                               calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_pT"});
+                             },
+                             RegexMatch(R"(/calc/uQ/(\w+)_pt_(\w+)\..*)"));
   }
 
   {
@@ -193,70 +196,42 @@ int main() {
 
   {
     /***************** RESOLUTION 4-sub ******************/
-    gResourceManager.ForEach([](VectorKey key, Qn::DataContainerStatCalculate &calc) {
-      auto selected = calc.Select(Qn::AxisD("RecParticles_pT", 1, 0., 0.5));
-      std::vector<std::string> new_key = {"resolution", "4sub_pion_neg", key.back()};
+    gResourceManager.ForEach([](VectorKey key, DTCalc &calc) {
+      auto selected = calc.Select(Qn::AxisD("RecParticles_y_cm", 1, 0.8, 1.2));
+      VectorKey new_key = {"resolution", "4sub_protons", key.back()};
       AddResource(new_key, selected);
-    }, RegexMatch("/calc/uQ/pion_neg_pt_RESCALED\\.(psd1|psd3)_RECENTERED\\.(x1x1|y1y1)$"));
+    }, RegexMatch("/calc/uQ/protons_y_RESCALED\\.(psd[1-3])_RECENTERED\\.(x1x1|y1y1)$"));
 
-    Define(StringKey("/resolution/4sub_pion_neg/RES_TPC.x1x1"), Methods::Resolution3S, {
-        "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.x1x1",
-        "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.x1x1",
-        "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1"
-    });
-    Define(StringKey("/resolution/4sub_pion_neg/RES_TPC.y1y1"), Methods::Resolution3S, {
-        "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.y1y1",
-        "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.y1y1",
-        "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1"
-    });
-
-    Define(StringKey("/resolution/4sub_pion_neg/RES_psd1_x1x1"),
-           [](const Qn::DataContainerStatCalculate &qq,
-              const Qn::DataContainerStatCalculate &rt,
-              const Qn::DataContainerStatCalculate &uQ) {
-             auto result = qq * rt / uQ;
-             result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
-             return result;
-           },
-           {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1", "/resolution/4sub_pion_neg/RES_TPC.x1x1",
-            "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.x1x1"});
-    Define(StringKey("/resolution/4sub_pion_neg/RES_psd3_x1x1"),
-           [](const Qn::DataContainerStatCalculate &qq,
-              const Qn::DataContainerStatCalculate &rt,
-              const Qn::DataContainerStatCalculate &uQ) {
-             auto result = qq * rt / uQ;
-             result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
-             return result;
-           },
+    Define(StringKey("/resolution/4sub_protons/RES_TPC.x1x1"), Methods::Resolution3S,
+           {"/resolution/4sub_protons/protons_y_RESCALED.psd1_RECENTERED.x1x1",
+            "/resolution/4sub_protons/protons_y_RESCALED.psd3_RECENTERED.x1x1",
+            "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1"});
+    Define(StringKey("/resolution/4sub_protons/RES_TPC.y1y1"), Methods::Resolution3S,
+           {"/resolution/4sub_protons/protons_y_RESCALED.psd1_RECENTERED.y1y1",
+            "/resolution/4sub_protons/protons_y_RESCALED.psd3_RECENTERED.y1y1",
+            "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1"});
+    Define(StringKey("/resolution/4sub_protons/RES_psd1_x1x1"), Methods::Resolution4S,
            {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1",
-            "/resolution/4sub_pion_neg/RES_TPC.x1x1",
-            "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.x1x1",
-           });
-    Define(StringKey("/resolution/4sub_pion_neg/RES_psd1_y1y1"),
-           [](const Qn::DataContainerStatCalculate &qq,
-              const Qn::DataContainerStatCalculate &rt,
-              const Qn::DataContainerStatCalculate &uQ) {
-             auto result = qq * rt / uQ;
-             result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
-             return result;
-           },
-           {
-               "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1",
-               "/resolution/4sub_pion_neg/RES_TPC.y1y1",
-               "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd3_RECENTERED.y1y1"
-           });
-    Define(StringKey("/resolution/4sub_pion_neg/RES_psd3_y1y1"),
-           [](const Qn::DataContainerStatCalculate &qq,
-              const Qn::DataContainerStatCalculate &rt,
-              const Qn::DataContainerStatCalculate &uQ) {
-             auto result = qq * rt / uQ;
-             result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
-             return result;
-           }, {
-               "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1",
-               "/resolution/4sub_pion_neg/RES_TPC.y1y1",
-               "/resolution/4sub_pion_neg/pion_neg_pt_RESCALED.psd1_RECENTERED.y1y1",
-           });
+            "/resolution/4sub_protons/RES_TPC.x1x1",
+            "/resolution/4sub_protons/protons_y_RESCALED.psd3_RECENTERED.x1x1"});
+    Define(StringKey("/resolution/4sub_protons/RES_psd2_x1x1"), Methods::Resolution4S_1,
+           {"/resolution/4sub_protons/protons_y_RESCALED.psd2_RECENTERED.x1x1",
+            "/resolution/4sub_protons/RES_TPC.x1x1"});
+    Define(StringKey("/resolution/4sub_protons/RES_psd3_x1x1"), Methods::Resolution4S,
+           {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1",
+            "/resolution/4sub_protons/RES_TPC.x1x1",
+            "/resolution/4sub_protons/protons_y_RESCALED.psd1_RECENTERED.x1x1"});
+    Define(StringKey("/resolution/4sub_protons/RES_psd1_y1y1"), Methods::Resolution4S,
+           {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1",
+            "/resolution/4sub_protons/RES_TPC.y1y1",
+            "/resolution/4sub_protons/protons_y_RESCALED.psd3_RECENTERED.y1y1"});
+    Define(StringKey("/resolution/4sub_protons/RES_psd2_y1y1"), Methods::Resolution4S_1,
+           {"/resolution/4sub_protons/protons_y_RESCALED.psd2_RECENTERED.y1y1",
+            "/resolution/4sub_protons/RES_TPC.y1y1"});
+    Define(StringKey("/resolution/4sub_protons/RES_psd3_y1y1"), Methods::Resolution4S,
+           {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1",
+            "/resolution/4sub_protons/RES_TPC.y1y1",
+            "/resolution/4sub_protons/protons_y_RESCALED.psd1_RECENTERED.y1y1"});
   }
 
   {
@@ -277,8 +252,8 @@ int main() {
       for (auto &&[u_vector, resolution] : Tools::Combination(gResourceManager.GetMatching(u_query),
                                                               gResourceManager.GetMatching(res_query))) {
         VectorKey key = {"v1", resolution_method, "u-" + u_cstep,
-                                        (Format("v1_%1%_%2%_%4%_%3%") % particle % axis % projection
-                                            % reference).str()};
+                         (Format("v1_%1%_%2%_%4%_%3%") % particle % axis % projection
+                             % reference).str()};
         auto result = Define(key, Methods::v1, {u_vector, resolution});
         if (result) {
           result->meta.put("v1.ref", reference);
@@ -292,36 +267,34 @@ int main() {
 /****************** DRAWING *********************/
 
 /* export everything to TGraph */
-  gResourceManager.ForEach([](StringKey name, Qn::DataContainerStatCalculate &calc) {
+  gResourceManager.ForEach([](StringKey name, DTCalc calc) {
                              auto graph = Qn::ToTGraph(calc);
                              AddResource("/profiles" + name, graph);
                            },
                            RegexMatch("^/x2/QQ/.*$"));
 
-/* export everything to TGraph */
-  gResourceManager.ForEach([](StringKey name, Qn::DataContainerStatCalculate &calc) {
-                             auto graph = Qn::ToTGraph(calc);
-                             graph->GetYaxis()->SetRangeUser(-0.1, 1.0);
-                             AddResource("/profiles" + name, graph);
-                           },
-                           RegexMatch(".*RES_.*"));
+  /* export everything to TGraph */
+  gResourceManager.ForEach([](StringKey name, DTCalc calc) {
+    auto graph = Qn::ToTGraph(calc);
+    graph->GetYaxis()->SetRangeUser(-0.1, 1.0);
+    AddResource("/profiles" + name, graph);
+  }, META["type"] == "resolution");
 
-/* v1 vs Centrality */
+  /* v1 vs Centrality */
   gResourceManager.ForEach([](StringKey name, Qn::DataContainerStatCalculate &calc) {
-                             auto centrality_axis = calc.GetAxes()[0];
-                             for (size_t ic = 0; ic < centrality_axis.size(); ++ic) {
-                               auto c_lo = centrality_axis.GetLowerBinEdge(ic);
-                               auto c_hi = centrality_axis.GetUpperBinEdge(ic);
-                               auto selected = calc.Select(Qn::AxisD(centrality_axis.Name(), 1, c_lo, c_hi));
-                               auto selected_graph = Qn::ToTGraph(selected);
-                               selected_graph->SetTitle((Format("%1%-%2%") % c_lo % c_hi).str().c_str());
-                               selected_graph->GetXaxis()->SetTitle(calc.GetAxes()[1].Name().c_str());
-                               selected_graph->GetYaxis()->SetRangeUser(-0.2, 0.2);
-                               AddResource((Format("/profiles%1%/%2%_%3%") % name % centrality_axis.Name() % ic).str(),
-                                           selected_graph);
-                             }
-                           },
-                           META["type"] == "v1");
+    auto centrality_axis = calc.GetAxes()[0];
+    for (size_t ic = 0; ic < centrality_axis.size(); ++ic) {
+      auto c_lo = centrality_axis.GetLowerBinEdge(ic);
+      auto c_hi = centrality_axis.GetUpperBinEdge(ic);
+      auto selected = calc.Select(Qn::AxisD(centrality_axis.Name(), 1, c_lo, c_hi));
+      auto selected_graph = Qn::ToTGraph(selected);
+      selected_graph->SetTitle((Format("%1%-%2%") % c_lo % c_hi).str().c_str());
+      selected_graph->GetXaxis()->SetTitle(calc.GetAxes()[1].Name().c_str());
+      selected_graph->GetYaxis()->SetRangeUser(-0.2, 0.2);
+      AddResource((Format("/profiles%1%/%2%_%3%") % name % centrality_axis.Name() % ic).str(),
+                  selected_graph);
+    }
+  }, META["type"] == "v1");
 
   gResourceManager.Print();
 
