@@ -266,6 +266,12 @@ int main() {
   }
 /****************** DRAWING *********************/
 
+  {
+    auto result = gResourceManager.SelectUniq(META["type"]);
+    std::cout << std::endl;
+
+  }
+
 /* export everything to TGraph */
   gResourceManager.ForEach([](StringKey name, DTCalc calc) {
                              auto graph = Qn::ToTGraph(calc);

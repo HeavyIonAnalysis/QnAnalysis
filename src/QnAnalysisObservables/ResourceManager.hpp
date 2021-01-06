@@ -21,7 +21,7 @@ namespace Details {
 template<typename T>
 class Singleton {
 
-public:
+ public:
   virtual ~Singleton() = default;
 
   static T &Instance() {
@@ -79,11 +79,11 @@ struct Convert<std::vector<std::string>> {
 
 }
 
-typedef std::string StringKey ;
+typedef std::string StringKey;
 typedef std::vector<std::string> VectorKey;
 
 class ResourceManager : public Details::Singleton<ResourceManager> {
-public:
+ public:
 
   struct Resource; /// fwd
   typedef boost::property_tree::ptree MetaType;
@@ -109,7 +109,7 @@ public:
       return std::any_cast<T>(&obj);
     }
 
-    void Print(std::ostream& os = std::cout) const {
+    void Print(std::ostream &os = std::cout) const {
       os << "name:" << name << "\t" << "meta:";
       boost::property_tree::write_json(os, meta, false);
     }
@@ -120,7 +120,7 @@ public:
 
     std::string name;
 
-    operator std::string () const {
+    operator std::string() const {
       return name;
     }
   };
@@ -129,7 +129,7 @@ public:
   struct ResTag {};
 
   struct AlwaysTrue {
-    bool operator () (const NameTag&) {
+    bool operator()(const NameTag &) {
       return true;
     }
   };
@@ -200,12 +200,11 @@ public:
         (resources_[Details::Convert<KeyRepr>::ToString(key)]->obj));
   }
 
-  template <typename KeyRepr>
-  NameTag Get(const KeyRepr& key, ResTag<NameTag>) {
+  template<typename KeyRepr>
+  NameTag Get(const KeyRepr &key, ResTag<NameTag>) {
     CheckResource(key);
     return NameTag(Details::Convert<KeyRepr>::ToString(key));
   }
-
 
   template<typename KeyRepr>
   MetaType &Get(const KeyRepr &key, ResTag<MetaType>) {
@@ -220,17 +219,17 @@ public:
   }
 
   template<typename Predicate>
-  bool TestPredicate(Predicate && predicate, const std::string& key) {
+  bool TestPredicate(Predicate &&predicate, const std::string &key) {
     using PredicateTraits = Details::FunctionTraits<decltype(std::function{predicate})>;
-    static_assert(PredicateTraits::N_ARGS == 1 && std::is_same_v<typename PredicateTraits::ReturnType,bool>);
+    static_assert(PredicateTraits::N_ARGS == 1 && std::is_same_v<typename PredicateTraits::ReturnType, bool>);
     using ArgType = std::decay_t<typename PredicateTraits::template ArgType<0>>;
     return predicate(Get(key, ResTag<ArgType>()));
   }
 
-  template <typename Predicate = AlwaysTrue>
-  std::vector<std::string> GetMatching(Predicate && predicate = AlwaysTrue()) {
+  template<typename Predicate = AlwaysTrue>
+  std::vector<std::string> GetMatching(Predicate &&predicate = AlwaysTrue()) {
     std::vector<std::string> result;
-    for (auto & element : resources_) {
+    for (auto &element : resources_) {
       if (TestPredicate(std::forward<Predicate>(predicate), element.first))
         result.emplace_back(element.first);
     }
@@ -238,7 +237,7 @@ public:
   }
 
   template<typename Function, typename Predicate = AlwaysTrue>
-  void ForEach(Function &&fct, Predicate && predicate = AlwaysTrue(), bool warn_bad_cast = true) {
+  void ForEach(Function &&fct, Predicate &&predicate = AlwaysTrue(), bool warn_bad_cast = true) {
     using Traits = Details::FunctionTraits<decltype(std::function{fct})>;
 
     auto resources_copy = resources_;
@@ -258,7 +257,33 @@ public:
     }
   }
 
+  template<typename MapFunction, typename OIter, typename Predicate = AlwaysTrue>
+  void Select(MapFunction &&fct, OIter &&o, Predicate &&predicate = AlwaysTrue()) {
+    using Traits = Details::FunctionTraits<decltype(std::function{fct})>;
 
+    auto resources_copy = resources_;
+    for (auto &element : resources_copy) {
+      if (TestPredicate(std::forward<Predicate>(predicate), element.first)) {
+        try {
+          static_assert(Traits::N_ARGS == 1);
+          using ArgType = std::decay_t<typename Traits::template ArgType<0>>;
+          *o = fct(Get(element.first, ResTag<ArgType>()));
+        } catch (std::bad_any_cast &e) {
+          Warning(__func__, "Bad cast for '%s'. Skipping...", element.first.c_str());
+        }
+      } /// predicate
+    } /// resources
+  }
+
+  template<typename MapFunction, typename Predicate = AlwaysTrue>
+  auto SelectUniq(MapFunction &&fct, Predicate &&predicate = AlwaysTrue()) {
+    using Traits = Details::FunctionTraits<decltype(std::function{fct})>;
+    std::set<std::decay_t<typename Traits::ReturnType>> result;
+    Select(std::forward<MapFunction>(fct),
+           std::inserter(result, std::begin(result)),
+           std::forward<Predicate>(predicate));
+    return result;
+  }
 
   void Print() {
     std::cout << "Keys: " << std::endl;
@@ -267,7 +292,7 @@ public:
     }
   }
 
-private:
+ private:
 
   std::map<KeyType, ResourcePtr>
       resources_; /// Pointers are used to allow simultaneous iteration and definition new objects
@@ -281,10 +306,10 @@ auto AddResource(const KeyRepr &key, T &&ref) {
 }
 
 template<typename KeyRepr>
-auto AddResource(const KeyRepr& key, ResourceManager::Resource res) {
+auto AddResource(const KeyRepr &key, ResourceManager::Resource res) {
   std::string name = Details::Convert<KeyRepr>::ToString(key);
   if (!res.name.empty()) {
-    Warning(__func__ , "Name of resource '%s' will be replaced to '%s'",
+    Warning(__func__, "Name of resource '%s' will be replaced to '%s'",
             res.name.c_str(),
             name.c_str());
   }
