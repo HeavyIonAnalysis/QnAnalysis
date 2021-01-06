@@ -222,7 +222,7 @@ public:
   template<typename Predicate>
   bool TestPredicate(Predicate && predicate, const std::string& key) {
     using PredicateTraits = Details::FunctionTraits<decltype(std::function{predicate})>;
-    static_assert(PredicateTraits::N_ARGS == 1);
+    static_assert(PredicateTraits::N_ARGS == 1 && std::is_same_v<typename PredicateTraits::ReturnType,bool>);
     using ArgType = std::decay_t<typename PredicateTraits::template ArgType<0>>;
     return predicate(Get(key, ResTag<ArgType>()));
   }
@@ -257,6 +257,8 @@ public:
       } // predicate
     }
   }
+
+
 
   void Print() {
     std::cout << "Keys: " << std::endl;

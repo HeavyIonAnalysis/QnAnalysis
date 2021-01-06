@@ -12,8 +12,10 @@
 
 namespace Predicates {
 
+
 template<typename Expr>
-struct ResourceQueryExpr;
+struct ResourceQueryExpr; /// fwd declaration
+
 
 struct ResourceExprDomain : boost::proto::domain<boost::proto::generator<ResourceQueryExpr>> {};
 
@@ -24,29 +26,6 @@ struct KeyTag {};
 struct MetaTag {};
 
 } // namespace Resource
-
-template<typename Expr>
-struct ResourceQueryExpr {
-
-  BOOST_PROTO_BASIC_EXTENDS(Expr, ResourceQueryExpr<Expr>, ResourceExprDomain);
-
-  BOOST_PROTO_EXTENDS_SUBSCRIPT_CONST();
-
-  typedef bool result_type;
-
-  ResourceQueryExpr(Expr proto_expr = Expr()) : proto_expr_(proto_expr) {}
-
-  result_type operator()(const ResourceManager::Resource &r) const;
-
-};
-
-namespace Resource {
-
-ResourceQueryExpr<boost::proto::terminal<KeyTag>::type> const KEY;
-
-ResourceQueryExpr<boost::proto::terminal<MetaTag>::type> const META;
-
-}
 
 struct ResourceContext {
 
@@ -82,7 +61,7 @@ struct ResourceContext {
   struct eval_subscript : boost::proto::default_eval<Expr, ResourceContext const> {};
 
   template<typename Expr>
-  struct eval_subscript<Expr, std::remove_const_t<decltype(Resource::META)>> {
+  struct eval_subscript<Expr, ResourceQueryExpr<boost::proto::terminal<Resource::MetaTag>::type>> {
     typedef std::string result_type;
 
     result_type operator() (Expr& e, const ResourceContext& ctx) const {
@@ -99,7 +78,30 @@ struct ResourceContext {
 };
 
 template<typename Expr>
-bool ResourceQueryExpr<Expr>::operator()(const ResourceManager::Resource &r) const {
+struct ResourceQueryExpr {
+
+  BOOST_PROTO_BASIC_EXTENDS(Expr, ResourceQueryExpr<Expr>, ResourceExprDomain);
+
+  BOOST_PROTO_EXTENDS_SUBSCRIPT_CONST();
+
+  typedef typename boost::proto::result_of::eval<Expr,ResourceContext>::type result_type;
+
+  ResourceQueryExpr(Expr proto_expr = Expr()) : proto_expr_(proto_expr) {}
+
+  result_type operator()(const ResourceManager::Resource &r) const;
+
+};
+
+namespace Resource {
+
+ResourceQueryExpr<boost::proto::terminal<KeyTag>::type> const KEY;
+
+ResourceQueryExpr<boost::proto::terminal<MetaTag>::type> const META;
+
+}
+
+template<typename Expr>
+typename ResourceQueryExpr<Expr>::result_type ResourceQueryExpr<Expr>::operator()(const ResourceManager::Resource &r) const {
   ResourceContext ctx(r);
   return boost::proto::eval(*this, ctx);
 }
