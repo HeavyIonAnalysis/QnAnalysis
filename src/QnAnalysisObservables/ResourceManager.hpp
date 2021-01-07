@@ -258,7 +258,7 @@ class ResourceManager : public Details::Singleton<ResourceManager> {
   }
 
   template<typename MapFunction, typename OIter, typename Predicate = AlwaysTrue>
-  void Select(MapFunction &&fct, OIter &&o, Predicate &&predicate = AlwaysTrue()) {
+  void SelectImpl(MapFunction &&fct, OIter &&o, Predicate &&predicate = AlwaysTrue()) {
     using Traits = Details::FunctionTraits<decltype(std::function{fct})>;
 
     auto resources_copy = resources_;
@@ -278,10 +278,13 @@ class ResourceManager : public Details::Singleton<ResourceManager> {
   template<typename MapFunction, typename Predicate = AlwaysTrue>
   auto SelectUniq(MapFunction &&fct, Predicate &&predicate = AlwaysTrue()) {
     using Traits = Details::FunctionTraits<decltype(std::function{fct})>;
-    std::set<std::decay_t<typename Traits::ReturnType>> result;
-    Select(std::forward<MapFunction>(fct),
-           std::inserter(result, std::begin(result)),
+    std::set<std::decay_t<typename Traits::ReturnType>> tmp;
+    SelectImpl(std::forward<MapFunction>(fct),
+           std::inserter(tmp, std::begin(tmp)),
            std::forward<Predicate>(predicate));
+    std::vector<typename decltype(tmp)::value_type> result;
+    result.reserve(tmp.size());
+    std::copy(std::begin(tmp), std::end(tmp), std::back_inserter(result));
     return result;
   }
 

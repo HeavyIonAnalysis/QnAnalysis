@@ -7,8 +7,6 @@
 
 #include <any>
 #include <filesystem>
-#include <map>
-#include <regex>
 #include <tuple>
 #include <utility>
 
@@ -21,6 +19,8 @@
 
 #include "Observables.hpp"
 #include "Tools.hpp"
+
+#include <boost/algorithm/string.hpp>
 
 namespace Tools {
 
@@ -142,7 +142,7 @@ int main() {
 
 
   TFile f("correlation.root", "READ");
-  LoadROOTFile<Qn::DataContainerStatCollect>(f.GetName(), "raw");
+  LoadROOTFile<DTColl>(f.GetName(), "raw");
 
   /* Convert everything to Qn::DataContainerStatCalculate */
   gResourceManager.ForEach([](VectorKey key, DTColl &collect) {
@@ -150,6 +150,35 @@ int main() {
     key[0] = "calc";
     AddResource(key, Qn::DataContainerStatCalculate(collect));
   });
+
+  /* label correlations */
+  gResourceManager.ForEach([] (StringKey key, ResourceManager::Resource &r) {
+    using std::filesystem::path;
+    using boost::algorithm::split;
+    path key_path(key);
+
+    auto obj_name = key_path.filename().string();
+
+    std::vector<std::string> tokens;
+    split(tokens, obj_name, boost::is_any_of("."));
+
+    /* args are all tokens but last */
+    for (size_t iarg = 0; iarg < tokens.size() - 1; ++iarg) {
+      const std::regex arg_re("^(\\w+)_(PLAIN|RECENTERED|RESCALED)$");
+      std::smatch match_results;
+      std::regex_search(tokens[iarg], match_results, arg_re);
+      std::string arg_name = match_results.str(1);
+      std::string arg_cstep = match_results.str(2);
+      r.meta.put("arg" + std::to_string(iarg) + ".name", arg_name);
+      r.meta.put("arg" + std::to_string(iarg) + ".c-step", arg_cstep);
+    }
+    r.meta.put("component", tokens.back());
+  });
+
+
+
+
+
   /* To check compatibility with old stuff, multiply raw correlations by factor of 2 */
   gResourceManager.ForEach([](VectorKey key, DTCalc calc) {
     key[0] = "x2";
@@ -206,10 +235,6 @@ int main() {
            {"/resolution/4sub_protons/protons_y_RESCALED.psd1_RECENTERED.x1x1",
             "/resolution/4sub_protons/protons_y_RESCALED.psd3_RECENTERED.x1x1",
             "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1"});
-    Define(StringKey("/resolution/4sub_protons/RES_TPC.y1y1"), Methods::Resolution3S,
-           {"/resolution/4sub_protons/protons_y_RESCALED.psd1_RECENTERED.y1y1",
-            "/resolution/4sub_protons/protons_y_RESCALED.psd3_RECENTERED.y1y1",
-            "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1"});
     Define(StringKey("/resolution/4sub_protons/RES_psd1_x1x1"), Methods::Resolution4S,
            {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1",
             "/resolution/4sub_protons/RES_TPC.x1x1",
@@ -221,6 +246,11 @@ int main() {
            {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1",
             "/resolution/4sub_protons/RES_TPC.x1x1",
             "/resolution/4sub_protons/protons_y_RESCALED.psd1_RECENTERED.x1x1"});
+
+    Define(StringKey("/resolution/4sub_protons/RES_TPC.y1y1"), Methods::Resolution3S,
+           {"/resolution/4sub_protons/protons_y_RESCALED.psd1_RECENTERED.y1y1",
+            "/resolution/4sub_protons/protons_y_RESCALED.psd3_RECENTERED.y1y1",
+            "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1"});
     Define(StringKey("/resolution/4sub_protons/RES_psd1_y1y1"), Methods::Resolution4S,
            {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1",
             "/resolution/4sub_protons/RES_TPC.y1y1",
@@ -235,12 +265,13 @@ int main() {
   }
 
   {
-    std::vector<std::string> resolution_methods{"3sub", "4sub_protons", "4sub_pion_neg"};
-    std::vector<std::string> references{"psd1", "psd2", "psd3"};
-    std::vector<std::string> u_correction_step{"RECENTERED", "RESCALED"};
+    const auto resolution_predicate = (META["type"] == "resolution");
+    std::vector<std::string> resolution_methods = {"3sub", "4sub_protons"};
+    auto references = gResourceManager.SelectUniq(META["resolution.ref"], resolution_predicate);
+    std::vector<std::string> projections{"x1x1", "y1y1"};
     std::vector<std::string> axes{"pt", "y"};
     std::vector<std::string> particles{"protons", "pion_neg"};
-    std::vector<std::string> projections{"x1x1", "y1y1"};
+    std::vector<std::string> u_correction_step{"RECENTERED", "RESCALED"};
 
     for (auto&&[resolution_method, reference, u_cstep, projection, axis, particle] :
         Tools::Combination(resolution_methods, references, u_correction_step, projections, axes, particles)) {
@@ -260,17 +291,12 @@ int main() {
           result->meta.put("v1.particle", particle);
           result->meta.put("v1.component", projection);
           result->meta.put("v1.axis", axis);
+          result->meta.put("v1.u-cstep", u_cstep);
         }
       }
     }
   }
 /****************** DRAWING *********************/
-
-  {
-    auto result = gResourceManager.SelectUniq(META["type"]);
-    std::cout << std::endl;
-
-  }
 
 /* export everything to TGraph */
   gResourceManager.ForEach([](StringKey name, DTCalc calc) {
