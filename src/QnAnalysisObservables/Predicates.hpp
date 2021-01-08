@@ -90,6 +90,12 @@ struct ResourceQueryExpr {
 
   result_type operator()(const ResourceManager::Resource &r) const;
 
+  template<typename E = ResourceQueryExpr<Expr>>
+  std::enable_if_t<std::is_same_v<std::string,typename E::result_type>, bool>
+  Matches(const std::string& re_expr) const {
+    return true;
+  }
+
 };
 
 namespace Resource {

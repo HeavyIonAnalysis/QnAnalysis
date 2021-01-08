@@ -121,8 +121,7 @@ void LoadROOTFile(const std::string &file_name, const std::string &manager_prefi
       std::cout << "Adding path '" << manager_path << "'" << std::endl;
       AddResource(manager_path, ptr);
     }
-  }
-}
+  }}
 
 int main() {
 
@@ -180,10 +179,10 @@ int main() {
 
 
   /* To check compatibility with old stuff, multiply raw correlations by factor of 2 */
-  gResourceManager.ForEach([](VectorKey key, DTCalc calc) {
+  gResourceManager.ForEach([](VectorKey key, ResourceManager::Resource calc) {
     key[0] = "x2";
-    auto x2 = 2 * calc;
-    AddResource(key, x2);
+    calc.obj = 2 * calc.As<DTCalc>();
+    AddResource(key, calc);
   });
 
   {
@@ -215,20 +214,20 @@ int main() {
       auto arg2_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subC % component).str();
       auto arg3_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subB % subC % component).str();
       auto resolution = (Format("/resolution/3sub/RES_%1%_%2%") % subA % component).str();
-      auto result = ::Tools::Define(resolution, Methods::Resolution3S, {arg1_name, arg2_name, arg3_name});
+      auto result = Define(resolution, Methods::Resolution3S, {arg1_name, arg2_name, arg3_name});
       if (result) {
         result->meta.put("resolution.ref", subA);
-        result->meta.put("resolution.projection", component);
+        result->meta.put("resolution.component", component == "x1x1"? "X" : "Y");
       }
     }
   }
 
   {
     /***************** RESOLUTION 4-sub ******************/
-    gResourceManager.ForEach([](VectorKey key, DTCalc &calc) {
-      auto selected = calc.Select(Qn::AxisD("RecParticles_y_cm", 1, 0.8, 1.2));
+    gResourceManager.ForEach([](VectorKey key, ResourceManager::Resource r) {
+      r.obj = r.As<DTCalc>().Select(Qn::AxisD("RecParticles_y_cm", 1, 0.8, 1.2));
       VectorKey new_key = {"resolution", "4sub_protons", key.back()};
-      AddResource(new_key, selected);
+      AddResource(new_key, r);
     }, RegexMatch("/calc/uQ/protons_y_RESCALED\\.(psd[1-3])_RECENTERED\\.(x1x1|y1y1)$"));
 
     Define(StringKey("/resolution/4sub_protons/RES_TPC.x1x1"), Methods::Resolution3S,
@@ -305,11 +304,25 @@ int main() {
                            },
                            RegexMatch("^/x2/QQ/.*$"));
 
-  /* export everything to TGraph */
-  gResourceManager.ForEach([](StringKey name, DTCalc calc) {
-    auto graph = Qn::ToTGraph(calc);
+  /* export ALL resolution to TGraph */
+  gResourceManager.ForEach([](StringKey name, ResourceManager::Resource r) {
+    auto graph = Qn::ToTGraph(r.As<DTCalc>());
+
+    auto component = r.meta.get("resolution.component", "??");
+    auto reference = r.meta.get("resolution.ref", "??");
+    auto method = r.meta.get("resolution.method", "??");
+
+    graph->SetTitle((Format("R_{1,%1%} (%2%) %3%")
+      % component
+      % reference
+      % method).str().c_str());
+
+    graph->GetXaxis()->SetTitle("Centrality (%)");
+
     graph->GetYaxis()->SetRangeUser(-0.1, 1.0);
-    AddResource("/profiles" + name, graph);
+    graph->GetYaxis()->SetTitle("R_{1}");
+
+    AddResource("/profiles" + name, ResourceManager::Resource(*graph, r.meta));
   }, META["type"] == "resolution");
 
   /* v1 vs Centrality */

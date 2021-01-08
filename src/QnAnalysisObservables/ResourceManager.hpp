@@ -136,7 +136,7 @@ class ResourceManager : public Details::Singleton<ResourceManager> {
 
   struct ResourceAlreadyExists : public std::exception {
     explicit ResourceAlreadyExists(std::string resource_name_) : resource_name(std::move(resource_name_)) {}
-    ResourceAlreadyExists(const ResourceAlreadyExists &other) = default;
+    ResourceAlreadyExists(const ResourceAlreadyExists &other) noexcept = default;
     const char *what() const
     _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW
     override {
@@ -147,7 +147,7 @@ class ResourceManager : public Details::Singleton<ResourceManager> {
 
   struct NoSuchResource : public std::exception {
     explicit NoSuchResource(std::string resource_name_) : resource_name(std::move(resource_name_)) {}
-    NoSuchResource(const NoSuchResource &Exception) = default;
+    NoSuchResource(const NoSuchResource &Exception) noexcept = default;
     const char *what() const
     _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW
     override {
