@@ -12,12 +12,40 @@
 
 namespace Predicates {
 
-
 template<typename Expr>
 struct ResourceQueryExpr; /// fwd declaration
 
 
 struct ResourceExprDomain : boost::proto::domain<boost::proto::generator<ResourceQueryExpr>> {};
+
+namespace Details {
+
+struct RegexMatchImpl {
+  explicit RegexMatchImpl(const std::string &regex_str) : re_expr(regex_str) {}
+  explicit RegexMatchImpl(std::regex expr) : re_expr(std::move(expr)) {}
+
+  typedef bool result_type;
+
+  result_type operator()(const std::string &str) const {
+    return std::regex_match(str, re_expr);
+  }
+
+  const std::regex re_expr;
+};
+
+} /// namespace Details
+
+template<typename Arg, typename Regex>
+typename boost::proto::result_of::make_expr<
+    boost::proto::tag::function,
+    Details::RegexMatchImpl,
+    Arg const &
+>::type const
+IsMatchesRegex(Arg const &arg, Regex && regex_string) {
+  namespace proto = boost::proto;
+  return proto::make_expr<proto::tag::function>(
+      Details::RegexMatchImpl(regex_string), boost::ref(arg));
+}
 
 namespace Resource {
 
@@ -64,13 +92,12 @@ struct ResourceContext {
   struct eval_subscript<Expr, ResourceQueryExpr<boost::proto::terminal<Resource::MetaTag>::type>> {
     typedef std::string result_type;
 
-    result_type operator() (Expr& e, const ResourceContext& ctx) const {
+    result_type operator()(Expr &e, const ResourceContext &ctx) const {
       auto path = std::string(boost::proto::value(boost::proto::right(e)));
-      auto result = ctx.res_.meta.get<result_type>(path, path+"-NOT-FOUND");
+      auto result = ctx.res_.meta.get<result_type>(path, path + "-NOT-FOUND");
       return result;
     }
   };
-
 
   template<typename Expr>
   struct eval<Expr, boost::proto::tag::subscript> : eval_subscript<Expr> {};
@@ -84,16 +111,15 @@ struct ResourceQueryExpr {
 
   BOOST_PROTO_EXTENDS_SUBSCRIPT_CONST();
 
-  typedef typename boost::proto::result_of::eval<Expr,ResourceContext>::type result_type;
+  typedef typename boost::proto::result_of::eval<Expr, ResourceContext>::type result_type;
 
   ResourceQueryExpr(Expr proto_expr = Expr()) : proto_expr_(proto_expr) {}
 
   result_type operator()(const ResourceManager::Resource &r) const;
 
-  template<typename E = ResourceQueryExpr<Expr>>
-  std::enable_if_t<std::is_same_v<std::string,typename E::result_type>, bool>
-  Matches(const std::string& re_expr) const {
-    return true;
+  template <typename Regex>
+  auto Matches(Regex && re_expr) const {
+    return IsMatchesRegex(*this, std::forward<Regex>(re_expr));
   }
 
 };
@@ -112,16 +138,6 @@ typename ResourceQueryExpr<Expr>::result_type ResourceQueryExpr<Expr>::operator(
   return boost::proto::eval(*this, ctx);
 }
 
-struct RegexMatch {
-  explicit RegexMatch(const std::string &regex_str) : expr(regex_str) {}
-  explicit RegexMatch(std::regex expr) : expr(std::move(expr)) {}
-
-  bool operator()(const ResourceManager::NameTag &name) const {
-    return std::regex_match(static_cast<const std::string &>(name), expr);
-  }
-
-  const std::regex expr;
-};
 
 } /// namespace Predicates
 

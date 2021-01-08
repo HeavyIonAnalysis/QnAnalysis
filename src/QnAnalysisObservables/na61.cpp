@@ -133,7 +133,7 @@ int main() {
   namespace Tools = Qn::Analysis::Tools;
 
   using Predicates::Resource::META;
-  using Predicates::RegexMatch;
+  using Predicates::Resource::KEY;
 
   using DTCalc = Qn::DataContainerStatCalculate;
   using DTColl = Qn::DataContainerStatCollect;
@@ -190,12 +190,12 @@ int main() {
     gResourceManager.ForEach([](StringKey name, DTCalc &calc) {
                                calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_y_cm"});
                              },
-                             RegexMatch(R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
+                             KEY.Matches( R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
     /* Projection _pT correlations to 'y' axis  */
     gResourceManager.ForEach([](StringKey name, DTCalc &calc) {
                                calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_pT"});
                              },
-                             RegexMatch(R"(/calc/uQ/(\w+)_pt_(\w+)\..*)"));
+                             KEY.Matches(R"(/calc/uQ/(\w+)_pt_(\w+)\..*)"));
   }
 
   {
@@ -228,7 +228,7 @@ int main() {
       r.obj = r.As<DTCalc>().Select(Qn::AxisD("RecParticles_y_cm", 1, 0.8, 1.2));
       VectorKey new_key = {"resolution", "4sub_protons", key.back()};
       AddResource(new_key, r);
-    }, RegexMatch("/calc/uQ/protons_y_RESCALED\\.(psd[1-3])_RECENTERED\\.(x1x1|y1y1)$"));
+    }, KEY.Matches("/calc/uQ/protons_y_RESCALED\\.(psd[1-3])_RECENTERED\\.(x1x1|y1y1)$"));
 
     Define(StringKey("/resolution/4sub_protons/RES_TPC.x1x1"), Methods::Resolution3S,
            {"/resolution/4sub_protons/protons_y_RESCALED.psd1_RECENTERED.x1x1",
@@ -275,10 +275,10 @@ int main() {
     for (auto&&[resolution_method, reference, u_cstep, projection, axis, particle] :
         Tools::Combination(resolution_methods, references, u_correction_step, projections, axes, particles)) {
       auto u_query =
-          RegexMatch((Format("/calc/uQ/%4%_%5%_%1%\\.%2%_RECENTERED.%3%") % u_cstep % reference % projection % particle
+          KEY.Matches((Format("/calc/uQ/%4%_%5%_%1%\\.%2%_RECENTERED.%3%") % u_cstep % reference % projection % particle
               % axis).str());
       auto res_query =
-          RegexMatch((Format("/resolution/%3%/RES_%1%_%2%") % reference % projection % resolution_method).str());
+          KEY.Matches((Format("/resolution/%3%/RES_%1%_%2%") % reference % projection % resolution_method).str());
       for (auto &&[u_vector, resolution] : Tools::Combination(gResourceManager.GetMatching(u_query),
                                                               gResourceManager.GetMatching(res_query))) {
         VectorKey key = {"v1", resolution_method, "u-" + u_cstep,
@@ -302,7 +302,7 @@ int main() {
                              auto graph = Qn::ToTGraph(calc);
                              AddResource("/profiles" + name, graph);
                            },
-                           RegexMatch("^/x2/QQ/.*$"));
+                           KEY.Matches("^/x2/QQ/.*$"));
 
   /* export ALL resolution to TGraph */
   gResourceManager.ForEach([](StringKey name, ResourceManager::Resource r) {
