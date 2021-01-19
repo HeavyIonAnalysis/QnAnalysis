@@ -64,7 +64,7 @@ hades_analysis:
     - name: pid_protons
       type: track
       phi:  mdc_vtx_tracks_rapidity/phi
-      weight: ones
+      weight: mdc_vtx_tracks_rapidity/efficiency
       norm: m
       corrections:
         - recentering
