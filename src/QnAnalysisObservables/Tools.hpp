@@ -24,6 +24,9 @@ struct ToRoot {
     mode = other.mode;
   }
   ToRoot(ToRoot<T>&& other)  noexcept = default;
+  ~ToRoot() {
+    std::cout << "Exported to '" << filename << "'" << std::endl;
+  }
 
   void operator () (const std::string& fpathstr, T& obj) {
     if (!file) {
