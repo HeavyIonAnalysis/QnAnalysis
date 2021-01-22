@@ -18,77 +18,9 @@
 #include <QnAnalysisTools/QnAnalysisTools.hpp>
 
 #include "Observables.hpp"
-#include "Tools.hpp"
 
 #include <boost/algorithm/string.hpp>
 
-namespace Tools {
-
-namespace Details {
-
-template<typename Tuple, std::size_t IArg>
-void SetArgI(const std::vector<std::string> &arg_names, Tuple &tuple) {
-  using ArgT = std::tuple_element_t<IArg, Tuple>;
-  auto &manager = ResourceManager::Instance();
-  try {
-    std::get<IArg>(tuple) = manager.Get(arg_names[IArg], ResourceManager::ResTag<ArgT>());
-  } catch (std::bad_any_cast &e) {
-    throw ResourceManager::NoSuchResource(arg_names[IArg]);
-  }
-}
-template<typename Tuple, std::size_t... IArg>
-void SetArgTupleImpl(const std::vector<std::string> &arg_names, Tuple &tuple, std::index_sequence<IArg...>) {
-  (SetArgI<Tuple, IArg>(arg_names, tuple), ...);
-}
-template<typename... Args>
-void SetArgTuple(const std::vector<std::string> &arg_names, std::tuple<Args...> &tuple) {
-  SetArgTupleImpl(arg_names, tuple, std::make_index_sequence<sizeof...(Args)>());
-}
-}// namespace Details
-
-template<typename KeyRepr, typename Function>
-auto Define(const KeyRepr &key, Function &&fct, std::vector<std::string> arg_names, bool warn_at_missing = true) {
-  using ArgsTuple = typename ::Details::FunctionTraits<decltype(std::function{fct})>::ArgumentsTuple;
-  ArgsTuple args;
-  try {
-    Details::SetArgTuple(arg_names, args);
-    return AddResource(key, std::apply(fct, args));
-  } catch (ResourceManager::NoSuchResource &e) {
-    if (warn_at_missing) {
-      Warning(__func__, "Resource '%s' required for '%s' is missing, new resource won't be added",
-              e.what(), ::Details::Convert<KeyRepr>::ToString(key).c_str());
-      return ResourceManager::ResourcePtr();
-    } else {
-      throw e; /* rethrow */
-    }
-  }
-}
-
-template<typename KeyRepr, typename Function>
-void Define1(const KeyRepr &key, Function &&fct, std::vector<std::string> arg_names, bool warn_at_missing = true) {
-  using Traits = ::Details::FunctionTraits<decltype(std::function{fct})>;
-  using Container = std::decay_t<typename Traits::template ArgType<0>>;
-  using Entity = typename Container::value_type;
-  Container args_container;
-  /* lookup arguments */
-  auto args_back_inserter = std::back_inserter(args_container);
-  for (auto &arg : arg_names) {
-    try {
-      *args_back_inserter = ResourceManager::Instance().template Get<std::string, Entity>(arg);
-    } catch (ResourceManager::NoSuchResource &e) {
-      if (warn_at_missing) {
-        Warning(__func__, "Resource '%s' required for '%s' is missing, new resource won't be added",
-                e.what(), key.c_str());
-        return;
-      } else {
-        throw e;
-      }
-    }
-  }
-  AddResource(key, fct(args_container));
-}
-
-}// namespace Tools
 
 namespace Details {
 
@@ -224,10 +156,29 @@ int main() {
 
   {
     /***************** RESOLUTION 4-sub ******************/
-    gResourceManager.ForEach([](VectorKey key, ResourceManager::Resource r) {
-      r.obj = r.As<DTCalc>().Select(Qn::AxisD("RecParticles_y_cm", 1, 0.8, 1.2));
-      VectorKey new_key = {"resolution", "4sub_protons", key.back()};
-      AddResource(new_key, r);
+
+    /*
+     * Prepare different references from TPC to use in 4-subevents method
+     */
+    gResourceManager.ForEach([](VectorKey key, const ResourceManager::Resource &r) {
+      {
+        auto new_r = r; /// taking copy
+        new_r.obj = new_r.As<DTCalc>().Select(Qn::AxisD("RecParticles_y_cm", 1, 0.8, 1.2));
+        VectorKey new_key = {"resolution", "4sub_protons_08_12", key.back()};
+        AddResource(new_key, new_r);
+      }
+      {
+        auto new_r = r;
+        new_r.obj = new_r.As<DTCalc>().Select(Qn::AxisD("RecParticles_y_cm", 1, 0.4, 0.8));
+        VectorKey new_key = {"resolution", "4sub_protons_04_08", key.back()};
+        AddResource(new_key, new_r);
+      }
+      {
+        auto new_r = r;
+        new_r.obj = new_r.As<DTCalc>().Select(Qn::AxisD("RecParticles_y_cm", 1, 0.0, 0.4));
+        VectorKey new_key = {"resolution", "4sub_protons_00_04", key.back()};
+        AddResource(new_key, new_r);
+      }
     }, KEY.Matches("/calc/uQ/protons_y_RESCALED\\.(psd[1-3])_RECENTERED\\.(x1x1|y1y1)$"));
 
     Define(StringKey("/resolution/4sub_protons/RES_TPC.x1x1"), Methods::Resolution3S,

@@ -15,20 +15,20 @@
 
 namespace Tools {
 
-template <typename T>
+template<typename T>
 struct ToRoot {
-  explicit ToRoot(std::string filename, std::string mode = "RECREATE") : filename(std::move(filename)), mode(std::move(mode)) {}
-
-  ToRoot(const ToRoot<T>& other) {
+  explicit ToRoot(std::string filename, std::string mode = "RECREATE")
+      : filename(std::move(filename)), mode(std::move(mode)) {}
+  ToRoot(const ToRoot<T> &other) {
     filename = other.filename;
     mode = other.mode;
   }
-  ToRoot(ToRoot<T>&& other)  noexcept = default;
+  ToRoot(ToRoot<T> &&other) noexcept = default;
   ~ToRoot() {
     std::cout << "Exported to '" << filename << "'" << std::endl;
   }
 
-  void operator () (const std::string& fpathstr, T& obj) {
+  void operator()(const std::string &fpathstr, T &obj) {
     if (!file) {
       file.reset(TFile::Open(filename.c_str(), mode.c_str()));
     }
@@ -53,6 +53,110 @@ struct ToRoot {
   std::unique_ptr<TFile> file{};
 };
 
+
+namespace Details {
+
+template<typename Tuple, std::size_t IArg>
+void SetArgI(const std::vector<std::string> &arg_names, Tuple &tuple) {
+  using ArgT = std::tuple_element_t<IArg, Tuple>;
+  auto &manager = ResourceManager::Instance();
+  try {
+    std::get<IArg>(tuple) = manager.Get(arg_names[IArg], ResourceManager::ResTag<ArgT>());
+  } catch (std::bad_any_cast &e) {
+    throw ResourceManager::NoSuchResource(arg_names[IArg]);
+  }
 }
+template<typename Tuple, std::size_t... IArg>
+void SetArgTupleImpl(const std::vector<std::string> &arg_names, Tuple &tuple, std::index_sequence<IArg...>) {
+  (SetArgI<Tuple, IArg>(arg_names, tuple), ...);
+}
+template<typename... Args>
+void SetArgTuple(const std::vector<std::string> &arg_names, std::tuple<Args...> &tuple) {
+  SetArgTupleImpl(arg_names, tuple, std::make_index_sequence<sizeof...(Args)>());
+}
+
+ResourceManager::MetaType MergeMeta(const ResourceManager::MetaType &lhs, const ResourceManager::MetaType &rhs) {
+  using Meta = ResourceManager::MetaType;
+
+  Meta result = lhs;
+  for (auto &element : rhs) {
+    auto element_name = element.first;
+
+    if (element.second.empty()) { /// element is value
+      result.put_child(element_name, element.second);
+    } else { /// element is node
+      auto lhs_child = lhs.get_child(element_name, Meta());
+      result.put_child(element_name, MergeMeta(lhs_child, element.second));
+    }
+
+  }
+  return result;
+}
+
+template<typename T>
+ResourceManager::Resource MakeResource(T&& obj, const ResourceManager::MetaType& meta) {
+  return ResourceManager::Resource(std::forward<T>(obj), meta);
+}
+
+template<>
+ResourceManager::Resource MakeResource<ResourceManager::Resource>(ResourceManager::Resource&& r,
+                                                                  const ResourceManager::MetaType& meta) {
+  return {r.obj, MergeMeta(r.meta, meta)};
+}
+
+
+}// namespace Details
+
+template<typename KeyRepr, typename Function>
+auto Define(const KeyRepr &key,
+            Function &&fct,
+            std::vector<std::string> arg_names,
+            const ResourceManager::MetaType& meta_to_override = ResourceManager::MetaType(),
+            bool warn_at_missing = true) {
+  using ArgsTuple = typename ::Details::FunctionTraits<decltype(std::function{fct})>::ArgumentsTuple;
+  ArgsTuple args;
+  try {
+    Details::SetArgTuple(arg_names, args);
+    return AddResource(key, Details::MakeResource(std::apply(fct, args), meta_to_override));
+  } catch (ResourceManager::NoSuchResource &e) {
+    if (warn_at_missing) {
+      Warning(__func__, "Resource '%s' required for '%s' is missing, new resource won't be added",
+              e.what(), ::Details::Convert<KeyRepr>::ToString(key).c_str());
+      return ResourceManager::ResourcePtr();
+    } else {
+      throw e; /* rethrow */
+    }
+  }
+}
+
+template<typename KeyRepr, typename Function>
+void Define1(const KeyRepr &key,
+             Function &&fct,
+             std::vector<std::string> arg_names,
+             ResourceManager::MetaType meta_to_override = ResourceManager::MetaType(),
+             bool warn_at_missing = true) {
+  using Traits = ::Details::FunctionTraits<decltype(std::function{fct})>;
+  using Container = std::decay_t<typename Traits::template ArgType<0>>;
+  using Entity = typename Container::value_type;
+  Container args_container;
+  /* lookup arguments */
+  auto args_back_inserter = std::back_inserter(args_container);
+  for (auto &arg : arg_names) {
+    try {
+      *args_back_inserter = ResourceManager::Instance().template Get<std::string, Entity>(arg);
+    } catch (ResourceManager::NoSuchResource &e) {
+      if (warn_at_missing) {
+        Warning(__func__, "Resource '%s' required for '%s' is missing, new resource won't be added",
+                e.what(), key.c_str());
+        return;
+      } else {
+        throw e;
+      }
+    }
+  }
+  AddResource(key, fct(args_container));
+}
+
+}// namespace Tools
 
 #endif //QNANALYSIS_SRC_QNANALYSISOBSERVABLES_TOOLS_HPP_
