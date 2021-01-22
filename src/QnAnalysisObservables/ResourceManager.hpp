@@ -105,6 +105,11 @@ class ResourceManager : public Details::Singleton<ResourceManager> {
     }
 
     template<typename T>
+    const T &As() const {
+      return std::any_cast<const T &>(obj);
+    }
+
+    template<typename T>
     T *Ptr() {
       return std::any_cast<T>(&obj);
     }
@@ -237,7 +242,7 @@ class ResourceManager : public Details::Singleton<ResourceManager> {
   }
 
   template<typename Function, typename Predicate = AlwaysTrue>
-  void ForEach(Function &&fct, Predicate &&predicate = AlwaysTrue(), bool warn_bad_cast = true) {
+  void ForEach(Function &&fct, Predicate &&predicate = AlwaysTrue(), bool warn_bad_cast = false) {
     using Traits = Details::FunctionTraits<decltype(std::function{fct})>;
 
     auto resources_copy = resources_;

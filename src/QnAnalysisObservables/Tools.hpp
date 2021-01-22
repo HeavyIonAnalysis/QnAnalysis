@@ -107,24 +107,32 @@ ResourceManager::Resource MakeResource<ResourceManager::Resource>(ResourceManage
 
 }// namespace Details
 
+enum EDefineMissingPolicy {
+  kSilent,
+  kWarn,
+  kRethrow
+};
+
 template<typename KeyRepr, typename Function>
 auto Define(const KeyRepr &key,
             Function &&fct,
             std::vector<std::string> arg_names,
             const ResourceManager::MetaType& meta_to_override = ResourceManager::MetaType(),
-            bool warn_at_missing = true) {
+            EDefineMissingPolicy policy = EDefineMissingPolicy::kSilent) {
   using ArgsTuple = typename ::Details::FunctionTraits<decltype(std::function{fct})>::ArgumentsTuple;
   ArgsTuple args;
   try {
     Details::SetArgTuple(arg_names, args);
     return AddResource(key, Details::MakeResource(std::apply(fct, args), meta_to_override));
   } catch (ResourceManager::NoSuchResource &e) {
-    if (warn_at_missing) {
+    if (policy == EDefineMissingPolicy::kWarn) {
       Warning(__func__, "Resource '%s' required for '%s' is missing, new resource won't be added",
               e.what(), ::Details::Convert<KeyRepr>::ToString(key).c_str());
       return ResourceManager::ResourcePtr();
-    } else {
+    } else if (policy == EDefineMissingPolicy::kRethrow) {
       throw e; /* rethrow */
+    } else {
+      return ResourceManager::ResourcePtr();
     }
   }
 }

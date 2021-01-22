@@ -69,6 +69,7 @@ int main() {
 
   using DTCalc = Qn::DataContainerStatCalculate;
   using DTColl = Qn::DataContainerStatCollect;
+  using Meta = ResourceManager::MetaType;
 
 
 
@@ -145,12 +146,14 @@ int main() {
       auto arg1_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subB % component).str();
       auto arg2_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subC % component).str();
       auto arg3_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subB % subC % component).str();
-      auto resolution = (Format("/resolution/3sub/RES_%1%_%2%") % subA % component).str();
-      auto result = Define(resolution, Methods::Resolution3S, {arg1_name, arg2_name, arg3_name});
-      if (result) {
-        result->meta.put("resolution.ref", subA);
-        result->meta.put("resolution.component", component == "x1x1"? "X" : "Y");
-      }
+      auto resolution = (Format("/resolution/3sub_standard/RES_%1%_%2%") % subA % component).str();
+
+      Meta meta;
+      meta.put("resolution.ref", subA);
+      meta.put("resolution.component", component == "x1x1"? "X" : "Y");
+      meta.put("resolution.meta_key", "3sub_standard");
+
+      Define(resolution, Methods::Resolution3S, {arg1_name, arg2_name, arg3_name}, meta);
     }
   }
 
@@ -161,62 +164,60 @@ int main() {
      * Prepare different references from TPC to use in 4-subevents method
      */
     gResourceManager.ForEach([](VectorKey key, const ResourceManager::Resource &r) {
+      using Resource = ResourceManager::Resource;
+
+      auto calc = r.As<DTCalc>();
+
+      auto meta = r.meta;
+      meta.put("type", "4sub_tpc_ref");
+
       {
-        auto new_r = r; /// taking copy
-        new_r.obj = new_r.As<DTCalc>().Select(Qn::AxisD("RecParticles_y_cm", 1, 0.8, 1.2));
+        auto selected = calc.Select(Qn::AxisD("RecParticles_y_cm", 1, 0.8, 1.2));
         VectorKey new_key = {"resolution", "4sub_protons_08_12", key.back()};
-        AddResource(new_key, new_r);
+        meta.put("4sub_meta_key", "4sub_protons_08_12");
+        AddResource(new_key, Resource(selected, meta));
       }
       {
-        auto new_r = r;
-        new_r.obj = new_r.As<DTCalc>().Select(Qn::AxisD("RecParticles_y_cm", 1, 0.4, 0.8));
+        auto selected = calc.Select(Qn::AxisD("RecParticles_y_cm", 1, 0.4, 0.8));
         VectorKey new_key = {"resolution", "4sub_protons_04_08", key.back()};
-        AddResource(new_key, new_r);
+        meta.put("4sub_meta_key", "4sub_protons_04_08");
+        AddResource(new_key, Resource(selected, meta));
       }
       {
-        auto new_r = r;
-        new_r.obj = new_r.As<DTCalc>().Select(Qn::AxisD("RecParticles_y_cm", 1, 0.0, 0.4));
+        auto selected = calc.Select(Qn::AxisD("RecParticles_y_cm", 1, 0.0, 0.4));
         VectorKey new_key = {"resolution", "4sub_protons_00_04", key.back()};
-        AddResource(new_key, new_r);
+        meta.put("4sub_meta_key", "4sub_protons_00_04");
+        AddResource(new_key, Resource(selected, meta));
       }
     }, KEY.Matches("/calc/uQ/protons_y_RESCALED\\.(psd[1-3])_RECENTERED\\.(x1x1|y1y1)$"));
 
-    Define(StringKey("/resolution/4sub_protons/RES_TPC.x1x1"), Methods::Resolution3S,
-           {"/resolution/4sub_protons/protons_y_RESCALED.psd1_RECENTERED.x1x1",
-            "/resolution/4sub_protons/protons_y_RESCALED.psd3_RECENTERED.x1x1",
-            "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1"});
-    Define(StringKey("/resolution/4sub_protons/RES_psd1_x1x1"), Methods::Resolution4S,
-           {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1",
-            "/resolution/4sub_protons/RES_TPC.x1x1",
-            "/resolution/4sub_protons/protons_y_RESCALED.psd3_RECENTERED.x1x1"});
-    Define(StringKey("/resolution/4sub_protons/RES_psd2_x1x1"), Methods::Resolution4S_1,
-           {"/resolution/4sub_protons/protons_y_RESCALED.psd2_RECENTERED.x1x1",
-            "/resolution/4sub_protons/RES_TPC.x1x1"});
-    Define(StringKey("/resolution/4sub_protons/RES_psd3_x1x1"), Methods::Resolution4S,
-           {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.x1x1",
-            "/resolution/4sub_protons/RES_TPC.x1x1",
-            "/resolution/4sub_protons/protons_y_RESCALED.psd1_RECENTERED.x1x1"});
+    for (auto &&[resolution_meta_key,component] : Tools::Combination(gResourceManager.SelectUniq(META["4sub_meta_key"], META["type"] == "4sub_tpc_ref"),
+                                                        std::vector<std::string>{"x1x1","y1y1"})) {
+      Meta meta;
+      meta.put("resolution.meta_key", resolution_meta_key);
+      Define(StringKey("/resolution/" + resolution_meta_key + "/RES_TPC." + component), Methods::Resolution3S,
+             {"/resolution/" + resolution_meta_key + "/protons_y_RESCALED.psd1_RECENTERED." + component,
+              "/resolution/" + resolution_meta_key + "/protons_y_RESCALED.psd3_RECENTERED." + component,
+              "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED." + component}, meta);
+      Define(StringKey("/resolution/" + resolution_meta_key + "/RES_psd1_" + component), Methods::Resolution4S,
+             {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED." + component,
+              "/resolution/" + resolution_meta_key + "/RES_TPC." + component,
+              "/resolution/" + resolution_meta_key + "/protons_y_RESCALED.psd3_RECENTERED." + component}, meta);
+      Define(StringKey("/resolution/" + resolution_meta_key + "/RES_psd2_" + component), Methods::Resolution4S_1,
+             {"/resolution/" + resolution_meta_key + "/protons_y_RESCALED.psd2_RECENTERED." + component,
+              "/resolution/" + resolution_meta_key + "/RES_TPC." + component}, meta);
+      Define(StringKey("/resolution/"+ resolution_meta_key + "/RES_psd3_" + component), Methods::Resolution4S,
+             {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED." + component,
+              "/resolution/" + resolution_meta_key + "/RES_TPC." + component,
+              "/resolution/" + resolution_meta_key + "/protons_y_RESCALED.psd1_RECENTERED." + component}, meta);
+    }
 
-    Define(StringKey("/resolution/4sub_protons/RES_TPC.y1y1"), Methods::Resolution3S,
-           {"/resolution/4sub_protons/protons_y_RESCALED.psd1_RECENTERED.y1y1",
-            "/resolution/4sub_protons/protons_y_RESCALED.psd3_RECENTERED.y1y1",
-            "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1"});
-    Define(StringKey("/resolution/4sub_protons/RES_psd1_y1y1"), Methods::Resolution4S,
-           {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1",
-            "/resolution/4sub_protons/RES_TPC.y1y1",
-            "/resolution/4sub_protons/protons_y_RESCALED.psd3_RECENTERED.y1y1"});
-    Define(StringKey("/resolution/4sub_protons/RES_psd2_y1y1"), Methods::Resolution4S_1,
-           {"/resolution/4sub_protons/protons_y_RESCALED.psd2_RECENTERED.y1y1",
-            "/resolution/4sub_protons/RES_TPC.y1y1"});
-    Define(StringKey("/resolution/4sub_protons/RES_psd3_y1y1"), Methods::Resolution4S,
-           {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED.y1y1",
-            "/resolution/4sub_protons/RES_TPC.y1y1",
-            "/resolution/4sub_protons/protons_y_RESCALED.psd1_RECENTERED.y1y1"});
+
   }
 
   {
     const auto resolution_predicate = (META["type"] == "resolution");
-    std::vector<std::string> resolution_methods = {"3sub", "4sub_protons"};
+    auto resolution_methods = gResourceManager.SelectUniq(META["resolution.meta_key"], resolution_predicate);
     auto references = gResourceManager.SelectUniq(META["resolution.ref"], resolution_predicate);
     std::vector<std::string> projections{"x1x1", "y1y1"};
     std::vector<std::string> axes{"pt", "y"};
