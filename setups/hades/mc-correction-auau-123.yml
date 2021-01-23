@@ -65,7 +65,7 @@ hades_analysis:
       type: track
       phi:  mdc_vtx_tracks_rapidity/phi
       weight: mdc_vtx_tracks_rapidity/efficiency
-      norm: m
+      norm: none
       corrections:
         - recentering
         - twist-and-rescale
