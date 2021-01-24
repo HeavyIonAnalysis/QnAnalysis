@@ -104,8 +104,27 @@ ResourceManager::Resource MakeResource<ResourceManager::Resource>(ResourceManage
   return {r.obj, MergeMeta(r.meta, meta)};
 }
 
+template <typename KeyGenerator>
+auto EvalKey(const KeyGenerator & key_generator,
+             const ResourceManager::Resource& res) {
+  return key_generator(res);
+}
+
+template<>
+auto EvalKey<StringKey>(const StringKey &key,
+                        const ResourceManager::Resource&) {
+  return key;
+}
+
+template<>
+auto EvalKey<VectorKey>(const VectorKey &key,
+                        const ResourceManager::Resource&) {
+  return key;
+}
 
 }// namespace Details
+
+
 
 enum EDefineMissingPolicy {
   kSilent,
@@ -113,8 +132,8 @@ enum EDefineMissingPolicy {
   kRethrow
 };
 
-template<typename KeyRepr, typename Function>
-auto Define(const KeyRepr &key,
+template<typename KeyGenerator, typename Function>
+auto Define(KeyGenerator &&key_generator,
             Function &&fct,
             std::vector<std::string> arg_names,
             const ResourceManager::MetaType& meta_to_override = ResourceManager::MetaType(),
@@ -123,11 +142,14 @@ auto Define(const KeyRepr &key,
   ArgsTuple args;
   try {
     Details::SetArgTuple(arg_names, args);
-    return AddResource(key, Details::MakeResource(std::apply(fct, args), meta_to_override));
+    auto result = Details::MakeResource(std::apply(fct, args), meta_to_override);
+    auto key = Details::EvalKey(std::forward<KeyGenerator>(key_generator), result);
+    return AddResource(std::move(key), std::move(result));
   } catch (ResourceManager::NoSuchResource &e) {
     if (policy == EDefineMissingPolicy::kWarn) {
-      Warning(__func__, "Resource '%s' required for '%s' is missing, new resource won't be added",
-              e.what(), ::Details::Convert<KeyRepr>::ToString(key).c_str());
+//      Warning(__func__, "Resource '%s' is required for '%s' is missing, new resource won't be added",
+//              e.what(), ::Details::Convert<KeyGenerator>::ToString(key_generator).c_str());
+//    FIXME
       return ResourceManager::ResourcePtr();
     } else if (policy == EDefineMissingPolicy::kRethrow) {
       throw e; /* rethrow */

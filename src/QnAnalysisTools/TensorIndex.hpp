@@ -24,9 +24,13 @@ struct TensorIndex {
   shape_type shape;
 
   distance_type size() const {
-    size_t result = 0;
-    for (auto i_size : shape) {
-      result = result == 0 ? i_size : result * i_size;
+    if (shape.empty()) {
+      return 0;
+    }
+
+    size_t result = shape[0];
+    for (distance_type i = 1; i < shape.size(); ++i) {
+      result *= shape[i];
     }
     return result;
   }

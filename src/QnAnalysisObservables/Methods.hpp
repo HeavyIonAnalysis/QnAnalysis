@@ -52,7 +52,7 @@ inline
 Resource
 Resolution4S_1(Qn::DataContainerStatCalculate Qu,
              Qn::DataContainerStatCalculate RT) {
-  auto result = Qu / RT;
+  auto result = 2* Qu / RT;
   result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
 
   auto meta = ResourceMeta();

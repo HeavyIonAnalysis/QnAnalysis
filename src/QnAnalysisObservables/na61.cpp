@@ -193,22 +193,33 @@ int main() {
 
     for (auto &&[resolution_meta_key,component] : Tools::Combination(gResourceManager.SelectUniq(META["4sub_meta_key"], META["type"] == "4sub_tpc_ref"),
                                                         std::vector<std::string>{"x1x1","y1y1"})) {
+
+      auto key_generator =
+          "/resolution/" + META["resolution.meta_key"] +
+          "/RES_" + META["resolution.ref"] + "_" + META["resolution.component"];
+
       Meta meta;
       meta.put("resolution.meta_key", resolution_meta_key);
-      Define(StringKey("/resolution/" + resolution_meta_key + "/RES_TPC." + component), Methods::Resolution3S,
+      meta.put("resolution.component", component);
+
+      meta.put("resolution.ref", "TPC");
+      Define(key_generator, Methods::Resolution3S,
              {"/resolution/" + resolution_meta_key + "/protons_y_RESCALED.psd1_RECENTERED." + component,
               "/resolution/" + resolution_meta_key + "/protons_y_RESCALED.psd3_RECENTERED." + component,
               "/calc/QQ/psd1_RECENTERED.psd3_RECENTERED." + component}, meta);
-      Define(StringKey("/resolution/" + resolution_meta_key + "/RES_psd1_" + component), Methods::Resolution4S,
+      meta.put("resolution.ref", "psd1");
+      Define(key_generator, Methods::Resolution4S,
              {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED." + component,
-              "/resolution/" + resolution_meta_key + "/RES_TPC." + component,
+              "/resolution/" + resolution_meta_key + "/RES_TPC_" + component,
               "/resolution/" + resolution_meta_key + "/protons_y_RESCALED.psd3_RECENTERED." + component}, meta);
-      Define(StringKey("/resolution/" + resolution_meta_key + "/RES_psd2_" + component), Methods::Resolution4S_1,
+      meta.put("resolution.ref", "psd2");
+      Define(key_generator, Methods::Resolution4S_1,
              {"/resolution/" + resolution_meta_key + "/protons_y_RESCALED.psd2_RECENTERED." + component,
-              "/resolution/" + resolution_meta_key + "/RES_TPC." + component}, meta);
-      Define(StringKey("/resolution/"+ resolution_meta_key + "/RES_psd3_" + component), Methods::Resolution4S,
+              "/resolution/" + resolution_meta_key + "/RES_TPC_" + component}, meta);
+      meta.put("resolution.ref", "psd3");
+      Define(key_generator, Methods::Resolution4S,
              {"/calc/QQ/psd1_RECENTERED.psd3_RECENTERED." + component,
-              "/resolution/" + resolution_meta_key + "/RES_TPC." + component,
+              "/resolution/" + resolution_meta_key + "/RES_TPC_" + component,
               "/resolution/" + resolution_meta_key + "/protons_y_RESCALED.psd1_RECENTERED." + component}, meta);
     }
 
@@ -233,17 +244,17 @@ int main() {
           KEY.Matches((Format("/resolution/%3%/RES_%1%_%2%") % reference % projection % resolution_method).str());
       for (auto &&[u_vector, resolution] : Tools::Combination(gResourceManager.GetMatching(u_query),
                                                               gResourceManager.GetMatching(res_query))) {
+        Meta meta;
+        meta.put("v1.ref", reference);
+        meta.put("v1.particle", particle);
+        meta.put("v1.component", projection);
+        meta.put("v1.axis", axis);
+        meta.put("v1.u-cstep", u_cstep);
+
         VectorKey key = {"v1", resolution_method, "u-" + u_cstep,
                          (Format("v1_%1%_%2%_%4%_%3%") % particle % axis % projection
                              % reference).str()};
-        auto result = Define(key, Methods::v1, {u_vector, resolution});
-        if (result) {
-          result->meta.put("v1.ref", reference);
-          result->meta.put("v1.particle", particle);
-          result->meta.put("v1.component", projection);
-          result->meta.put("v1.axis", axis);
-          result->meta.put("v1.u-cstep", u_cstep);
-        }
+        Define(key, Methods::v1, {u_vector, resolution}, meta);
       }
     }
   }
