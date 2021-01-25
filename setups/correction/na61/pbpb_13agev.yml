@@ -59,14 +59,15 @@ pbpb_13agev_16_025:
     - RecEventHeader/s1
     - RecEventHeader/s2
   qa:
-    - &ax-vtx-x-qa { name: RecEventHeader/vtx_x, nb: 200, lo: -10., hi: 10}
-    - &ax-vtx-y-qa { name: RecEventHeader/vtx_y, nb: 200, lo: -10., hi: 10}
+    - &ax-vtx-x-qa { name: RecEventHeader/vtx_x, nb: 1000, lo: -10., hi: 10}
+    - &ax-vtx-y-qa { name: RecEventHeader/vtx_y, nb: 1000, lo: -10., hi: 10}
     - [*ax-vtx-x-qa, *ax-vtx-y-qa]
-    - &ax-vtx-z-qa { name: RecEventHeader/vtx_z, nb: 400, lo: -594., hi: -590.}
+    - &ax-vtx-z-qa { name: RecEventHeader/vtx_z, nb: 1000, lo: -602., hi: -582.}
     - &ax-epsd-qa { name: RecEventHeader/Epsd, nb: 500, lo: 0, hi: 5000}
     - *centrality
     - [*ax-epsd-qa, *centrality]
     - [*ax-vtx-z-qa, *ax-epsd-qa]
+    - [*ax-vtx-z-qa, *centrality]
     - &ax-s1-qa { name: RecEventHeader/s1, nb: 500, lo: 0, hi: 500}
     - &ax-s2-qa { name: RecEventHeader/s2, nb: 500, lo: 0, hi: 500}
     - [*ax-s1-qa, *ax-s2-qa]
@@ -78,6 +79,7 @@ pbpb_13agev_16_025:
       type: track
       phi: RecParticles/phi
       weight: Ones
+      norm: m
       corrections:
         - recentering
         - twist-and-rescale
@@ -93,6 +95,7 @@ pbpb_13agev_16_025:
       type: track
       phi: RecParticles/phi
       weight: Ones
+      norm: m
       corrections:
         - recentering
         - twist-and-rescale
@@ -108,6 +111,7 @@ pbpb_13agev_16_025:
       type: track
       phi: RecParticles/phi
       weight: Ones
+      norm: m
       corrections:
         - recentering
         - twist-and-rescale
@@ -123,6 +127,7 @@ pbpb_13agev_16_025:
       type: track
       phi: RecParticles/phi
       weight: Ones
+      norm: m
       corrections:
         - recentering
         - twist-and-rescale

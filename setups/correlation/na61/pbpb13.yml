@@ -7,6 +7,12 @@ _axes:
 _detectors: &detectors
   - name: protons_pt
     tags: [observable]
+  - name: protons_y
+    tags: [observable]
+  - name: pion_neg_pt
+    tags: [observable]
+  - name: pion_neg_y
+    tags: [observable]
   - name: psd1
     tags: [reference]
   - name: psd2
@@ -53,3 +59,22 @@ _tasks:
     #    weights-function: xx
     folder: "/QQ"
     axes: [ *centrality ]
+  - args:
+      - query: { tags: { any-in: [ reference ] } }
+        query-list: *detectors
+        components: [cos1, sin1]
+        correction-steps: [ recentered ]
+        weight: ones
+      - query: { tags: { any-in: [ reference ] } }
+        query-list: *detectors
+        components: [cos1, sin1]
+        correction-steps: [ recentered ]
+        weight: ones
+    # temporarily ignored
+    #    actions: [xx,xy,yx,yy]
+    n-samples: 50
+    weights-type: reference
+    # temporarily ignored
+    #    weights-function: xx
+    folder: "/QQ1"
+    axes: [ *centrality ]   
