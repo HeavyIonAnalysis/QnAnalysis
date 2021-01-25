@@ -1,0 +1,29 @@
+_detectors: &detectors
+  - name: W1
+    correction-step: RESCALED
+    components: [x1,y1]
+    tags: [ep-vectors, res-vectors]
+  - name: W2
+    correction-step: RESCALED
+    components: [x1,y1]
+    tags: [ep-vectors, res-vectors]
+  - name: W3
+    correction-step: RESCALED
+    components: [x1,y1]
+    tags: [ep-vectors, res-vectors]
+  - name: Mf
+    correction-step: RESCALED
+    components: [x1,y1]
+    tags: [res-vectors]
+  - name: Mb
+    correction-step: RESCALED
+    components: [x1,y1]
+    tags: [res-vectors]
+
+_observables:
+  - method: three-sub-event
+    QQ-directory: QQ/SP
+    uQ-directory: uQ/SP
+    u-vector: {name: pi_plus, components: [x1, y1], correction-step: RESCALED}
+    EP-vectors: ep-vectors
+    resolution-vectors: res-vectors
