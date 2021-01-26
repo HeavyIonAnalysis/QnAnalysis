@@ -1,0 +1,77 @@
+_layouts:
+
+_axes:
+  - &rec_axis_pT
+    name: RecParticlesMcPid/pT
+    nb: 11
+    lo: 0
+    hi: 3
+  - &rec_axis_rapidity
+    name: RecParticlesMcPid/rapidity
+    nb: 9
+    lo: 0.12179 # y_beam-1.5
+    hi: 3.12179 # y_beam+1.5
+  - &sim_axis_pT
+    name: SimParticles/pT
+    nb: 11
+    lo: 0
+    hi: 3
+  - &sim_axis_rapidity
+    name: SimParticles/rapidity
+    nb: 9
+    lo: 0.12179 # y_beam-1.5
+    hi: 3.12179 # y_beam+1.5
+  #- &axis_mass
+    #name: RecParticlesMcPid/axis_mass
+    #nb: 11
+    #lo: 1.1063830 # 1.115683-5*0.00186
+    #hi: 1.1249830 # 1.115683+5*0.00186
+    
+toymc_analysis:
+  event-variables:
+    - AnaEventHeader/tracks_centrality
+  axes:
+    - { name: AnaEventHeader/tracks_centrality, bin-edges: [0, 5, 10, 20, 30, 50, 70, 100]}
+  q-vectors:
+    - name: u_rec
+      type: track
+      phi:  RecParticlesMcPid/phi
+      weight: RecParticlesMcPid/weight
+      norm: m
+      #corrections:
+        #- recentering
+        #- twist-and-rescale
+      axes:
+        - *rec_axis_pT
+        - *rec_axis_rapidity
+        #- *axis_mass
+      cuts:
+        RecParticlesMcPid/pid: { equals: 3122 }
+      qa:
+        - {name: RecParticlesMcPid/phi, nb: 100, lo: -4., hi: 4.}
+        - *rec_axis_pT
+        - *rec_axis_rapidity
+        - [*rec_axis_rapidity, *rec_axis_pT]
+    - name: u_sim
+      type: track
+      phi:  SimParticles/phi
+      weight: Ones
+      norm: m
+      axes:
+        - *sim_axis_pT
+        - *sim_axis_rapidity
+        #- *axis_mass
+      cuts:
+        SimParticles/pid: { equals: 3122 }
+      qa:
+        - {name: SimParticles/phi, nb: 100, lo: -4., hi: 4.}
+        - *sim_axis_pT
+        - *sim_axis_rapidity
+        - [*sim_axis_rapidity, *sim_axis_pT]
+    - name: Q_psi
+      type: psi
+      phi:  SimEventHeader/psi_RP
+      weight: Ones
+      norm: m
+      qa:
+        - {name: SimEventHeader/psi_RP, nb: 100, lo: -4., hi: 4.}
