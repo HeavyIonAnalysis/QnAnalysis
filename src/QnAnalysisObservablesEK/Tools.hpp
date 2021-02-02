@@ -183,7 +183,7 @@ void Define1(const KeyRepr &key,
                 e.what(), key.c_str());
         return;
       } else {
-        throw e;
+        std::rethrow_exception(std::current_exception());
       }
     }
   }
