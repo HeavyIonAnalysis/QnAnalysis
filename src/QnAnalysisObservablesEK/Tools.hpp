@@ -152,7 +152,10 @@ auto Define(KeyGenerator &&key_generator,
 //    FIXME
       return ResourceManager::ResourcePtr();
     } else if (policy == EDefineMissingPolicy::kRethrow) {
-      throw e; /* rethrow */
+      /* this is the right way of rethrowing exceptions
+       * see: https://stackoverflow.com/questions/37227300/why-doesnt-c-use-stdnested-exception-to-allow-throwing-from-destructor/37227893#37227893
+       */
+      std::rethrow_exception(std::current_exception());
     } else {
       return ResourceManager::ResourcePtr();
     }
