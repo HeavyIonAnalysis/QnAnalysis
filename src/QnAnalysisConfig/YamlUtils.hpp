@@ -9,8 +9,7 @@
 
 namespace Qn::Analysis::Config::YAML::Utils {
 
-
-inline const ::YAML::Node & CNode(const ::YAML::Node &n) {
+inline const ::YAML::Node &CNode(const ::YAML::Node &n) {
   return n;
 }
 
@@ -24,8 +23,7 @@ inline const ::YAML::Node & CNode(const ::YAML::Node &n) {
  */
 inline
 ::YAML::Node
-MergeRecursive(const ::YAML::Node& lhs, const ::YAML::Node& rhs)
-{
+MergeRecursive(const ::YAML::Node &lhs, const ::YAML::Node &rhs) {
   using ::YAML::Node;
   using ::YAML::NodeType;
 
@@ -45,7 +43,7 @@ MergeRecursive(const ::YAML::Node& lhs, const ::YAML::Node& rhs)
   auto result = Node(NodeType::Map);
   for (auto l_c : lhs) {
     if (l_c.first.IsScalar()) {
-      const std::string & key = l_c.first.Scalar();
+      const std::string &key = l_c.first.Scalar();
       auto r_c = Node(CNode(rhs)[key]);
       if (r_c) {
         result[l_c.first] = MergeRecursive(l_c.second, r_c);
@@ -59,7 +57,7 @@ MergeRecursive(const ::YAML::Node& lhs, const ::YAML::Node& rhs)
   for (auto r_c : rhs) {
     if (
         !r_c.first.IsScalar() ||
-        !CNode(result)[r_c.first.Scalar()]) {
+            !CNode(result)[r_c.first.Scalar()]) {
       result[r_c.first] = r_c.second;
     }
   }
@@ -68,7 +66,39 @@ MergeRecursive(const ::YAML::Node& lhs, const ::YAML::Node& rhs)
 
 inline
 ::YAML::Node
-ExpandInheritance(const ::YAML::Node& node) {
+Merge(const ::YAML::Node &lhs, const ::YAML::Node &rhs) {
+  using ::YAML::Clone;
+  using ::YAML::Node;
+  using ::YAML::NodeType;
+
+  auto result = Node(NodeType::Map);
+
+  for (auto &l_c: lhs) {
+    if (l_c.first.IsScalar()) {
+      const std::string &key = l_c.first.Scalar();
+      auto r_c = Node(CNode(rhs)[key]);
+      if (r_c) {
+        result[l_c.first] = Clone(r_c);
+        continue;
+      }
+    }
+    // move node as-is
+    result[l_c.first] = l_c.second;
+  }
+
+  for (auto &r_c : rhs) {
+    if (
+        !r_c.first.IsScalar() ||
+            !CNode(result)[r_c.first.Scalar()]) {
+      result[r_c.first] = r_c.second;
+    }
+  }
+  return result;
+}
+
+inline
+::YAML::Node
+ExpandInheritance(const ::YAML::Node &node) {
   using ::YAML::Node;
   using ::YAML::NodeType;
 
@@ -102,15 +132,12 @@ ExpandInheritance(const ::YAML::Node& node) {
   if (node["_from"].IsDefined()) {
     auto from_node = ExpandInheritance(node["_from"]);
     if (from_node.IsMap()) {
-      return MergeRecursive(from_node, result);
+      return Merge(from_node, result);
     }
   }
 
   return result;
 }
-
-
-
 
 }
 
