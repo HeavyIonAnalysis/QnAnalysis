@@ -77,6 +77,25 @@ _objs:
     std::cout << expand_result << std::endl;
   }
 
+  {
+    auto node = Load(R"YAML(
+_objs:
+  - &base
+    base_key1: value1
+    base_key2: value2
+  - &derived
+    _from: *base
+    derived_key1: value1
+    base_key2: new_value2
+  - &dderived
+    _from: *derived
+    dderived_key1: value1
+)YAML");
+
+    auto expand_result = ExpandInheritance(node["_objs"]);
+    std::cout << std::endl;
+    std::cout << expand_result << std::endl;
+  }
 }
 
 

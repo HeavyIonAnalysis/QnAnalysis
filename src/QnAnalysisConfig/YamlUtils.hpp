@@ -74,7 +74,7 @@ inline const ::YAML::Node & CNode(const ::YAML::Node &n) {
   }
 
   if (node.IsScalar()) {
-    return node;
+    return ::YAML::Clone(node);
   }
 
   auto result = Node(node.Type());
@@ -92,11 +92,11 @@ inline const ::YAML::Node & CNode(const ::YAML::Node &n) {
     if (child.first.IsScalar() && child.first.Scalar() == "_from") {
       continue;
     }
-    result[child.first] = ExpandInheritance(child.second);
+    result[::YAML::Clone(child.first)] = ExpandInheritance(child.second);
   }
 
   if (node["_from"].IsDefined()) {
-    auto &from_node = node["_from"];
+    auto from_node = ExpandInheritance(node["_from"]);
     if (from_node.IsMap()) {
       return MergeRecursive(from_node, result);
     }
