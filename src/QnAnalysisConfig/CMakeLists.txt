@@ -9,3 +9,11 @@ target_link_libraries(QnAnalysisConfig PUBLIC
 
 add_executable(ReadConfig ReadConfig.cpp)
 target_link_libraries(ReadConfig PRIVATE QnAnalysisConfig)
+
+
+if (QnAnalysis_BUILD_TESTS)
+    include(GoogleTest)
+    add_executable(QnAnalysisConfig_UnitTests YamlUtils.test.cpp)
+    target_link_libraries(QnAnalysisConfig_UnitTests PRIVATE gtest_main yaml-cpp)
+    gtest_add_tests(TARGET QnAnalysisConfig_UnitTests)
+endif (QnAnalysis_BUILD_TESTS)
