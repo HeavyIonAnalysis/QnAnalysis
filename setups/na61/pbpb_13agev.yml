@@ -92,9 +92,9 @@ pbpb_13agev_16_025:
 # OBSERVABLES
 # STANDARD CUTS
     - name: protons_pt
+      tags: [observable]
       _from: &tpc-base-detector
         type: track
-        tags: [observable]
         phi: RecParticles/phi
         weight: Ones
         norm: m
@@ -110,6 +110,7 @@ pbpb_13agev_16_025:
       cuts: &cuts-proton
         RecParticles/pid : { equals: 2212 }
     - name: protons_y
+      tags: [observable]
       _from: *tpc-base-detector
       axes: &correction-axes-y-standard
         - *ax-y-cm
@@ -117,60 +118,71 @@ pbpb_13agev_16_025:
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-proton
     - name: pion_neg_pt
+      tags: [observable]
       _from: *tpc-base-detector
       axes: *correction-axes-pt-standard
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: &cuts-pion-neg
         RecParticles/pid : { equals: -211 }
     - name: pion_neg_y
+      tags: [observable]
       _from: *tpc-base-detector
       axes: *correction-axes-y-standard
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-pion-neg
 # DCA TIGHT
     - name: protons_pt_dca_tight
+      tags: [observable]
       _from: *tpc-base-detector
       axes: *correction-axes-pt-standard
       cuts-quality: *rec-particle-cuts-quality-dca-tight
       cuts: *cuts-proton
     - name: protons_y_dca_tight
+      tags: [observable]
       _from: *tpc-base-detector
       axes: *correction-axes-y-standard
       cuts-quality: *rec-particle-cuts-quality-dca-tight
       cuts: *cuts-proton
     - name: pion_neg_pt_dca_tight
+      tags: [observable]
       _from: *tpc-base-detector
       axes: *correction-axes-pt-standard
       cuts-quality: *rec-particle-cuts-quality-dca-tight
       cuts: *cuts-pion-neg
     - name: pion_neg_y_dca_tight
+      tags: [observable]
       _from: *tpc-base-detector
       axes: *correction-axes-y-standard
       cuts-quality: *rec-particle-cuts-quality-dca-tight
       cuts: *cuts-pion-neg
 # DCA LOOSE
     - name: protons_pt_dca_loose
+      tags: [observable]
       _from: *tpc-base-detector
       axes: *correction-axes-pt-standard
       cuts-quality: *rec-particle-cuts-quality-dca-loose
       cuts: *cuts-proton
     - name: protons_y_dca_loose
+      tags: [observable]
       _from: *tpc-base-detector
       axes: *correction-axes-y-standard
       cuts-quality: *rec-particle-cuts-quality-dca-loose
       cuts: *cuts-proton
     - name: pion_neg_pt_dca_loose
+      tags: [observable]
       _from: *tpc-base-detector
       axes: *correction-axes-pt-standard
       cuts-quality: *rec-particle-cuts-quality-dca-loose
       cuts: *cuts-pion-neg
     - name: pion_neg_y_dca_loose
+      tags: [observable]
       _from: *tpc-base-detector
       axes: *correction-axes-y-standard
       cuts-quality: *rec-particle-cuts-quality-dca-loose
       cuts: *cuts-pion-neg
 # INCREASED RAPIDITY BINNING FOR CORRECTION FOR pT DEPENDENCIES
     - name: pion_neg_pt_binned_rapidity
+      tags: [observable]
       _from: *tpc-base-detector
       axes:
         - *ax-pt
@@ -178,6 +190,7 @@ pbpb_13agev_16_025:
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-pion-neg
     - name: protons_pt_binned_rapidity
+      tags: [observable]
       _from: *tpc-base-detector
       axes:
         - *ax-pt
@@ -186,8 +199,8 @@ pbpb_13agev_16_025:
       cuts: *cuts-proton
 # REFERENCE DETECTORS
     - name: psd1
+      tags: [reference]
       _from: &reference-base-detector
-        tags: [reference]
         type: channel
         phi: PsdModules/phi
         weight: PsdModules/signal
@@ -196,9 +209,11 @@ pbpb_13agev_16_025:
         qa: *psd-qa
       channel-ids: *layout-na61-psd1
     - name: psd2
+      tags: [reference]
       _from: *reference-base-detector
       channel-ids: *layout-na61-psd2
     - name: psd3
+      tags: [reference]
       _from: *reference-base-detector
       channel-ids: *layout-na61-psd3
 
