@@ -22,7 +22,9 @@ inline const ::YAML::Node & CNode(const ::YAML::Node &n) {
  * @param rhs
  * @return
  */
-::YAML::Node MergeRecursive(const ::YAML::Node& lhs, const ::YAML::Node& rhs)
+inline
+::YAML::Node
+MergeRecursive(const ::YAML::Node& lhs, const ::YAML::Node& rhs)
 {
   using ::YAML::Node;
   using ::YAML::NodeType;
@@ -64,7 +66,9 @@ inline const ::YAML::Node & CNode(const ::YAML::Node &n) {
   return result;
 }
 
-::YAML::Node ExpandInheritance(const ::YAML::Node& node) {
+inline
+::YAML::Node
+ExpandInheritance(const ::YAML::Node& node) {
   using ::YAML::Node;
   using ::YAML::NodeType;
 

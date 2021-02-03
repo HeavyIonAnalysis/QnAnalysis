@@ -60,8 +60,6 @@ _qa:
     - [*ax-dcax-qa, *ax-dcay-qa]
 
 
-
-
 pbpb_13agev_16_025:
   event-variables:
     - Centrality/Centrality_Epsd
@@ -91,211 +89,124 @@ pbpb_13agev_16_025:
 # OBSERVABLES
 # STANDARD CUTS
     - name: protons_pt
+      _from: &tpc-base-detector
+        type: track
+        phi: RecParticles/phi
+        weight: Ones
+        norm: m
+        corrections:
+          - recentering
+          - twist-and-rescale
+        qa-quality: *rec-particle-qa-quality
+        qa-kinematics: *rec-particle-qa-kinematics
       tags: [observable]
-      type: track
-      phi: RecParticles/phi
-      weight: Ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
       axes:
         - *ax-pt
         - *ax-y-cm-corr-1
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts:
         RecParticles/pid : { equals: 2212 }
-      qa-quality: *rec-particle-qa-quality
-      qa-kinematics: *rec-particle-qa-kinematics
     - name: protons_y
+      _from: *tpc-base-detector
       tags: [observable]
-      type: track
-      phi: RecParticles/phi
-      weight: Ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
       axes:
         - *ax-y-cm
         - *ax-pt-corr-1
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts:
         RecParticles/pid: { equals: 2212 }
-      qa-quality: *rec-particle-qa-quality
-      qa-kinematics: *rec-particle-qa-kinematics
     - name: pion_neg_pt
+      _from: *tpc-base-detector
       tags: [observable]
-      type: track
-      phi: RecParticles/phi
-      weight: Ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
       axes:
         - *ax-pt
         - *ax-y-cm-corr-1
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts:
         RecParticles/pid : { equals: -211 }
-      qa-quality: *rec-particle-qa-quality
-      qa-kinematics: *rec-particle-qa-kinematics
     - name: pion_neg_y
+      _from: *tpc-base-detector
       tags: [observable]
-      type: track
-      phi: RecParticles/phi
-      weight: Ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
       axes:
         - *ax-y-cm
         - *ax-pt-corr-1
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts:
         RecParticles/pid: { equals: -211 }
-      qa-quality: *rec-particle-qa-quality
-      qa-kinematics: *rec-particle-qa-kinematics
 # DCA TIGHT
     - name: protons_pt_dca_tight
+      _from: *tpc-base-detector
       tags: [ observable ]
-      type: track
-      phi: RecParticles/phi
-      weight: Ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
       axes:
         - *ax-pt
         - *ax-y-cm-corr-1
       cuts-quality: *rec-particle-cuts-quality-dca-tight
       cuts:
         RecParticles/pid: { equals: 2212 }
-      qa-quality: *rec-particle-qa-quality
-      qa-kinematics: *rec-particle-qa-kinematics
     - name: protons_y_dca_tight
+      _from: *tpc-base-detector
       tags: [ observable ]
-      type: track
-      phi: RecParticles/phi
-      weight: Ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
       axes:
         - *ax-y-cm
         - *ax-pt-corr-1
       cuts-quality: *rec-particle-cuts-quality-dca-tight
       cuts:
         RecParticles/pid: { equals: 2212 }
-      qa-quality: *rec-particle-qa-quality
-      qa-kinematics: *rec-particle-qa-kinematics
     - name: pion_neg_pt_dca_tight
+      _from: *tpc-base-detector
       tags: [ observable ]
-      type: track
-      phi: RecParticles/phi
-      weight: Ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
       axes:
         - *ax-pt
         - *ax-y-cm-corr-1
       cuts-quality: *rec-particle-cuts-quality-dca-tight
       cuts:
         RecParticles/pid: { equals: -211 }
-      qa-quality: *rec-particle-qa-quality
-      qa-kinematics: *rec-particle-qa-kinematics
     - name: pion_neg_y_dca_tight
+      _from: *tpc-base-detector
       tags: [ observable ]
-      type: track
-      phi: RecParticles/phi
-      weight: Ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
       axes:
         - *ax-y-cm
         - *ax-pt-corr-1
       cuts-quality: *rec-particle-cuts-quality-dca-tight
       cuts:
         RecParticles/pid: { equals: -211 }
-      qa-quality: *rec-particle-qa-quality
-      qa-kinematics: *rec-particle-qa-kinematics
 # DCA LOOSE
     - name: protons_pt_dca_loose
+      _from: *tpc-base-detector
       tags: [ observable ]
-      type: track
-      phi: RecParticles/phi
-      weight: Ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
       axes:
         - *ax-pt
         - *ax-y-cm-corr-1
       cuts-quality: *rec-particle-cuts-quality-dca-loose
       cuts:
         RecParticles/pid: { equals: 2212 }
-      qa-quality: *rec-particle-qa-quality
-      qa-kinematics: *rec-particle-qa-kinematics
     - name: protons_y_dca_loose
+      _from: *tpc-base-detector
       tags: [ observable ]
-      type: track
-      phi: RecParticles/phi
-      weight: Ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
       axes:
         - *ax-y-cm
         - *ax-pt-corr-1
       cuts-quality: *rec-particle-cuts-quality-dca-loose
       cuts:
         RecParticles/pid: { equals: 2212 }
-      qa-quality: *rec-particle-qa-quality
-      qa-kinematics: *rec-particle-qa-kinematics
     - name: pion_neg_pt_dca_loose
+      _from: *tpc-base-detector
       tags: [ observable ]
-      type: track
-      phi: RecParticles/phi
-      weight: Ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
       axes:
         - *ax-pt
         - *ax-y-cm-corr-1
       cuts-quality: *rec-particle-cuts-quality-dca-loose
       cuts:
         RecParticles/pid: { equals: -211 }
-      qa-quality: *rec-particle-qa-quality
-      qa-kinematics: *rec-particle-qa-kinematics
     - name: pion_neg_y_dca_loose
+      _from: *tpc-base-detector
       tags: [ observable ]
-      type: track
-      phi: RecParticles/phi
-      weight: Ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
       axes:
         - *ax-y-cm
         - *ax-pt-corr-1
       cuts-quality: *rec-particle-cuts-quality-dca-loose
       cuts:
         RecParticles/pid: { equals: -211 }
-      qa-quality: *rec-particle-qa-quality
-      qa-kinematics: *rec-particle-qa-kinematics
 # REFERENCE DETECTORS
     - name: psd1
       tags: [reference]
