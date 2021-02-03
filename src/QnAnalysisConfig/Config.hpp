@@ -9,6 +9,7 @@
 #include <regex>
 
 #include "ConfigUtils.hpp"
+#include "YamlUtils.hpp"
 
 #include <QnAnalysisBase/AnalysisSetup.hpp>
 #include <QnAnalysisBase/Axis.hpp>
