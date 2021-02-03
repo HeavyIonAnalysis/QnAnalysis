@@ -60,6 +60,9 @@ _qa:
     - [*ax-dcax-qa, *ax-dcay-qa]
 
 
+########################################################################################
+#   CORRECTION
+########################################################################################
 pbpb_13agev_16_025:
   event-variables:
     - Centrality/Centrality_Epsd
@@ -166,6 +169,21 @@ pbpb_13agev_16_025:
       axes: *correction-axes-y-standard
       cuts-quality: *rec-particle-cuts-quality-dca-loose
       cuts: *cuts-pion-neg
+# INCREASED RAPIDITY BINNING FOR CORRECTION FOR pT DEPENDENCIES
+    - name: pion_neg_pt_binned_rapidity
+      _from: *tpc-base-detector
+      axes:
+        - *ax-pt
+        - *ax-y-cm-corr-2
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts: *cuts-pion-neg
+    - name: protons_pt_binned_rapidity
+      _from: *tpc-base-detector
+      axes:
+        - *ax-pt
+        - *ax-y-cm-corr-2
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts: *cuts-proton
 # REFERENCE DETECTORS
     - name: psd1
       _from: &reference-base-detector
