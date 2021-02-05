@@ -23,19 +23,37 @@ _cuts:
     RecParticles/dcax : { range: [-2., 2.] }
     RecParticles/dcay : { range: [-1., 1.] }
   - &rec-particle-cuts-quality-dca-tight
-    RecParticles/nhits_total : { range: [30, 1000] }
-    RecParticles/nhits_vtpc : { range: [10, 1000] }
-    RecParticles/nhits_pot_total : { range: [1, 1000] }
-    RecParticles/nhits_ratio : { range: [0.55, 1.1] }
+    _from: *rec-particle-cuts-quality-standard
     RecParticles/dcax : { range: [-1, 1.] }
     RecParticles/dcay : { range: [-0.5, 0.5] }
   - &rec-particle-cuts-quality-dca-loose
-    RecParticles/nhits_total: { range: [ 30, 1000 ] }
-    RecParticles/nhits_vtpc: { range: [ 10, 1000 ] }
-    RecParticles/nhits_pot_total: { range: [ 1, 1000 ] }
-    RecParticles/nhits_ratio: { range: [ 0.55, 1.1 ] }
+    _from: *rec-particle-cuts-quality-standard
     RecParticles/dcax: { range: [ -3, 3. ] }
     RecParticles/dcay: { range: [ -1.5, 1.5 ] }
+  - &rec-particle-cuts-quality-nhits-vtpc-loose
+    _from: *rec-particle-cuts-quality-standard
+    RecParticles/nhits_vtpc : { range: [5, 1000] }
+  - &rec-particle-cuts-quality-nhits-vtpc-tight
+    _from: *rec-particle-cuts-quality-standard
+    RecParticles/nhits_vtpc : { range: [15, 1000] }
+  - &rec-particle-cuts-quality-nhits-total-loose
+    _from: *rec-particle-cuts-quality-standard
+    RecParticles/nhits_total : { range: [20, 1000] }
+  - &rec-particle-cuts-quality-nhits-total-tight
+    _from: *rec-particle-cuts-quality-standard
+    RecParticles/nhits_total : { range: [40, 1000] }
+  - &rec-particle-cuts-quality-nhits-ratio-lowedge-tight
+    _from: *rec-particle-cuts-quality-standard
+    RecParticles/nhits_ratio : { range: [0.7, 1.1] }
+  - &rec-particle-cuts-quality-nhits-ratio-lowedge-loose
+    _from: *rec-particle-cuts-quality-standard
+    RecParticles/nhits_ratio : { range: [0.4, 1.1] }
+  - &rec-particle-cuts-quality-nhits-ratio-upedge-tight
+    _from: *rec-particle-cuts-quality-standard
+    RecParticles/nhits_ratio : { range: [0.55, 1.0] }
+
+
+
 
 _qa:
   - &psd-qa
@@ -54,10 +72,11 @@ _qa:
   - &rec-particle-qa-quality
     - &ax-dcax-qa { name: RecParticles/dcax, nb: 200, lo: -10, hi: 10 }
     - &ax-dcay-qa { name: RecParticles/dcay, nb: 200, lo: -10, hi: 10 }
+    - [*ax-dcax-qa, *ax-dcay-qa]
+    - &ax-nhits-vtpc-qa { name: RecParticles/nhits_vtpc, nb: 300, lo: 0, hi: 300 }
     - &ax-nhits-total-qa { name: RecParticles/nhits_total, nb: 300, lo: 0, hi: 300 }
     - &ax-nhits-pot-total-qa { name: RecParticles/nhits_pot_total, nb: 300, lo: 0, hi: 300 }
     - [*ax-nhits-pot-total-qa, *ax-nhits-total-qa]
-    - [*ax-dcax-qa, *ax-dcay-qa]
 
 
 ########################################################################################
@@ -91,7 +110,7 @@ pbpb_13agev_16_025:
   q-vectors: &q-vectors-list
 # OBSERVABLES
 # STANDARD CUTS
-    - name: protons_pt
+    - name: protons_pt_standard
       tags: [observable]
       _from: &tpc-base-detector
         type: track
@@ -109,7 +128,7 @@ pbpb_13agev_16_025:
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: &cuts-proton
         RecParticles/pid : { equals: 2212 }
-    - name: protons_y
+    - name: protons_y_standard
       tags: [observable]
       _from: *tpc-base-detector
       axes: &correction-axes-y-standard
@@ -117,14 +136,14 @@ pbpb_13agev_16_025:
         - *ax-pt-corr-1
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-proton
-    - name: pion_neg_pt
+    - name: pion_neg_pt_standard
       tags: [observable]
       _from: *tpc-base-detector
       axes: *correction-axes-pt-standard
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: &cuts-pion-neg
         RecParticles/pid : { equals: -211 }
-    - name: pion_neg_y
+    - name: pion_neg_y_standard
       tags: [observable]
       _from: *tpc-base-detector
       axes: *correction-axes-y-standard
@@ -179,6 +198,181 @@ pbpb_13agev_16_025:
       _from: *tpc-base-detector
       axes: *correction-axes-y-standard
       cuts-quality: *rec-particle-cuts-quality-dca-loose
+      cuts: *cuts-pion-neg
+#  NHITS_VTPC TIGHT
+    - name: protons_pt_nhits_vtpc_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-vtpc-tight
+      cuts: *cuts-proton
+    - name: protons_y_nhits_vtpc_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-y-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-vtpc-tight
+      cuts: *cuts-proton
+    - name: pion_neg_pt_nhits_vtpc_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-vtpc-tight
+      cuts: *cuts-pion-neg
+    - name: pion_neg_y_nhits_vtpc_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-y-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-vtpc-tight
+      cuts: *cuts-pion-neg
+#  NHITS_VTPC LOOSE
+    - name: protons_pt_nhits_vtpc_loose
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-vtpc-loose
+      cuts: *cuts-proton
+    - name: protons_y_nhits_vtpc_loose
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-y-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-vtpc-loose
+      cuts: *cuts-proton
+    - name: pion_neg_pt_nhits_vtpc_loose
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-vtpc-loose
+      cuts: *cuts-pion-neg
+    - name: pion_neg_y_nhits_vtpc_loose
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-y-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-vtpc-loose
+      cuts: *cuts-pion-neg
+#  NHITS_TOTAL TIGHT
+    - name: protons_pt_nhits_total_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-total-tight
+      cuts: *cuts-proton
+    - name: protons_y_nhits_total_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-y-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-total-tight
+      cuts: *cuts-proton
+    - name: pion_neg_pt_nhits_total_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-total-tight
+      cuts: *cuts-pion-neg
+    - name: pion_neg_y_nhits_total_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-y-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-total-tight
+      cuts: *cuts-pion-neg
+#  NHITS_TOTAL LOOSE
+    - name: protons_pt_nhits_total_loose
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-total-loose
+      cuts: *cuts-proton
+    - name: protons_y_nhits_total_loose
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-y-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-total-loose
+      cuts: *cuts-proton
+    - name: pion_neg_pt_nhits_total_loose
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-total-loose
+      cuts: *cuts-pion-neg
+    - name: pion_neg_y_nhits_total_loose
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-y-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-total-loose
+      cuts: *cuts-pion-neg
+#  NHITS_RATIO_LOWEDGE TIGHT
+    - name: protons_pt_nhits_ratio_lowedge_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-ratio-lowedge-tight
+      cuts: *cuts-proton
+    - name: protons_y_nhits_ratio_lowedge_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-y-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-ratio-lowedge-tight
+      cuts: *cuts-proton
+    - name: pion_neg_pt_nhits_ratio_lowedge_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-ratio-lowedge-tight
+      cuts: *cuts-pion-neg
+    - name: pion_neg_y_nhits_ratio_lowedge_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-y-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-ratio-lowedge-tight
+      cuts: *cuts-pion-neg
+#  NHITS_RATIO_LOWEDGE LOOSE
+    - name: protons_pt_nhits_ratio_lowedge_loose
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-ratio-lowedge-loose
+      cuts: *cuts-proton
+    - name: protons_y_nhits_ratio_lowedge_loose
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-y-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-ratio-lowedge-loose
+      cuts: *cuts-proton
+    - name: pion_neg_pt_nhits_ratio_lowedge_loose
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-ratio-lowedge-loose
+      cuts: *cuts-pion-neg
+    - name: pion_neg_y_nhits_ratio_lowedge_loose
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-y-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-ratio-lowedge-loose
+      cuts: *cuts-pion-neg
+#  NHITS_RATIO_UPEDGE TIGHT
+    - name: protons_pt_nhits_ratio_upedge_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-ratio-upedge-tight
+      cuts: *cuts-proton
+    - name: protons_y_nhits_ratio_upedge_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-y-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-ratio-upedge-tight
+      cuts: *cuts-proton
+    - name: pion_neg_pt_nhits_ratio_upedge_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-ratio-upedge-tight
+      cuts: *cuts-pion-neg
+    - name: pion_neg_y_nhits_ratio_upedge_tight
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-y-standard
+      cuts-quality: *rec-particle-cuts-quality-nhits-ratio-upedge-tight
       cuts: *cuts-pion-neg
 # INCREASED RAPIDITY BINNING FOR CORRECTION FOR pT DEPENDENCIES
     - name: pion_neg_pt_binned_rapidity
