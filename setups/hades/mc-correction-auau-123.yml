@@ -53,6 +53,12 @@ _cuts:
     mdc_vtx_tracks_rapidity/dca_xy: {range: [-10.0, 10.0]}
     mdc_vtx_tracks_rapidity/dca_z: {range: [-10.0, 10.0]}
     mdc_vtx_tracks_rapidity/chi2: {range: [0.0, 100.0]}
+  - &w1_cuts
+    sim_tracks_rapidity/eta: {range: [3.88, 5.38]}
+  - &w2_cuts
+    sim_tracks_rapidity/eta: {range: [3.35, 3.88]}
+  - &w3_cuts
+    sim_tracks_rapidity/eta: {range: [2.68, 3.35]}
 
 hades_analysis:
   event-variables:
@@ -171,6 +177,36 @@ hades_analysis:
         - *axis_gen_pions_pT
         - *axis_gen_pions_rapidity
         - [*axis_gen_pions_rapidity, *axis_gen_pions_pT]
+  ###########################################################################
+    - name: W1_spectators
+      type: track
+      phi:  sim_tracks_rapidity/phi
+      weight: sim_tracks_rapidity/charge
+      norm: m
+      cuts-w1:
+        *w1_cuts
+      qa:
+        - {name: sim_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+  ###########################################################################
+    - name: W2_spectators
+      type: track
+      phi:  sim_tracks_rapidity/phi
+      weight: sim_tracks_rapidity/charge
+      norm: m
+      cuts-w2:
+        *w2_cuts
+      qa:
+        - {name: sim_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+  ###########################################################################
+    - name: W3_spectators
+      type: track
+      phi:  sim_tracks_rapidity/phi
+      weight: sim_tracks_rapidity/charge
+      norm: m
+      cuts-w3:
+        *w3_cuts
+      qa:
+        - {name: sim_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
   ###########################################################################
     - name: psi_rp
       type: psi

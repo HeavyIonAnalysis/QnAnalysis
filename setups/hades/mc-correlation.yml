@@ -13,6 +13,12 @@ _detectors: &detectors
     tags: [ gen_un_vector ]
   - name: psi_rp
     tags: [ psi_vector ]
+  - name: W1_spectators
+    tags: [ qn_vector ]
+  - name: W2_spectators
+    tags: [ qn_vector ]
+  - name: W3_spectators
+    tags: [ qn_vector ]
 
 _axes:
   - &centrality
@@ -46,9 +52,20 @@ _tasks_args:
     components: *ep_components
     correction-steps: [ plain ]
     weight: ones
+  - &ta_qn
+    query: { tags: { any-in: [ qn_vector ] } }
+    query-list: *detectors
+    components: *sp_components
+    correction-steps: [ plain ]
+    weight: ones
 
 _tasks:
   - args: [*ta_reco, *ta_psi]
+    n-samples: 100
+    weights-type: observable
+    folder: "/uQ/reco"
+    axes: [ *centrality ]
+  - args: [*ta_reco, *ta_qn]
     n-samples: 100
     weights-type: observable
     folder: "/uQ/reco"
@@ -57,4 +74,14 @@ _tasks:
     n-samples: 100
     weights-type: observable
     folder: "/uQ/gen"
+    axes: [ *centrality ]
+  - args: [*ta_qn, *ta_psi]
+    n-samples: 100
+    weights-type: observable
+    folder: "/QQ/psi"
+    axes: [ *centrality ]
+  - args: [*ta_qn, *ta_qn]
+    n-samples: 100
+    weights-type: reference
+    folder: "/QQ/qvec"
     axes: [ *centrality ]
