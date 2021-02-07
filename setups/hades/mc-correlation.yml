@@ -49,7 +49,7 @@ _tasks_args:
   - &ta_psi
     query: { tags: { any-in: [ psi_vector ] } }
     query-list: *detectors
-    components: *ep_components
+    components: *sp_components
     correction-steps: [ plain ]
     weight: ones
   - &ta_qn
@@ -78,10 +78,10 @@ _tasks:
   - args: [*ta_qn, *ta_psi]
     n-samples: 100
     weights-type: observable
-    folder: "/QQ/psi"
+    folder: "/QQ/"
     axes: [ *centrality ]
   - args: [*ta_qn, *ta_qn]
     n-samples: 100
     weights-type: reference
-    folder: "/QQ/qvec"
+    folder: "/QQ/"
     axes: [ *centrality ]
