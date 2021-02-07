@@ -77,7 +77,7 @@ _tasks:
     axes: [ *centrality ]
   - args: [*ta_qn, *ta_psi]
     n-samples: 100
-    weights-type: observable
+    weights-type: reference
     folder: "/QQ"
     axes: [ *centrality ]
   - args: [*ta_qn, *ta_qn]
