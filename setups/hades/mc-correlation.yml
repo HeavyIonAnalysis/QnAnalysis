@@ -78,10 +78,10 @@ _tasks:
   - args: [*ta_qn, *ta_psi]
     n-samples: 100
     weights-type: observable
-    folder: "/QQ/"
+    folder: "/QQ"
     axes: [ *centrality ]
   - args: [*ta_qn, *ta_qn]
     n-samples: 100
     weights-type: reference
-    folder: "/QQ/"
+    folder: "/QQ"
     axes: [ *centrality ]
