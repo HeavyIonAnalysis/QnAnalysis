@@ -55,10 +55,13 @@ _cuts:
     mdc_vtx_tracks_rapidity/chi2: {range: [0.0, 100.0]}
   - &w1_cuts
     sim_tracks_rapidity/eta: {range: [3.88, 5.38]}
+    sim_tracks_rapidity/is_primary: { equals: 1 }
   - &w2_cuts
     sim_tracks_rapidity/eta: {range: [3.35, 3.88]}
+    sim_tracks_rapidity/is_primary: { equals: 1 }
   - &w3_cuts
     sim_tracks_rapidity/eta: {range: [2.68, 3.35]}
+    sim_tracks_rapidity/is_primary: { equals: 1 }
 
 hades_analysis:
   event-variables:
