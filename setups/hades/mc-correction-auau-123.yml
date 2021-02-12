@@ -54,14 +54,14 @@ _cuts:
     mdc_vtx_tracks_rapidity/dca_z: {range: [-10.0, 10.0]}
     mdc_vtx_tracks_rapidity/chi2: {range: [0.0, 100.0]}
   - &w1_cuts
-    sim_tracks_rapidity/eta: {range: [3.88, 5.38]}
-    sim_tracks_rapidity/is_primary: { equals: 1 }
+    reconstructed_forward_wall_hits/ring: { range: [1.0, 5.0] }
+    reconstructed_forward_wall_hits/signal: { range: [80.0, 999.0] }
   - &w2_cuts
-    sim_tracks_rapidity/eta: {range: [3.35, 3.88]}
-    sim_tracks_rapidity/is_primary: { equals: 1 }
+    reconstructed_forward_wall_hits/ring: { range: [6.0, 7.0] }
+    reconstructed_forward_wall_hits/signal: { range: [85.0, 999.0] }
   - &w3_cuts
-    sim_tracks_rapidity/eta: {range: [2.68, 3.35]}
-    sim_tracks_rapidity/is_primary: { equals: 1 }
+    reconstructed_forward_wall_hits/ring: { range: [8.0, 10.0] }
+    reconstructed_forward_wall_hits/signal: { range: [88.0, 999.0] }
 
 hades_analysis:
   event-variables:
@@ -181,35 +181,44 @@ hades_analysis:
         - *axis_gen_pions_rapidity
         - [*axis_gen_pions_rapidity, *axis_gen_pions_pT]
   ###########################################################################
-    - name: W1_spectators
+    - name: W1
       type: track
-      phi:  sim_tracks_rapidity/phi
-      weight: sim_tracks_rapidity/charge
+      phi:  reconstructed_forward_wall_hits/phi
+      weight: reconstructed_forward_wall_hits/signal
       norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
       cuts-w1:
         *w1_cuts
       qa:
-        - {name: sim_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: reconstructed_forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
   ###########################################################################
-    - name: W2_spectators
+    - name: W2
       type: track
-      phi:  sim_tracks_rapidity/phi
-      weight: sim_tracks_rapidity/charge
+      phi:  reconstructed_forward_wall_hits/phi
+      weight: reconstructed_forward_wall_hits/signal
       norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
       cuts-w2:
         *w2_cuts
       qa:
-        - {name: sim_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: reconstructed_forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
   ###########################################################################
-    - name: W3_spectators
+    - name: W3
       type: track
-      phi:  sim_tracks_rapidity/phi
-      weight: sim_tracks_rapidity/charge
+      phi:  reconstructed_forward_wall_hits/phi
+      weight: reconstructed_forward_wall_hits/signal
       norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
       cuts-w3:
         *w3_cuts
       qa:
-        - {name: sim_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: reconstructed_forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
   ###########################################################################
     - name: psi_rp
       type: psi

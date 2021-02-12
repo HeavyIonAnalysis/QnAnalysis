@@ -13,11 +13,11 @@ _detectors: &detectors
     tags: [ gen_un_vector ]
   - name: psi_rp
     tags: [ psi_vector ]
-  - name: W1_spectators
+  - name: W1
     tags: [ qn_vector ]
-  - name: W2_spectators
+  - name: W2
     tags: [ qn_vector ]
-  - name: W3_spectators
+  - name: W3
     tags: [ qn_vector ]
 
 _axes:
@@ -56,7 +56,7 @@ _tasks_args:
     query: { tags: { any-in: [ qn_vector ] } }
     query-list: *detectors
     components: *sp_components
-    correction-steps: [ plain ]
+    correction-steps: [ rescaled ]
     weight: ones
 
 _tasks:
