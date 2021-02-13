@@ -40,6 +40,12 @@ _cuts:
     mdc_vtx_tracks_rapidity/pid: { equals: 211 }
   - &pid_pi_minus_cut
     mdc_vtx_tracks_rapidity/pid: { equals: -211 }
+  - &mf_cuts
+    mdc_vtx_tracks_rapidity/pT: {range: [0.0, 2.0]}
+    mdc_vtx_tracks_rapidity/rapidity: {range: [1.09, 1.29]}
+  - &mb_cuts
+    mdc_vtx_tracks_rapidity/pT: {range: [0.0, 2.0]}
+    mdc_vtx_tracks_rapidity/rapidity: {range: [0.19, 0.39]}
   - &gen_prim_protons_cut
     sim_tracks/pid: { equals: 2212 }
     sim_tracks/is_primary: { equals: 1 }
@@ -133,6 +139,40 @@ hades_analysis:
         - *axis_pions_rapidity
         - [*axis_pions_rapidity, *axis_pions_pT]
   ###########################################################################
+    - name: Mf
+      type: track
+      phi:  mdc_vtx_tracks_rapidity/phi
+      weight: Ones
+      norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
+      cuts-subevent:
+        *mf_cuts
+      cuts-quality:
+        *good_track_cuts
+      cuts-pid:
+        *pid_protons_cut
+      qa:
+        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        #############################################################
+    - name: Mb
+      type: track
+      phi:  mdc_vtx_tracks_rapidity/phi
+      weight: Ones
+      norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
+      cuts-subevent:
+        *mb_cuts
+      cuts-quality:
+        *good_track_cuts
+      cuts-pid:
+        *pid_protons_cut
+      qa:
+        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+  #############################################################
     - name: gen_prim_protons
       type: track
       phi:  sim_tracks/phi
