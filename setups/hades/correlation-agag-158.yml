@@ -115,6 +115,16 @@ _tasks:
     weights-type: reference
     folder: "/EP/QQ"
     axes: [ *centrality ]
+  - args: [*ta_mdc_sp, *ta_mdc_sp]
+    n-samples: 100
+    weights-type: reference
+    folder: "/SP/QQ"
+    axes: [ *centrality ]
+  - args: [*ta_mdc_ep, *ta_mdc_ep]
+    n-samples: 100
+    weights-type: reference
+    folder: "/EP/QQ"
+    axes: [ *centrality ]
   - args: [*ta_rnd_sp, *ta_rnd_sp]
     n-samples: 100
     weights-type: reference
