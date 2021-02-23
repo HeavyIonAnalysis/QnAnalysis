@@ -8,15 +8,15 @@ _axes:
     name: mdc_vtx_tracks_rapidity/pT
     bin-edges: [0, 0.0825, 0.1075, 0.1275, 0.1525, 0.1775, 0.2075, 0.2475, 0.3075, 0.4725, 1.0]
   - &axis_protons_rapidity
-    name: mdc_vtx_tracks_rapidity/rapidity
+    name: mdc_vtx_tracks_rapidity/ycm
     nb: 15
-    lo: -0.01
-    hi: 1.49
+    lo: -0.75
+    hi: 0.75
   - &axis_pions_rapidity
-    name: mdc_vtx_tracks_rapidity/rapidity
+    name: mdc_vtx_tracks_rapidity/ycm
     nb: 17
-    lo: 0.09
-    hi: 1.79
+    lo: -0.65
+    hi: 0.95
 _cuts:
   - &protons_cuts
     mdc_vtx_tracks_rapidity/pid: { equals: 2212 }
