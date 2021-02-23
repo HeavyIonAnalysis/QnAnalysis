@@ -14,10 +14,12 @@ namespace Qn::Analysis::Base {
 
 struct HistogramConfig {
   std::vector<AxisConfig> axes;
+  std::string weight{"Ones"};
 };
 
 struct Histogram {
   std::vector<Axis> axes;
+  std::string weight;
 };
 
 namespace Utils {
