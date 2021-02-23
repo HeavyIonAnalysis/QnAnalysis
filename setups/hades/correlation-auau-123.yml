@@ -16,9 +16,9 @@ _detectors: &detectors
   - name: R2
     tags: [ rnd_vector ]
   - name: Mf
-    tags: [ mdc_vector ]
+    tags: [ qn_vector ]
   - name: Mb
-    tags: [ mdc_vector ]
+    tags: [ qn_vector ]
 
 _axes:
   - &centrality
@@ -30,8 +30,6 @@ _axes:
 _components:
   - &sp_components
     [ x1,y1 ]
-  - &sp2_components
-    [ x2,y2 ]
   - &ep_components
     [ cos1,sin1 ]
 
@@ -42,25 +40,25 @@ _tasks_args:
     components: *sp_components
     correction-steps: [ rescaled ]
     weight: sumw
-  - &ta_qn
+  - &ta_qn_sp
     query: { tags: { any-in: [ qn_vector ] } }
     query-list: *detectors
     components: *sp_components
     correction-steps: [ rescaled ]
     weight: ones
-  - &ta_mdc
-    query: { tags: { any-in: [ mdc_vector ] } }
+  - &ta_qn_ep
+    query: { tags: { any-in: [ qn_vector ] } }
+    query-list: *detectors
+    components: *ep_components
+    correction-steps: [ rescaled ]
+    weight: ones
+  - &ta_rnd_sp
+    query: { tags: { any-in: [ rnd_vector ] } }
     query-list: *detectors
     components: *sp_components
     correction-steps: [ rescaled ]
     weight: ones
-  - &ta_mdc2
-    query: { tags: { any-in: [ mdc_vector ] } }
-    query-list: *detectors
-    components: *sp2_components
-    correction-steps: [ rescaled ]
-    weight: ones
-  - &ta_rnd
+  - &ta_rnd_ep
     query: { tags: { any-in: [ rnd_vector ] } }
     query-list: *detectors
     components: *ep_components
@@ -68,39 +66,44 @@ _tasks_args:
     weight: ones
 
 _tasks:
-  - args: [*ta_u, *ta_qn]
+  - args: [*ta_u, *ta_qn_sp]
     n-samples: 100
     weights-type: observable
-    folder: "/uQ/SP"
+    folder: "/SP/uQ"
     axes: [ *centrality ]
-  - args: [*ta_u, *ta_rnd]
+  - args: [*ta_u, *ta_qn_ep]
     n-samples: 100
     weights-type: observable
-    folder: "/uQ/SP"
+    folder: "/EP/uQ"
     axes: [ *centrality ]
-  - args: [*ta_u, *ta_qn, *ta_mdc2]
+  - args: [*ta_u, *ta_rnd_sp]
     n-samples: 100
     weights-type: observable
-    folder: "/uQ/SP"
+    folder: "/SP/uQ"
+    axes: [ *centrality ]
+  - args: [*ta_u, *ta_rnd_ep]
+    n-samples: 100
+    weights-type: observable
+    folder: "/EP/uQ"
     axes: [ *centrality ]
   # Reference x Reference
-  - args: [*ta_qn, *ta_qn]
+  - args: [*ta_qn_sp, *ta_qn_sp]
     n-samples: 100
     weights-type: reference
-    folder: "/QQ/SP"
+    folder: "/SP/QQ"
     axes: [ *centrality ]
-  - args: [*ta_mdc, *ta_qn]
+  - args: [*ta_qn_ep, *ta_qn_ep]
     n-samples: 100
     weights-type: reference
-    folder: "/QQ/SP"
+    folder: "/EP/QQ"
     axes: [ *centrality ]
-  - args: [*ta_rnd, *ta_rnd]
+  - args: [*ta_rnd_sp, *ta_rnd_sp]
     n-samples: 100
     weights-type: reference
-    folder: "/QQ/SP"
+    folder: "/SP/QQ"
     axes: [ *centrality ]
-  - args: [*ta_mdc2, *ta_qn, *ta_qn]
+  - args: [*ta_rnd_ep, *ta_rnd_ep]
     n-samples: 100
     weights-type: reference
-    folder: "/QQ/SP"
+    folder: "/EP/QQ"
     axes: [ *centrality ]
