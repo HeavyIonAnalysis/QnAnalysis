@@ -14,12 +14,12 @@ _axes:
     name: sim_tracks/pT
     bin-edges: [0, 0.0825, 0.1075, 0.1275, 0.1525, 0.1775, 0.2075, 0.2475, 0.3075, 0.4725, 1.0]
   - &axis_protons_rapidity
-    name: mdc_vtx_tracks_rapidity/ycm
+    name: mdc_vtx_tracks_rapidity/rapidity
     nb: 15
     lo: -0.01
     hi: 1.49
   - &axis_pions_rapidity
-    name: mdc_vtx_tracks_rapidity/ycm
+    name: mdc_vtx_tracks_rapidity/rapidity
     nb: 17
     lo: 0.09
     hi: 1.79
@@ -79,7 +79,7 @@ hades_analysis:
     - name: pid_protons
       type: track
       phi:  mdc_vtx_tracks_rapidity/phi
-      weight: ones
+      weight: mdc_vtx_tracks_rapidity/efficiency
       norm: m
       corrections:
         - recentering
@@ -155,7 +155,7 @@ hades_analysis:
         *pid_protons_cut
       qa:
         - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
-        #############################################################
+  #############################################################
     - name: Mb
       type: track
       phi:  mdc_vtx_tracks_rapidity/phi

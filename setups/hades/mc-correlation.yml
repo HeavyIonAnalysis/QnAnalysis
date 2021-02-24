@@ -20,9 +20,9 @@ _detectors: &detectors
   - name: W3
     tags: [ qn_vector ]
   - name: Mf
-    tags: [ mdc_vector ]
+    tags: [ qn_vector ]
   - name: Mb
-    tags: [ mdc_vector ]
+    tags: [ qn_vector ]
 
 _axes:
   - &centrality
@@ -34,8 +34,6 @@ _axes:
 _components:
   - &sp_components
     [ x1,y1 ]
-  - &sp2_components
-    [ x2,y2 ]
 
 _tasks_args:
   - &ta_reco
@@ -56,28 +54,10 @@ _tasks_args:
     components: *sp_components
     correction-steps: [ plain ]
     weight: ones
-  - &ta_psi2
-    query: { tags: { any-in: [ psi_vector ] } }
-    query-list: *detectors
-    components: *sp2_components
-    correction-steps: [ plain ]
-    weight: ones
   - &ta_qn
     query: { tags: { any-in: [ qn_vector ] } }
     query-list: *detectors
     components: *sp_components
-    correction-steps: [ rescaled ]
-    weight: ones
-  - &ta_mdc
-    query: { tags: { any-in: [ mdc_vector ] } }
-    query-list: *detectors
-    components: *sp_components
-    correction-steps: [ rescaled ]
-    weight: ones
-  - &ta_mdc2
-    query: { tags: { any-in: [ mdc_vector ] } }
-    query-list: *detectors
-    components: *sp2_components
     correction-steps: [ rescaled ]
     weight: ones
 
@@ -92,11 +72,6 @@ _tasks:
     weights-type: observable
     folder: "/uQ/reco"
     axes: [ *centrality ]
-  - args: [*ta_reco, *ta_qn, *ta_mdc2]
-    n-samples: 100
-    weights-type: observable
-    folder: "/uQ/reco"
-    axes: [ *centrality ]
   - args: [*ta_sim, *ta_psi]
     n-samples: 100
     weights-type: observable
@@ -107,22 +82,7 @@ _tasks:
     weights-type: reference
     folder: "/QQ"
     axes: [ *centrality ]
-  - args: [*ta_mdc, *ta_psi]
-    n-samples: 100
-    weights-type: reference
-    folder: "/QQ"
-    axes: [ *centrality ]
-  - args: [*ta_mdc2, *ta_psi2]
-    n-samples: 100
-    weights-type: reference
-    folder: "/QQ"
-    axes: [ *centrality ]
   - args: [*ta_qn, *ta_qn]
-    n-samples: 100
-    weights-type: reference
-    folder: "/QQ"
-    axes: [ *centrality ]
-  - args: [*ta_mdc, *ta_qn]
     n-samples: 100
     weights-type: reference
     folder: "/QQ"
