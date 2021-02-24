@@ -264,9 +264,11 @@ void QnCorrectionTask::AddQAHisto() {
   for (auto q_tra : analysis_setup_->track_qvectors_) {
     for (const auto &qa : q_tra->GetQAHistograms()) {
       if (qa.axes.size() == 1) {
-        manager_.AddHisto1D(q_tra->GetName(), qa.axes.at(0).GetQnAxis());
+        manager_.AddHisto1D(q_tra->GetName(), qa.axes.at(0).GetQnAxis(),
+                            qa.weight);
       } else if (qa.axes.size() == 2) {
-        manager_.AddHisto2D(q_tra->GetName(), {qa.axes.at(0).GetQnAxis(), qa.axes.at(1).GetQnAxis()});
+        manager_.AddHisto2D(q_tra->GetName(), {qa.axes.at(0).GetQnAxis(), qa.axes.at(1).GetQnAxis()},
+                            qa.weight);
       } else {
         throw std::runtime_error("QA histograms with more than 2 axis (or less than one) are not supported.");
       }
@@ -278,7 +280,7 @@ void QnCorrectionTask::AddQAHisto() {
       if (qa.axes.size() == 1) {
         auto axis = qa.axes.at(0).GetQnAxis();
         axis.SetName(q_ch->GetName() + "_" + axis.Name());
-        manager_.AddHisto1D(q_ch->GetName(), axis);
+        manager_.AddHisto1D(q_ch->GetName(), axis, qa.weight);
       } else {
         throw std::runtime_error("FIX ME");
       }
@@ -289,7 +291,7 @@ void QnCorrectionTask::AddQAHisto() {
     for (const auto &qa : q_psi->GetQAHistograms()) {
       if (qa.axes.size() == 1) {
         auto axis = qa.axes.at(0).GetQnAxis();
-        manager_.AddHisto1D(q_psi->GetName(), axis);
+        manager_.AddHisto1D(q_psi->GetName(), axis, qa.weight);
       } else {
         throw std::runtime_error("FIX ME");
       }
@@ -298,9 +300,9 @@ void QnCorrectionTask::AddQAHisto() {
 
   for (const auto &histo : analysis_setup_->qa_) {
     if (histo.axes.size() == 1) {
-      manager_.AddEventHisto1D(histo.axes[0].GetQnAxis());
+      manager_.AddEventHisto1D(histo.axes[0].GetQnAxis(), histo.weight);
     } else if (histo.axes.size() == 2) {
-      manager_.AddEventHisto2D({histo.axes[0].GetQnAxis(), histo.axes[1].GetQnAxis()});
+      manager_.AddEventHisto2D({histo.axes[0].GetQnAxis(), histo.axes[1].GetQnAxis()}, histo.weight);
     } else {
       throw std::runtime_error("QA histograms with more than 2 axis (or less than one) are not supported.");
     }

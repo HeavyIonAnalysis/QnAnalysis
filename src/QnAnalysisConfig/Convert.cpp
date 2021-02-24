@@ -168,6 +168,7 @@ Qn::Analysis::Base::Histogram Qn::Analysis::Config::Utils::Convert(const Qn::Ana
   result.axes.resize(histogram_config.axes.size());
   std::transform(histogram_config.axes.begin(), histogram_config.axes.end(), result.axes.begin(),
                  [](const Base::AxisConfig& ax_config) { return Convert(ax_config); });
+  result.weight = histogram_config.weight;
   return result;
 }
 Qn::CorrectionOnQnVector* Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::QVectorCorrectionConfig& config) {

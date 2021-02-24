@@ -128,14 +128,18 @@ struct convert<Qn::Analysis::Base::HistogramConfig> {
       try {
         auto ax = node.as<AxisConfig>();
         config.axes.emplace_back(std::move(ax));
+        /* taking weight (if present) directly from the same node */
+        config.weight = node["weight"].as<std::string>("Ones");
         return true;
       } catch (std::exception &e) { /* ignore */
       }
 
       config.axes = node["axes"].as<std::vector<AxisConfig>>();
+      config.weight = node["weight"].as<std::string>("Ones");
       return true;
     } else if (node.IsSequence()) {
       config.axes = node.as<std::vector<AxisConfig>>();
+      config.weight = "Ones";
       return true;
     }// IsSequence
 
