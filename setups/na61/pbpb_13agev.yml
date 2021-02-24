@@ -69,6 +69,11 @@ _qa:
     - [*ax-eta-qa, *ax-pt-qa]
     - [*ax-phi-qa, *ax-rapidity-qa]
     - [*ax-phi-qa, *ax-pt-qa]
+  - &rec-particle-qa-kinematics-weighted
+    - { axes: [*ax-rapidity-qa], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [*ax-pt-qa], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [*ax-phi-qa], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [*ax-rapidity-qa, *ax-pt-qa], weight: RecParticles_w_eff_standard_cuts }
   - &rec-particle-qa-quality
     - &ax-dcax-qa { name: RecParticles/dcax, nb: 200, lo: -10, hi: 10 }
     - &ax-dcay-qa { name: RecParticles/dcay, nb: 200, lo: -10, hi: 10 }
@@ -146,6 +151,47 @@ pbpb_13agev_16_025:
     - name: pion_neg_y_standard
       tags: [observable]
       _from: *tpc-base-detector
+      axes: *correction-axes-y-standard
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts: *cuts-pion-neg
+# STANDARD CUTS (WEIGHTED)
+    - name: protons_pt_standard_weighted
+      tags: [ observable ]
+      _from: &tpc-base-detector-weighted
+        type: track
+        phi: RecParticles/phi
+        weight: RecParticles/w_eff_standard_cuts
+        norm: m
+        corrections:
+          - recentering
+          - twist-and-rescale
+        qa-quality: *rec-particle-qa-quality
+        qa-kinematics: *rec-particle-qa-kinematics
+        qa-special: *rec-particle-qa-kinematics-weighted
+      axes: &correction-axes-pt-standard
+        - *ax-pt
+        - *ax-y-cm-corr-1
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts: &cuts-proton
+        RecParticles/pid: { equals: 2212 }
+    - name: protons_y_standard_weighted
+      tags: [ observable ]
+      _from: *tpc-base-detector-weighted
+      axes: &correction-axes-y-standard
+        - *ax-y-cm
+        - *ax-pt-corr-1
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts: *cuts-proton
+    - name: pion_neg_pt_standard_weighted
+      tags: [ observable ]
+      _from: *tpc-base-detector-weighted
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts: &cuts-pion-neg
+        RecParticles/pid: { equals: -211 }
+    - name: pion_neg_y_standard_weighted
+      tags: [ observable ]
+      _from: *tpc-base-detector-weighted
       axes: *correction-axes-y-standard
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-pion-neg
