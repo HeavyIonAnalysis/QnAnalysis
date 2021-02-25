@@ -127,23 +127,23 @@ hades_analysis:
         - *axis_pions_rapidity
         - [*axis_pions_rapidity, *axis_pions_pT]
     #############################################################
-  - name: pions
-    type: track
-    phi:  mdc_vtx_tracks_rapidity/phi
-    weight: Ones
-    norm: m
-    corrections:
-      - recentering
-      - twist-and-rescale
-    cuts-pid:
-      *pions_cuts
-    cuts-quality:
-      *good_particle_cuts
-    qa:
-      - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
-      - *axis_pions_pT
-      - *axis_pions_rapidity
-      - [*axis_pions_rapidity, *axis_pions_pT]
+    - name: pions
+      type: track
+      phi:  mdc_vtx_tracks_rapidity/phi
+      weight: Ones
+      norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
+      cuts-pid:
+        *pions_cuts
+      cuts-quality:
+        *good_particle_cuts
+      qa:
+        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_pions_pT
+        - *axis_pions_rapidity
+        - [*axis_pions_rapidity, *axis_pions_pT]
     #############################################################
     - name: Mf
       type: track
