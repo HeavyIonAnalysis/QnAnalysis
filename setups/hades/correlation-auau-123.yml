@@ -19,6 +19,8 @@ _detectors: &detectors
     tags: [ qn_vector ]
   - name: Mb
     tags: [ qn_vector ]
+  - name: pions
+    tags: [ pions_vector ]
 
 _axes:
   - &centrality
@@ -30,6 +32,8 @@ _axes:
 _components:
   - &sp_components
     [ x1,y1 ]
+  - &sp2_components
+    [ x2,y2 ]
   - &ep_components
     [ cos1,sin1 ]
 
@@ -64,6 +68,12 @@ _tasks_args:
     components: *ep_components
     correction-steps: [ rescaled ]
     weight: ones
+  - &ta_pions
+    query: { tags: { any-in: [ pions_vector ] } }
+    query-list: *detectors
+    components: *sp2_components
+    correction-steps: [ rescaled ]
+    weight: ones
 
 _tasks:
   - args: [*ta_u, *ta_qn_sp]
@@ -86,6 +96,11 @@ _tasks:
     weights-type: observable
     folder: "/EP/uQ"
     axes: [ *centrality ]
+  - args: [*ta_u, *ta_pions, *ta_qn_sp]
+    n-samples: 100
+    weights-type: observable
+    folder: "/SP/uQQ"
+    axes: [ *centrality ]
   # Reference x Reference
   - args: [*ta_qn_sp, *ta_qn_sp]
     n-samples: 100
@@ -106,4 +121,9 @@ _tasks:
     n-samples: 100
     weights-type: reference
     folder: "/EP/QQ"
+    axes: [ *centrality ]
+  - args: [*ta_pions, *ta_qn_sp, *ta_qn_sp]
+    n-samples: 100
+    weights-type: reference
+    folder: "/SP/QQQ"
     axes: [ *centrality ]
