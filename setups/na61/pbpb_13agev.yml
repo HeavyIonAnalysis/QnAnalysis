@@ -74,6 +74,8 @@ _qa:
     - { axes: [*ax-pt-qa], weight: RecParticles_w_eff_standard_cuts }
     - { axes: [*ax-phi-qa], weight: RecParticles_w_eff_standard_cuts }
     - { axes: [*ax-rapidity-qa, *ax-pt-qa], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [*ax-phi-qa, *ax-pt-qa], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [*ax-phi-qa, *ax-rapidity-qa], weight: RecParticles_w_eff_standard_cuts }
   - &rec-particle-qa-quality
     - &ax-dcax-qa { name: RecParticles/dcax, nb: 200, lo: -10, hi: 10 }
     - &ax-dcay-qa { name: RecParticles/dcay, nb: 200, lo: -10, hi: 10 }
