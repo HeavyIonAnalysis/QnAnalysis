@@ -35,11 +35,11 @@ struct RegexMatchImpl {
 
 struct MatchGroupImpl {
   MatchGroupImpl(const size_t group_id, std::regex re_expr) : group_id(group_id), re_expr(std::move(re_expr)) {}
-  MatchGroupImpl(const size_t group_id, std::string re_expr) : group_id(group_id), re_expr(re_expr) {}
+  MatchGroupImpl(const size_t group_id, const std::string &re_expr) : group_id(group_id), re_expr(re_expr) {}
 
   typedef std::string result_type;
 
-  result_type operator() (const std::string &str) const {
+  result_type operator()(const std::string &str) const {
     std::smatch match_result;
     auto is_matched = std::regex_search(str, match_result, re_expr);
     if (is_matched && group_id < match_result.size()) {
@@ -51,6 +51,15 @@ struct MatchGroupImpl {
 
   const size_t group_id;
   const std::regex re_expr;
+};
+
+struct BaseImpl {
+  typedef std::string result_type;
+
+  result_type operator()(const std::string &str) const {
+    std::filesystem::path path(str);
+    return path.parent_path().string();
+  }
 };
 
 } /// namespace Details
@@ -125,15 +134,15 @@ struct ResourceQueryExpr {
 
   result_type operator()(const ResourceManager::Resource &r) const;
 
-  template <typename Regex>
-  auto Matches(Regex && re_expr) const {
+  template<typename Regex>
+  auto Matches(Regex &&re_expr) const {
     namespace proto = boost::proto;
     return proto::make_expr<proto::tag::function>(
         Details::RegexMatchImpl(re_expr), boost::ref(*this));
   }
 
   template<typename Regex>
-  auto MatchGroup(std::size_t id, Regex && re_expr) const {
+  auto MatchGroup(std::size_t id, Regex &&re_expr) const {
     namespace proto = boost::proto;
     return proto::make_expr<proto::tag::function>(Details::MatchGroupImpl(id, re_expr), boost::ref(*this));
   }
@@ -146,14 +155,22 @@ ResourceQueryExpr<boost::proto::terminal<KeyTag>::type> const KEY;
 
 ResourceQueryExpr<boost::proto::terminal<MetaTag>::type> const META;
 
+template<typename Arg>
+typename boost::proto::result_of::make_expr<
+    boost::proto::tag::function,
+    Details::BaseImpl,
+    Arg const &>::type const
+BASE_OF(Arg const &arg) {
+  return boost::proto::make_expr<boost::proto::tag::function>(Details::BaseImpl(), boost::ref(arg));
 }
+
+} /// namespace Resource
 
 template<typename Expr>
 typename ResourceQueryExpr<Expr>::result_type ResourceQueryExpr<Expr>::operator()(const ResourceManager::Resource &r) const {
   ResourceContext ctx(r);
   return boost::proto::eval(*this, ctx);
 }
-
 
 } /// namespace Predicates
 

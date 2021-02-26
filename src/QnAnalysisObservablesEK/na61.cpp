@@ -66,6 +66,7 @@ int main() {
 
   using Predicates::Resource::META;
   using Predicates::Resource::KEY;
+  using Predicates::Resource::BASE_OF;
 
   using DTCalc = Qn::DataContainerStatCalculate;
   using DTColl = Qn::DataContainerStatCollect;
@@ -255,6 +256,13 @@ int main() {
         VectorKey key = {"v1", u_vector_base, "systematics", resolution_method, reference, projection};
         Define(key, Methods::v1, {u_vector, resolution}, meta);
       }
+    }
+  }
+
+  /* Combine x1x1 and y1y1 */
+  {
+    for (const auto &v1_case : gResourceManager.SelectUniq(BASE_OF(KEY), META["type"] == "v1")) {
+      std::cout << v1_case << std::endl;
     }
   }
 /****************** DRAWING *********************/
