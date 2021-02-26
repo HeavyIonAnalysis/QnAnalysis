@@ -9,7 +9,10 @@ _layouts:
 _axes:
   - &ax-centrality {name: Centrality/Centrality_Epsd, nb: 20, lo: 0, hi: 100}
   - &ax-pt {name: RecParticles/pT, bin-edges: [0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0]}
-  - &ax-pt-corr-1 {name: RecParticles/pT, nb: 1, lo: 0., hi: 2.}
+#efficiency map for pions is defined in [0, 1.5] GeV
+  - &ax-pt-corr-protons {name: RecParticles/pT, nb: 1, lo: 0., hi: 1.5}
+#efficiency map for pions is defined in [0, 1] GeV
+  - &ax-pt-corr-pions {name: RecParticles/pT, nb: 1, lo: 0., hi: 1.}
   - &ax-y-cm {name: RecParticles/y_cm, nb: 15, lo: -0.6, hi: 2.4}
   - &ax-y-cm-corr-1 {name: RecParticles/y_cm, nb: 1, lo: 0., hi: 1.2}
   - &ax-y-cm-corr-2 {name: RecParticles/y_cm, nb: 3, lo: 0., hi: 1.2}
@@ -138,9 +141,9 @@ pbpb_13agev_16_025:
     - name: protons_y_standard
       tags: [observable]
       _from: *tpc-base-detector
-      axes: &correction-axes-y-standard
+      axes: &correction-axes-y-proton-standard
         - *ax-y-cm
-        - *ax-pt-corr-1
+        - *ax-pt-corr-protons
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-proton
     - name: pion_neg_pt_standard
@@ -153,7 +156,7 @@ pbpb_13agev_16_025:
     - name: pion_neg_y_standard
       tags: [observable]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-proton-standard
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-pion-neg
 # STANDARD CUTS (WEIGHTED)
@@ -179,9 +182,9 @@ pbpb_13agev_16_025:
     - name: protons_y_standard_weighted
       tags: [ observable ]
       _from: *tpc-base-detector-weighted
-      axes: &correction-axes-y-standard
+      axes: &correction-axes-y-proton-standard
         - *ax-y-cm
-        - *ax-pt-corr-1
+        - *ax-pt-corr-protons
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-proton
     - name: pion_neg_pt_standard_weighted
@@ -194,7 +197,9 @@ pbpb_13agev_16_025:
     - name: pion_neg_y_standard_weighted
       tags: [ observable ]
       _from: *tpc-base-detector-weighted
-      axes: *correction-axes-y-standard
+      axes: &correction-axes-y-pion-standard
+        - *ax-y-cm
+        - *ax-pt-corr-pions
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-pion-neg
 # DCA TIGHT
@@ -207,7 +212,7 @@ pbpb_13agev_16_025:
     - name: protons_y_dca_tight
       tags: [observable]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-proton-standard
       cuts-quality: *rec-particle-cuts-quality-dca-tight
       cuts: *cuts-proton
     - name: pion_neg_pt_dca_tight
@@ -219,7 +224,7 @@ pbpb_13agev_16_025:
     - name: pion_neg_y_dca_tight
       tags: [observable]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-pion-standard
       cuts-quality: *rec-particle-cuts-quality-dca-tight
       cuts: *cuts-pion-neg
 # DCA LOOSE
@@ -232,7 +237,7 @@ pbpb_13agev_16_025:
     - name: protons_y_dca_loose
       tags: [observable]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-proton-standard
       cuts-quality: *rec-particle-cuts-quality-dca-loose
       cuts: *cuts-proton
     - name: pion_neg_pt_dca_loose
@@ -244,7 +249,7 @@ pbpb_13agev_16_025:
     - name: pion_neg_y_dca_loose
       tags: [observable]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-pion-standard
       cuts-quality: *rec-particle-cuts-quality-dca-loose
       cuts: *cuts-pion-neg
 #  NHITS_VTPC TIGHT
@@ -257,7 +262,7 @@ pbpb_13agev_16_025:
     - name: protons_y_nhits_vtpc_tight
       tags: [ observable ]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-proton-standard
       cuts-quality: *rec-particle-cuts-quality-nhits-vtpc-tight
       cuts: *cuts-proton
     - name: pion_neg_pt_nhits_vtpc_tight
@@ -269,7 +274,7 @@ pbpb_13agev_16_025:
     - name: pion_neg_y_nhits_vtpc_tight
       tags: [ observable ]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-pion-standard
       cuts-quality: *rec-particle-cuts-quality-nhits-vtpc-tight
       cuts: *cuts-pion-neg
 #  NHITS_VTPC LOOSE
@@ -282,7 +287,7 @@ pbpb_13agev_16_025:
     - name: protons_y_nhits_vtpc_loose
       tags: [ observable ]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-proton-standard
       cuts-quality: *rec-particle-cuts-quality-nhits-vtpc-loose
       cuts: *cuts-proton
     - name: pion_neg_pt_nhits_vtpc_loose
@@ -294,7 +299,7 @@ pbpb_13agev_16_025:
     - name: pion_neg_y_nhits_vtpc_loose
       tags: [ observable ]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-pion-standard
       cuts-quality: *rec-particle-cuts-quality-nhits-vtpc-loose
       cuts: *cuts-pion-neg
 #  NHITS_TOTAL TIGHT
@@ -307,7 +312,7 @@ pbpb_13agev_16_025:
     - name: protons_y_nhits_total_tight
       tags: [ observable ]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-proton-standard
       cuts-quality: *rec-particle-cuts-quality-nhits-total-tight
       cuts: *cuts-proton
     - name: pion_neg_pt_nhits_total_tight
@@ -319,7 +324,7 @@ pbpb_13agev_16_025:
     - name: pion_neg_y_nhits_total_tight
       tags: [ observable ]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-pion-standard
       cuts-quality: *rec-particle-cuts-quality-nhits-total-tight
       cuts: *cuts-pion-neg
 #  NHITS_TOTAL LOOSE
@@ -332,7 +337,7 @@ pbpb_13agev_16_025:
     - name: protons_y_nhits_total_loose
       tags: [ observable ]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-proton-standard
       cuts-quality: *rec-particle-cuts-quality-nhits-total-loose
       cuts: *cuts-proton
     - name: pion_neg_pt_nhits_total_loose
@@ -344,7 +349,7 @@ pbpb_13agev_16_025:
     - name: pion_neg_y_nhits_total_loose
       tags: [ observable ]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-pion-standard
       cuts-quality: *rec-particle-cuts-quality-nhits-total-loose
       cuts: *cuts-pion-neg
 #  NHITS_RATIO_LOWEDGE TIGHT
@@ -357,7 +362,7 @@ pbpb_13agev_16_025:
     - name: protons_y_nhits_ratio_lowedge_tight
       tags: [ observable ]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-proton-standard
       cuts-quality: *rec-particle-cuts-quality-nhits-ratio-lowedge-tight
       cuts: *cuts-proton
     - name: pion_neg_pt_nhits_ratio_lowedge_tight
@@ -369,7 +374,7 @@ pbpb_13agev_16_025:
     - name: pion_neg_y_nhits_ratio_lowedge_tight
       tags: [ observable ]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-pion-standard
       cuts-quality: *rec-particle-cuts-quality-nhits-ratio-lowedge-tight
       cuts: *cuts-pion-neg
 #  NHITS_RATIO_LOWEDGE LOOSE
@@ -382,7 +387,7 @@ pbpb_13agev_16_025:
     - name: protons_y_nhits_ratio_lowedge_loose
       tags: [ observable ]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-proton-standard
       cuts-quality: *rec-particle-cuts-quality-nhits-ratio-lowedge-loose
       cuts: *cuts-proton
     - name: pion_neg_pt_nhits_ratio_lowedge_loose
@@ -394,7 +399,7 @@ pbpb_13agev_16_025:
     - name: pion_neg_y_nhits_ratio_lowedge_loose
       tags: [ observable ]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-pion-standard
       cuts-quality: *rec-particle-cuts-quality-nhits-ratio-lowedge-loose
       cuts: *cuts-pion-neg
 #  NHITS_RATIO_UPEDGE TIGHT
@@ -407,7 +412,7 @@ pbpb_13agev_16_025:
     - name: protons_y_nhits_ratio_upedge_tight
       tags: [ observable ]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-proton-standard
       cuts-quality: *rec-particle-cuts-quality-nhits-ratio-upedge-tight
       cuts: *cuts-proton
     - name: pion_neg_pt_nhits_ratio_upedge_tight
@@ -419,7 +424,7 @@ pbpb_13agev_16_025:
     - name: pion_neg_y_nhits_ratio_upedge_tight
       tags: [ observable ]
       _from: *tpc-base-detector
-      axes: *correction-axes-y-standard
+      axes: *correction-axes-y-pion-standard
       cuts-quality: *rec-particle-cuts-quality-nhits-ratio-upedge-tight
       cuts: *cuts-pion-neg
 # INCREASED RAPIDITY BINNING FOR CORRECTION FOR pT DEPENDENCIES
