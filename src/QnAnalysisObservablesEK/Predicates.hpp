@@ -18,7 +18,7 @@ struct ResourceQueryExpr; /// fwd declaration
 
 struct ResourceExprDomain : boost::proto::domain<boost::proto::generator<ResourceQueryExpr>> {};
 
-namespace Details {
+namespace Impl {
 
 struct RegexMatchImpl {
   explicit RegexMatchImpl(const std::string &regex_str) : re_expr(regex_str) {}
@@ -53,7 +53,7 @@ struct MatchGroupImpl {
   const std::regex re_expr;
 };
 
-struct BaseImpl {
+struct BaseOfImpl {
   typedef std::string result_type;
 
   result_type operator()(const std::string &str) const {
@@ -138,30 +138,30 @@ struct ResourceQueryExpr {
   auto Matches(Regex &&re_expr) const {
     namespace proto = boost::proto;
     return proto::make_expr<proto::tag::function>(
-        Details::RegexMatchImpl(re_expr), boost::ref(*this));
+        Impl::RegexMatchImpl(re_expr), boost::ref(*this));
   }
 
   template<typename Regex>
   auto MatchGroup(std::size_t id, Regex &&re_expr) const {
     namespace proto = boost::proto;
-    return proto::make_expr<proto::tag::function>(Details::MatchGroupImpl(id, re_expr), boost::ref(*this));
+    return proto::make_expr<proto::tag::function>(Impl::MatchGroupImpl(id, re_expr), boost::ref(*this));
   }
 
 };
 
 namespace Resource {
 
-ResourceQueryExpr<boost::proto::terminal<KeyTag>::type> const KEY;
-
 ResourceQueryExpr<boost::proto::terminal<MetaTag>::type> const META;
+
+ResourceQueryExpr<boost::proto::terminal<KeyTag>::type> const KEY;
 
 template<typename Arg>
 typename boost::proto::result_of::make_expr<
     boost::proto::tag::function,
-    Details::BaseImpl,
+    Impl::BaseOfImpl,
     Arg const &>::type const
 BASE_OF(Arg const &arg) {
-  return boost::proto::make_expr<boost::proto::tag::function>(Details::BaseImpl(), boost::ref(arg));
+  return boost::proto::make_expr<boost::proto::tag::function>(Impl::BaseOfImpl(), boost::ref(arg));
 }
 
 } /// namespace Resource
