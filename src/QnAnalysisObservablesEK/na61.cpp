@@ -227,33 +227,32 @@ int main() {
   }
 
   {
+    /***************** Directed flow ******************/
+    // folder structure /v1/<particle>/<axis>
+
     const auto resolution_predicate = (META["type"] == "resolution");
     auto resolution_methods = gResourceManager.SelectUniq(META["resolution.meta_key"], resolution_predicate);
     auto references = gResourceManager.SelectUniq(META["resolution.ref"], resolution_predicate);
     std::vector<std::string> projections{"x1x1", "y1y1"};
-    std::vector<std::string> axes{"pt", "y"};
-    std::vector<std::string> particles{"protons", "pion_neg"};
-    std::vector<std::string> u_correction_step{"RECENTERED", "RESCALED"};
 
-    for (auto&&[resolution_method, reference, u_cstep, projection, axis, particle] :
-        Tools::Combination(resolution_methods, references, u_correction_step, projections, axes, particles)) {
+    auto u_vectors = gResourceManager.SelectUniq(KEY.MatchGroup(1, "/calc/uQ/(\\w+)_RESCALED.*$"),
+                                                 KEY.Matches("^/calc/uQ/.*"));
+
+    for (auto&&[resolution_method, reference, projection, u_vector_base] :
+        Tools::Combination(resolution_methods, references, projections, u_vectors)) {
       auto u_query =
-          KEY.Matches((Format("/calc/uQ/%4%_%5%_%1%\\.%2%_RECENTERED.%3%") % u_cstep % reference % projection % particle
-              % axis).str());
+          KEY.Matches((Format("/calc/uQ/%1%_RESCALED\\.%2%_RECENTERED.%3%") % u_vector_base % reference % projection).str());
       auto res_query =
           KEY.Matches((Format("/resolution/%3%/RES_%1%_%2%") % reference % projection % resolution_method).str());
       for (auto &&[u_vector, resolution] : Tools::Combination(gResourceManager.GetMatching(u_query),
                                                               gResourceManager.GetMatching(res_query))) {
         Meta meta;
         meta.put("v1.ref", reference);
-        meta.put("v1.particle", particle);
+//        meta.put("v1.particle", particle);
         meta.put("v1.component", projection);
-        meta.put("v1.axis", axis);
-        meta.put("v1.u-cstep", u_cstep);
+//        meta.put("v1.axis", axis);
 
-        VectorKey key = {"v1", resolution_method, "u-" + u_cstep,
-                         (Format("v1_%1%_%2%_%4%_%3%") % particle % axis % projection
-                             % reference).str()};
+        VectorKey key = {"v1", u_vector_base, "systematics", resolution_method, reference, projection};
         Define(key, Methods::v1, {u_vector, resolution}, meta);
       }
     }
@@ -288,19 +287,26 @@ int main() {
     AddResource("/profiles" + name, ResourceManager::Resource(*graph, r.meta));
   }, META["type"] == "resolution");
 
-  /* v1 vs Centrality */
-  gResourceManager.ForEach([](StringKey name, Qn::DataContainerStatCalculate &calc) {
+  /* v1 profiles */
+  // /profiles/v1/<particle>/<axis>/<centrality range>/
+  gResourceManager.ForEach([](VectorKey key, Qn::DataContainerStatCalculate &calc) {
     auto centrality_axis = calc.GetAxes()[0];
     for (size_t ic = 0; ic < centrality_axis.size(); ++ic) {
       auto c_lo = centrality_axis.GetLowerBinEdge(ic);
       auto c_hi = centrality_axis.GetUpperBinEdge(ic);
+      auto centrality_range_str = (Format("%1%-%2%") % c_lo % c_hi).str();
+
       auto selected = calc.Select(Qn::AxisD(centrality_axis.Name(), 1, c_lo, c_hi));
       auto selected_graph = Qn::ToTGraph(selected);
-      selected_graph->SetTitle((Format("%1%-%2%") % c_lo % c_hi).str().c_str());
+      selected_graph->SetTitle(centrality_range_str.c_str());
       selected_graph->GetXaxis()->SetTitle(calc.GetAxes()[1].Name().c_str());
       selected_graph->GetYaxis()->SetRangeUser(-0.2, 0.2);
-      AddResource((Format("/profiles%1%/%2%_%3%") % name % centrality_axis.Name() % ic).str(),
-                  selected_graph);
+
+
+      VectorKey new_key(key.begin(), key.end());
+      new_key.insert(new_key.begin(), "profiles");
+      new_key.insert(std::find(new_key.begin(), new_key.end(), "systematics"), centrality_range_str);
+      AddResource(new_key, selected_graph);
     }
   }, META["type"] == "v1");
 

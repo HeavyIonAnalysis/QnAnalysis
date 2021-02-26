@@ -33,19 +33,27 @@ struct RegexMatchImpl {
   const std::regex re_expr;
 };
 
-} /// namespace Details
+struct MatchGroupImpl {
+  MatchGroupImpl(const size_t group_id, std::regex re_expr) : group_id(group_id), re_expr(std::move(re_expr)) {}
+  MatchGroupImpl(const size_t group_id, std::string re_expr) : group_id(group_id), re_expr(re_expr) {}
 
-template<typename Arg, typename Regex>
-typename boost::proto::result_of::make_expr<
-    boost::proto::tag::function,
-    Details::RegexMatchImpl,
-    Arg const &
->::type const
-IsMatchesRegex(Arg const &arg, Regex && regex_string) {
-  namespace proto = boost::proto;
-  return proto::make_expr<proto::tag::function>(
-      Details::RegexMatchImpl(regex_string), boost::ref(arg));
-}
+  typedef std::string result_type;
+
+  result_type operator() (const std::string &str) const {
+    std::smatch match_result;
+    auto is_matched = std::regex_search(str, match_result, re_expr);
+    if (is_matched && group_id < match_result.size()) {
+      return match_result.str(group_id);
+    }
+
+    return "NOT-FOUND";
+  }
+
+  const size_t group_id;
+  const std::regex re_expr;
+};
+
+} /// namespace Details
 
 namespace Resource {
 
@@ -119,7 +127,15 @@ struct ResourceQueryExpr {
 
   template <typename Regex>
   auto Matches(Regex && re_expr) const {
-    return IsMatchesRegex(*this, std::forward<Regex>(re_expr));
+    namespace proto = boost::proto;
+    return proto::make_expr<proto::tag::function>(
+        Details::RegexMatchImpl(re_expr), boost::ref(*this));
+  }
+
+  template<typename Regex>
+  auto MatchGroup(std::size_t id, Regex && re_expr) const {
+    namespace proto = boost::proto;
+    return proto::make_expr<proto::tag::function>(Details::MatchGroupImpl(id, re_expr), boost::ref(*this));
   }
 
 };
