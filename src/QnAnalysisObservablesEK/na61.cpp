@@ -21,7 +21,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-
 namespace Details {
 
 std::vector<std::string> FindTDirectory(const TDirectory &dir, const std::string &cwd = "") {
@@ -53,7 +52,8 @@ void LoadROOTFile(const std::string &file_name, const std::string &manager_prefi
       std::cout << "Adding path '" << manager_path << "'" << std::endl;
       AddResource(manager_path, ptr);
     }
-  }}
+  }
+}
 
 int main() {
 
@@ -85,7 +85,7 @@ int main() {
   });
 
   /* label correlations */
-  gResourceManager.ForEach([] (StringKey key, ResourceManager::Resource &r) {
+  gResourceManager.ForEach([](StringKey key, ResourceManager::Resource &r) {
     using std::filesystem::path;
     using boost::algorithm::split;
     path key_path(key);
@@ -124,7 +124,7 @@ int main() {
     gResourceManager.ForEach([](StringKey name, DTCalc &calc) {
                                calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_y_cm"});
                              },
-                             KEY.Matches( R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
+                             KEY.Matches(R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
     /* Projection _pT correlations to 'y' axis  */
     gResourceManager.ForEach([](StringKey name, DTCalc &calc) {
                                calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_pT"});
@@ -151,7 +151,7 @@ int main() {
 
       Meta meta;
       meta.put("resolution.ref", subA);
-      meta.put("resolution.component", component == "x1x1"? "X" : "Y");
+      meta.put("resolution.component", component == "x1x1" ? "X" : "Y");
       meta.put("resolution.meta_key", "3sub_standard");
 
       Define(resolution, Methods::Resolution3S, {arg1_name, arg2_name, arg3_name}, meta);
@@ -192,12 +192,14 @@ int main() {
       }
     }, KEY.Matches("/calc/uQ/protons_y_RESCALED\\.(psd[1-3])_RECENTERED\\.(x1x1|y1y1)$"));
 
-    for (auto &&[resolution_meta_key,component] : Tools::Combination(gResourceManager.SelectUniq(META["4sub_meta_key"], META["type"] == "4sub_tpc_ref"),
-                                                        std::vector<std::string>{"x1x1","y1y1"})) {
+    for (auto &&[resolution_meta_key, component] : Tools::Combination(gResourceManager.SelectUniq(META["4sub_meta_key"],
+                                                                                                  META["type"]
+                                                                                                      == "4sub_tpc_ref"),
+                                                                      std::vector<std::string>{"x1x1", "y1y1"})) {
 
       auto key_generator =
           "/resolution/" + META["resolution.meta_key"] +
-          "/RES_" + META["resolution.ref"] + "_" + META["resolution.component"];
+              "/RES_" + META["resolution.ref"] + "_" + META["resolution.component"];
 
       Meta meta;
       meta.put("resolution.meta_key", resolution_meta_key);
@@ -224,7 +226,6 @@ int main() {
               "/resolution/" + resolution_meta_key + "/protons_y_RESCALED.psd1_RECENTERED." + component}, meta);
     }
 
-
   }
 
   {
@@ -242,7 +243,8 @@ int main() {
     for (auto&&[resolution_method, reference, projection, u_vector_base] :
         Tools::Combination(resolution_methods, references, projections, u_vectors)) {
       auto u_query =
-          KEY.Matches((Format("/calc/uQ/%1%_RESCALED\\.%2%_RECENTERED.%3%") % u_vector_base % reference % projection).str());
+          KEY.Matches((Format("/calc/uQ/%1%_RESCALED\\.%2%_RECENTERED.%3%") % u_vector_base % reference
+              % projection).str());
       auto res_query =
           KEY.Matches((Format("/resolution/%3%/RES_%1%_%2%") % reference % projection % resolution_method).str());
       for (auto &&[u_vector, resolution] : Tools::Combination(gResourceManager.GetMatching(u_query),
@@ -261,9 +263,12 @@ int main() {
 
   /* Combine x1x1 and y1y1 */
   {
-    for (const auto &v1_case : gResourceManager.SelectUniq(BASE_OF(KEY), META["type"] == "v1")) {
-      std::cout << v1_case << std::endl;
-    }
+    gResourceManager.GroupBy(
+        BASE_OF(KEY),
+        [](const std::string &feature, std::vector<ResourceManager::ResourcePtr> &objs) {
+          std::cout << "feature" << std::endl;
+        },
+        META["type"] == "v1");
   }
 /****************** DRAWING *********************/
 
@@ -283,9 +288,9 @@ int main() {
     auto method = r.meta.get("resolution.method", "??");
 
     graph->SetTitle((Format("R_{1,%1%} (%2%) %3%")
-      % component
-      % reference
-      % method).str().c_str());
+        % component
+        % reference
+        % method).str().c_str());
 
     graph->GetXaxis()->SetTitle("Centrality (%)");
 
@@ -309,7 +314,6 @@ int main() {
       selected_graph->SetTitle(centrality_range_str.c_str());
       selected_graph->GetXaxis()->SetTitle(calc.GetAxes()[1].Name().c_str());
       selected_graph->GetYaxis()->SetRangeUser(-0.2, 0.2);
-
 
       VectorKey new_key(key.begin(), key.end());
       new_key.insert(new_key.begin(), "profiles");

@@ -283,14 +283,41 @@ class ResourceManager : public Details::Singleton<ResourceManager> {
   template<typename MapFunction, typename Predicate = AlwaysTrue>
   auto SelectUniq(MapFunction &&fct, Predicate &&predicate = AlwaysTrue()) {
     using Traits = Details::FunctionTraits<decltype(std::function{fct})>;
-    std::set<std::decay_t<typename Traits::ReturnType>> tmp;
+    std::set<std::decay_t<typename Traits::ReturnType>> results_set;
     SelectImpl(std::forward<MapFunction>(fct),
-           std::inserter(tmp, std::begin(tmp)),
+           std::inserter(results_set, std::begin(results_set)),
            std::forward<Predicate>(predicate));
-    std::vector<typename decltype(tmp)::value_type> result;
-    result.reserve(tmp.size());
-    std::copy(std::begin(tmp), std::end(tmp), std::back_inserter(result));
+    std::vector<typename decltype(results_set)::value_type> result;
+    result.reserve(results_set.size());
+    std::copy(std::begin(results_set), std::end(results_set), std::back_inserter(result));
     return result;
+  }
+
+  template<typename FeatureExtractor, typename ApplyFunct, typename Predicate = AlwaysTrue>
+  auto GroupBy(FeatureExtractor && feature_extractor_function, ApplyFunct && funct, Predicate && predicate = AlwaysTrue()) {
+    using FeatureExtractorTraits = Details::FunctionTraits<decltype(std::function{feature_extractor_function})>;
+    using FeatureType = std::decay_t<typename FeatureExtractorTraits::ReturnType>;
+    static_assert(FeatureExtractorTraits::N_ARGS == 1);
+    using FeatureExtractorArg = std::decay_t<typename FeatureExtractorTraits::template ArgType<0>>;
+
+    std::unordered_map<FeatureType,std::vector<ResourcePtr>> feature_groups;
+    /* collecting features */
+    auto resources_copy = resources_;
+    for (auto &element : resources_copy) {
+      if (TestPredicate(std::forward<Predicate>(predicate), element.first)) {
+        auto feature = feature_extractor_function(Get(element.first, ResTag<FeatureExtractorArg>()));
+
+        auto && [emplace_it, emplace_ok] =
+            feature_groups.template emplace(std::move(feature), std::vector<ResourcePtr>({element.second}));
+        if (!emplace_ok) { /* already in the map */
+          emplace_it->second.emplace_back(element.second);
+        }
+      }
+    } // resources
+
+    for (auto &[feature, elements] : feature_groups) {
+      funct(feature, elements);
+    }
   }
 
   void Print() {
