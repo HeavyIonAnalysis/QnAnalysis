@@ -4,6 +4,7 @@
 
 #include <DataContainer.hpp>
 #include <DataContainerHelper.hpp>
+#include <StatCalculate.hpp>
 
 #include <any>
 #include <filesystem>
@@ -20,6 +21,7 @@
 #include "Observables.hpp"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace Details {
 
@@ -254,6 +256,8 @@ int main() {
 //        meta.put("v1.particle", particle);
         meta.put("v1.component", projection);
 //        meta.put("v1.axis", axis);
+        meta.put("plot.y_lo", -0.2);
+        meta.put("plot.y_hi", 0.2);
 
         VectorKey key = {"v1", u_vector_base, "systematics", resolution_method, reference, projection};
         Define(key, Methods::v1, {u_vector, resolution}, meta);
@@ -265,10 +269,68 @@ int main() {
   {
     gResourceManager.GroupBy(
         BASE_OF(KEY),
-        [](const std::string &feature, std::vector<ResourceManager::ResourcePtr> &objs) {
-          std::cout << "feature" << std::endl;
+        [](const std::string &base_dir, std::vector<ResourceManager::ResourcePtr> &objs) {
+          auto x1x1 = objs[0]->As<DTCalc>();
+          auto y1y1 = objs[1]->As<DTCalc>();
+          auto combined_name = base_dir + "/" + "combined";
+          auto combined = x1x1.Apply(y1y1, [](const Qn::StatCalculate &a, const Qn::StatCalculate &b) {
+            return Qn::Merge(a, b);
+          });
+          auto combined_meta = objs[0]->meta;
+          combined_meta.put("v1.component", "combined");
+          auto result = AddResource(combined_name, ResourceManager::Resource(combined, combined_meta));
+
+          for (auto &obj : objs) {
+            auto ratio = obj->As<DTCalc>() / combined;
+            auto ratio_name = base_dir + "/" + "ratio_" + META["v1.component"](*obj);
+            auto ratio_meta = obj->meta;
+            ratio_meta.put("type", "ratio_v1");
+            ratio_meta.put("plot.y_lo", 0.5);
+            ratio_meta.put("plot.y_hi", 1.5);
+            AddResource(ratio_name, ResourceManager::Resource(ratio, ratio_meta));
+          }
+
         },
-        META["type"] == "v1");
+        META["type"] == "v1" && KEY.Matches(".*(x1x1|y1y1)"));
+  }
+  /* Combine PSD1-3 */
+  {
+    std::string component = "x1x1";
+    auto combine_func = [&component](const std::string &base_dir, std::vector<ResourceManager::ResourcePtr> &objs) {
+      assert(!objs.empty());
+      auto combined_psd_name = base_dir + "/" + "combined" + "/" + component;
+      auto combined = objs[0]->As<DTCalc>(); // taking copy of first object
+      for (int iobjs = 1; iobjs < objs.size(); ++iobjs) {
+        combined =
+            combined.Apply(objs[iobjs]->As<DTCalc>(), [](const Qn::StatCalculate &a, const Qn::StatCalculate &b) {
+              return Qn::Merge(a, b);
+            });
+      }
+      auto combined_meta = objs[0]->meta;
+      combined_meta.put("v1.ref", "combined");
+      combined_meta.put("v1.resolution.ref", "combined");
+      AddResource(combined_psd_name, ResourceManager::Resource(combined, combined_meta));
+
+      for (auto &ref : objs) {
+        auto ratio_ref_combined = ref->As<DTCalc>() / combined;
+        auto ratio_meta = ref->meta;
+        ratio_meta.put("type", "ratio_v1");
+        ratio_meta.put("plot.y_lo", 0.5);
+        ratio_meta.put("plot.y_hi", 1.5);
+        auto ratio_key_name = base_dir + "/" + "combined" + "/" + "ratio_" + META["v1.ref"](*ref) + "_" + component;
+        AddResource(ratio_key_name, ResourceManager::Resource(ratio_ref_combined, ratio_meta));
+      }
+    };
+    gResourceManager.GroupBy(
+        KEY.MatchGroup(1, "^(.*)/psd[1-3].*$"),
+        combine_func,
+        META["type"] == "v1" && META["v1.component"] == component);
+
+    component = "y1y1";
+    gResourceManager.GroupBy(
+        KEY.MatchGroup(1, "^(.*)/psd[1-3].*$"),
+        combine_func,
+        META["type"] == "v1" && META["v1.component"] == component);
   }
 /****************** DRAWING *********************/
 
@@ -302,25 +364,50 @@ int main() {
 
   /* v1 profiles */
   // /profiles/v1/<particle>/<axis>/<centrality range>/
-  gResourceManager.ForEach([](VectorKey key, Qn::DataContainerStatCalculate &calc) {
-    auto centrality_axis = calc.GetAxes()[0];
+  gResourceManager.ForEach([](VectorKey key, ResourceManager::Resource &resource) {
+    const std::map<std::string, int> colors_map = {
+        {"psd1", kRed},
+        {"psd2", kGreen+2},
+        {"psd3", kBlue},
+        {"combined", kBlack}
+    };
+    const std::map<std::pair<std::string, std::string>, int> markers_map = {
+        {{"psd1", "x1x1"}, kFullSquare},
+        {{"psd1", "y1y1"}, kOpenSquare},
+        {{"psd1", "combined"}, kFullStar},
+        {{"psd2", "x1x1"}, kFullCircle},
+        {{"psd2", "y1y1"}, kOpenCircle},
+        {{"psd2", "combined"}, kFullStar},
+        {{"psd3", "x1x1"}, kFullTriangleDown},
+        {{"psd3", "y1y1"}, kOpenTriangleDown},
+        {{"psd3", "combined"}, kFullStar},
+        {{"combined", "x1x1"}, kFullDiamond},
+        {{"combined", "y1y1"}, kOpenDiamond}
+    };
+    auto centrality_axis = resource.As<DTCalc>().GetAxes()[0];
     for (size_t ic = 0; ic < centrality_axis.size(); ++ic) {
       auto c_lo = centrality_axis.GetLowerBinEdge(ic);
       auto c_hi = centrality_axis.GetUpperBinEdge(ic);
       auto centrality_range_str = (Format("%1%-%2%") % c_lo % c_hi).str();
 
-      auto selected = calc.Select(Qn::AxisD(centrality_axis.Name(), 1, c_lo, c_hi));
+      auto selected = resource.As<DTCalc>().Select(Qn::AxisD(centrality_axis.Name(), 1, c_lo, c_hi));
       auto selected_graph = Qn::ToTGraph(selected);
+      /// TODO SetName
       selected_graph->SetTitle(centrality_range_str.c_str());
-      selected_graph->GetXaxis()->SetTitle(calc.GetAxes()[1].Name().c_str());
-      selected_graph->GetYaxis()->SetRangeUser(-0.2, 0.2);
+      selected_graph->GetXaxis()->SetTitle(resource.As<DTCalc>().GetAxes()[1].Name().c_str());
+      selected_graph->GetYaxis()->SetRangeUser(
+          boost::lexical_cast<float>(META["plot.y_lo"](resource)),
+          boost::lexical_cast<float>(META["plot.y_hi"](resource)));
+      selected_graph->SetLineColor(colors_map.at(META["v1.ref"](resource)));
+      selected_graph->SetMarkerColor(colors_map.at(META["v1.ref"](resource)));
+      selected_graph->SetMarkerStyle(markers_map.at({META["v1.ref"](resource), META["v1.component"](resource)}));
 
       VectorKey new_key(key.begin(), key.end());
       new_key.insert(new_key.begin(), "profiles");
       new_key.insert(std::find(new_key.begin(), new_key.end(), "systematics"), centrality_range_str);
       AddResource(new_key, selected_graph);
     }
-  }, META["type"] == "v1");
+  }, META["type"] == "v1" || META["type"] == "ratio_v1");
 
   gResourceManager.Print();
 
