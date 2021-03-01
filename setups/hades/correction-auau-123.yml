@@ -24,8 +24,6 @@ _cuts:
     mdc_vtx_tracks_rapidity/pid: { equals: 211 }
   - &pion_minus_cuts
     mdc_vtx_tracks_rapidity/pid: { equals: -211 }
-  - &pions_cuts
-    mdc_vtx_tracks_rapidity/is_pion: { equals: 1 }
   - &good_particle_cuts
     mdc_vtx_tracks_rapidity/dca_xy: {range: [-10.0, 10.0]}
     mdc_vtx_tracks_rapidity/dca_z: {range: [-10.0, 10.0]}
@@ -119,24 +117,6 @@ hades_analysis:
         - *axis_pions_rapidity
       cuts-pid:
         *pion_minus_cuts
-      cuts-quality:
-        *good_particle_cuts
-      qa:
-        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
-        - *axis_pions_pT
-        - *axis_pions_rapidity
-        - [*axis_pions_rapidity, *axis_pions_pT]
-    #############################################################
-    - name: pions
-      type: track
-      phi:  mdc_vtx_tracks_rapidity/phi
-      weight: Ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
-      cuts-pid:
-        *pions_cuts
       cuts-quality:
         *good_particle_cuts
       qa:
