@@ -110,6 +110,12 @@ int main() {
     r.meta.put("component", tokens.back());
   });
 
+  gResourceManager.ForEach([](const StringKey &key, ResourceManager::Resource &r) {
+    r.meta.put("particle", "pion_neg");
+  }, KEY.Matches("^.*pion_neg.*$"));
+  gResourceManager.ForEach([](const StringKey &key, ResourceManager::Resource &r) {
+    r.meta.put("particle", "proton");
+  }, KEY.Matches("^.*proton.*$"));
 
 
 
@@ -192,7 +198,7 @@ int main() {
         meta.put("4sub_meta_key", "4sub_protons_00_04");
         AddResource(new_key, Resource(selected, meta));
       }
-    }, KEY.Matches("/calc/uQ/protons_y_RESCALED\\.(psd[1-3])_RECENTERED\\.(x1x1|y1y1)$"));
+    }, KEY.Matches("/calc/uQ/protons_y_standard_RESCALED\\.(psd[1-3])_RECENTERED\\.(x1x1|y1y1)$"));
 
     for (auto &&[resolution_meta_key, component] : Tools::Combination(gResourceManager.SelectUniq(META["4sub_meta_key"],
                                                                                                   META["type"]
@@ -233,7 +239,6 @@ int main() {
   {
     /***************** Directed flow ******************/
     // folder structure /v1/<particle>/<axis>
-
     const auto resolution_predicate = (META["type"] == "resolution");
     auto resolution_methods = gResourceManager.SelectUniq(META["resolution.meta_key"], resolution_predicate);
     auto references = gResourceManager.SelectUniq(META["resolution.ref"], resolution_predicate);
@@ -256,82 +261,120 @@ int main() {
 //        meta.put("v1.particle", particle);
         meta.put("v1.component", projection);
 //        meta.put("v1.axis", axis);
-        meta.put("plot.y_lo", -0.2);
-        meta.put("plot.y_hi", 0.2);
 
-        VectorKey key = {"v1", u_vector_base, "systematics", resolution_method, reference, projection};
+        VectorKey key = {"v1", u_vector_base, "systematics", resolution_method,
+                         "reference_" + reference,
+                         projection};
         Define(key, Methods::v1, {u_vector, resolution}, meta);
       }
     }
+  } // directed flow
+
+
+
+
+
+
+
+  /******************** v1 vs Centrality *********************/
+  // folder structure /v1/<particle>/centrality_%lo_%hi
+  {
+
+    gResourceManager.ForEach([](VectorKey key, ResourceManager::Resource &res) {
+      auto calc = res.As<DTCalc>();
+      auto meta = res.meta;
+
+      auto centrality_axis = res.As<DTCalc>().GetAxes()[0];
+      for (size_t ic = 0; ic < centrality_axis.size(); ++ic) {
+        auto c_lo = centrality_axis.GetLowerBinEdge(ic);
+        auto c_hi = centrality_axis.GetUpperBinEdge(ic);
+        auto centrality_range_str = (Format("centrality_%1%-%2%") % c_lo % c_hi).str();
+
+        auto selected = calc.Select(Qn::AxisD(centrality_axis.Name(), 1, c_lo, c_hi));
+
+        meta.put("type", "v1_centrality");
+        meta.put("centrality.lo", c_lo);
+        meta.put("centrality.hi", c_hi);
+
+        VectorKey new_key(key.begin(), key.end());
+        new_key[0] = "v1_centrality";
+        new_key.insert(std::find(new_key.begin(), new_key.end(), "systematics"), centrality_range_str);
+
+        AddResource(new_key, ResourceManager::Resource(selected, meta));
+      }
+    }, META["type"] == "v1");
   }
 
   /* Combine x1x1 and y1y1 */
   {
-    gResourceManager.GroupBy(
-        BASE_OF(KEY),
-        [](const std::string &base_dir, std::vector<ResourceManager::ResourcePtr> &objs) {
-          auto x1x1 = objs[0]->As<DTCalc>();
-          auto y1y1 = objs[1]->As<DTCalc>();
-          auto combined_name = base_dir + "/" + "combined";
-          auto combined = x1x1.Apply(y1y1, [](const Qn::StatCalculate &a, const Qn::StatCalculate &b) {
-            return Qn::Merge(a, b);
-          });
-          auto combined_meta = objs[0]->meta;
-          combined_meta.put("v1.component", "combined");
-          auto result = AddResource(combined_name, ResourceManager::Resource(combined, combined_meta));
-
-          for (auto &obj : objs) {
-            auto ratio = obj->As<DTCalc>() / combined;
-            auto ratio_name = base_dir + "/" + "ratio_" + META["v1.component"](*obj);
-            auto ratio_meta = obj->meta;
-            ratio_meta.put("type", "ratio_v1");
-            ratio_meta.put("plot.y_lo", 0.5);
-            ratio_meta.put("plot.y_hi", 1.5);
-            AddResource(ratio_name, ResourceManager::Resource(ratio, ratio_meta));
-          }
-
-        },
-        META["type"] == "v1" && KEY.Matches(".*(x1x1|y1y1)"));
-  }
-  /* Combine PSD1-3 */
-  {
-    std::string component = "x1x1";
-    auto combine_func = [&component](const std::string &base_dir, std::vector<ResourceManager::ResourcePtr> &objs) {
-      assert(!objs.empty());
-      auto combined_psd_name = base_dir + "/" + "combined" + "/" + component;
-      auto combined = objs[0]->As<DTCalc>(); // taking copy of first object
-      for (int iobjs = 1; iobjs < objs.size(); ++iobjs) {
-        combined =
-            combined.Apply(objs[iobjs]->As<DTCalc>(), [](const Qn::StatCalculate &a, const Qn::StatCalculate &b) {
-              return Qn::Merge(a, b);
-            });
-      }
+    auto
+        combine_components_function = [](const std::string &base_dir, std::vector<ResourceManager::ResourcePtr> &objs) {
+      auto x1x1 = objs[0]->As<DTCalc>();
+      auto y1y1 = objs[1]->As<DTCalc>();
+      auto combined_name = base_dir + "/" + "combined";
+      auto combined = x1x1.Apply(y1y1, [](const Qn::StatCalculate &a, const Qn::StatCalculate &b) {
+        return Qn::Merge(a, b);
+      });
       auto combined_meta = objs[0]->meta;
-      combined_meta.put("v1.ref", "combined");
-      combined_meta.put("v1.resolution.ref", "combined");
-      AddResource(combined_psd_name, ResourceManager::Resource(combined, combined_meta));
+      combined_meta.put("v1.component", "combined");
+      auto result = AddResource(combined_name, ResourceManager::Resource(combined, combined_meta));
 
-      for (auto &ref : objs) {
-        auto ratio_ref_combined = ref->As<DTCalc>() / combined;
-        auto ratio_meta = ref->meta;
+      for (auto &obj : objs) {
+        auto ratio = obj->As<DTCalc>() / combined;
+        auto ratio_name = base_dir + "/" + "ratio_" + META["v1.component"](*obj);
+        auto ratio_meta = obj->meta;
         ratio_meta.put("type", "ratio_v1");
-        ratio_meta.put("plot.y_lo", 0.5);
-        ratio_meta.put("plot.y_hi", 1.5);
-        auto ratio_key_name = base_dir + "/" + "combined" + "/" + "ratio_" + META["v1.ref"](*ref) + "_" + component;
-        AddResource(ratio_key_name, ResourceManager::Resource(ratio_ref_combined, ratio_meta));
+        AddResource(ratio_name, ResourceManager::Resource(ratio, ratio_meta));
       }
     };
-    gResourceManager.GroupBy(
-        KEY.MatchGroup(1, "^(.*)/psd[1-3].*$"),
-        combine_func,
-        META["type"] == "v1" && META["v1.component"] == component);
 
+    gResourceManager.GroupBy(
+        BASE_OF(KEY),
+        combine_components_function,
+        META["type"] == "v1_centrality" && KEY.Matches(".*(x1x1|y1y1)$"));
+    /* Combine all references */
+    std::string component = "x1x1";
+    auto combine_reference_function =
+        [&component](const std::string &base_dir, std::vector<ResourceManager::ResourcePtr> &objs) {
+          assert(!objs.empty());
+          auto combined_psd_name = base_dir + "/" + "reference_combined" + "/" + component;
+          auto combined = objs[0]->As<DTCalc>(); // taking copy of first object
+          for (int iobjs = 1; iobjs < objs.size(); ++iobjs) {
+            combined =
+                combined.Apply(objs[iobjs]->As<DTCalc>(), [](const Qn::StatCalculate &a, const Qn::StatCalculate &b) {
+                  return Qn::Merge(a, b);
+                });
+          }
+          auto combined_meta = objs[0]->meta;
+          combined_meta.put("v1.ref", "combined");
+          combined_meta.put("v1.resolution.ref", "combined");
+          AddResource(combined_psd_name, ResourceManager::Resource(combined, combined_meta));
+
+          for (auto &ref : objs) {
+            auto ratio_ref_combined = ref->As<DTCalc>() / combined;
+            auto ratio_meta = ref->meta;
+            ratio_meta.put("type", "ratio_v1");
+            auto ratio_key_name =
+                base_dir + "/" + "reference_combined" + "/" + "ratio_" + META["v1.ref"](*ref) + "_" + component;
+            AddResource(ratio_key_name, ResourceManager::Resource(ratio_ref_combined, ratio_meta));
+          }
+        };
+    gResourceManager.GroupBy(
+        KEY.MatchGroup(1, "^(.*)/reference_psd[1-3].*$"),
+        combine_reference_function,
+        META["type"] == "v1_centrality" && META["v1.component"] == component);
     component = "y1y1";
     gResourceManager.GroupBy(
-        KEY.MatchGroup(1, "^(.*)/psd[1-3].*$"),
-        combine_func,
-        META["type"] == "v1" && META["v1.component"] == component);
+        KEY.MatchGroup(1, "^(.*)/reference_psd[1-3].*$"),
+        combine_reference_function,
+        META["type"] == "v1_centrality" && META["v1.component"] == component);
+    /* Combine x1x1 and y1y1 in combined reference path */
+    gResourceManager.GroupBy(
+        BASE_OF(KEY),
+        combine_components_function,
+        META["type"] == "v1_centrality" && META["v1.ref"] == "combined");
   }
+
 /****************** DRAWING *********************/
 
 /* export everything to TGraph */
@@ -342,7 +385,9 @@ int main() {
                            KEY.Matches("^/x2/QQ/.*$"));
 
   /* export ALL resolution to TGraph */
-  gResourceManager.ForEach([](StringKey name, ResourceManager::Resource r) {
+  gResourceManager.ForEach([](const StringKey& name, ResourceManager::Resource r) {
+
+
     auto graph = Qn::ToTGraph(r.As<DTCalc>());
 
     auto component = r.meta.get("resolution.component", "??");
@@ -365,6 +410,10 @@ int main() {
   /* v1 profiles */
   // /profiles/v1/<particle>/<axis>/<centrality range>/
   gResourceManager.ForEach([](VectorKey key, ResourceManager::Resource &resource) {
+    const std::map<std::string,std::string> remap_axis_name = {
+        {"RecParticles_pT", "p_{T} (GeV/#it{c})"},
+        {"RecParticles_y_cm", "#it{y}_{CM}"}
+    };
     const std::map<std::string, int> colors_map = {
         {"psd1", kRed},
         {"psd2", kGreen + 2},
@@ -382,34 +431,39 @@ int main() {
         {{"psd3", "y1y1"}, kOpenTriangleDown},
         {{"psd3", "combined"}, kFullStar},
         {{"combined", "x1x1"}, kFullDiamond},
-        {{"combined", "y1y1"}, kOpenDiamond}
+        {{"combined", "y1y1"}, kOpenDiamond},
+        {{"combined", "combined"}, kOpenDiamond}
     };
-    auto centrality_axis = resource.As<DTCalc>().GetAxes()[0];
-    for (size_t ic = 0; ic < centrality_axis.size(); ++ic) {
-      auto c_lo = centrality_axis.GetLowerBinEdge(ic);
-      auto c_hi = centrality_axis.GetUpperBinEdge(ic);
-      auto centrality_range_str = (Format("centrality_%1%-%2%") % c_lo % c_hi).str();
 
-      auto selected = resource.As<DTCalc>().Select(Qn::AxisD(centrality_axis.Name(), 1, c_lo, c_hi));
-      auto selected_graph = Qn::ToTGraph(selected);
-      /// TODO SetName
-      selected_graph->SetTitle(centrality_range_str.c_str());
-      selected_graph->GetXaxis()->SetTitle(resource.As<DTCalc>().GetAxes()[1].Name().c_str());
-      if (META["type"](resource) == "v1") {
-        selected_graph->GetYaxis()->SetRangeUser(-0.2, 0.2);
-      } else if (META["type"](resource) == "ratio_v1") {
-        selected_graph->GetYaxis()->SetRangeUser(0.5, 1.5);
-      }
-      selected_graph->SetLineColor(colors_map.at(META["v1.ref"](resource)));
-      selected_graph->SetMarkerColor(colors_map.at(META["v1.ref"](resource)));
-      selected_graph->SetMarkerStyle(markers_map.at({META["v1.ref"](resource), META["v1.component"](resource)}));
+    auto selected_graph = Qn::ToTGraph(resource.As<DTCalc>());
+    selected_graph->SetName(key.back().c_str());
+    selected_graph->GetXaxis()->SetTitle(remap_axis_name.at(resource.As<DTCalc>().GetAxes()[0].Name()).c_str());
+    selected_graph->SetLineColor(colors_map.at(META["v1.ref"](resource)));
+    selected_graph->SetMarkerColor(colors_map.at(META["v1.ref"](resource)));
+    selected_graph->SetMarkerStyle(markers_map.at({META["v1.ref"](resource), META["v1.component"](resource)}));
 
-      VectorKey new_key(key.begin(), key.end());
-      new_key.insert(new_key.begin(), "profiles");
-      new_key.insert(std::find(new_key.begin(), new_key.end(), "systematics"), centrality_range_str);
-      AddResource(new_key, selected_graph);
+    VectorKey new_key(key.begin(), key.end());
+    new_key.insert(new_key.begin(), "profiles");
+    auto meta = resource.meta;
+    if (META["type"](resource) == "v1_centrality") {
+      meta.put("type", "profile_v1");
+    } else if (META["type"](resource) == "ratio_v1") {
+      meta.put("type", "profile_ratio");
     }
-  }, META["type"] == "v1" || META["type"] == "ratio_v1");
+    AddResource(new_key, ResourceManager::Resource(*selected_graph, meta));
+  }, KEY.Matches("^/v1_centrality/.*$"));
+
+  gResourceManager.ForEach([] (const StringKey &, TGraphErrors &graph) {
+    graph.GetYaxis()->SetRangeUser(-0.1, 0.1);
+  }, META["type"] == "profile_v1" && META["v1.particle"] == "pion_neg");
+
+  gResourceManager.ForEach([] (const StringKey &, TGraphErrors &graph) {
+    graph.GetYaxis()->SetRangeUser(-0.1, 0.3);
+  }, META["type"] == "profile_v1" && META["v1.particle"] == "proton");
+
+  gResourceManager.ForEach([] (const StringKey &, TGraphErrors &graph) {
+    graph.GetYaxis()->SetRangeUser(0., 2.);
+  }, META["type"] == "profile_ratio");
 
   gResourceManager.Print();
 
@@ -417,11 +471,13 @@ int main() {
 
   using ::Tools::ToRoot;
   /// Save individual cases to separate ROOT file
-  for (const auto &v1_case : gResourceManager.SelectUniq(KEY.MatchGroup(1, "^/profiles/v1/(\\w+)/.*$"))) {
+  for (const auto &v1_case : gResourceManager.SelectUniq(KEY.MatchGroup(1, "^/profiles/v1_centrality/(\\w+)/.*$"))) {
     if (v1_case == "NOT-FOUND") continue;
-
     gResourceManager.ForEach(ToRoot<TGraphErrors>("v1_" + v1_case + ".root", "RECREATE",
-                                                  "/profiles/v1/" + v1_case));
+                                                  "/profiles/v1_centrality/" + v1_case),
+                             META["type"] == "profile_v1" &&
+                             META["v1.component"] == "combined" &&
+                             META["v1.ref"] == "combined");
   }
 
   {

@@ -65,14 +65,15 @@ Resolution4S_1(Qn::DataContainerStatCalculate Qu,
 
 inline
 Resource
-v1(Qn::DataContainerStatCalculate &uQ, Resource & resolution) {
-  auto result = 2 * uQ / resolution.As<Qn::DataContainerStatCalculate>();
+v1(Resource &uQ, Resource & resolution) {
+  auto result = 2 * uQ.As<Qn::DataContainerStatCalculate>() / resolution.As<Qn::DataContainerStatCalculate>();
   result.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
 
   ResourceMeta meta;
   meta.put("type", "v1");
   meta.put("source", __func__);
   meta.put_child("v1.resolution", resolution.meta.get_child("resolution", {}));
+  meta.put("v1.particle", uQ.meta.get("particle","unknown"));
   return {result, meta};
 }
 
