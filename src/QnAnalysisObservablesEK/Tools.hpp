@@ -15,10 +15,38 @@
 
 namespace Tools {
 
+inline
+std::filesystem::path TailPath(const std::filesystem::path &parent_path, const std::filesystem::path &tgt_path) {
+  using std::filesystem::path;
+  assert(parent_path.is_absolute() && tgt_path.is_absolute());
+  assert(parent_path != tgt_path);
+
+  auto tgt_path_it = tgt_path.begin();
+  path common_path{"/"};
+  for (auto parent_path_it = parent_path.begin();
+       parent_path_it != parent_path.end() &&
+           tgt_path_it != tgt_path.end();
+       ++parent_path_it, ++tgt_path_it) {
+    common_path.append(tgt_path_it->string());
+  }
+  if (common_path != parent_path) {
+    return path();
+  }
+
+  path result;
+  for (; tgt_path_it != tgt_path.end(); ++tgt_path_it) {
+    result.append(tgt_path_it->string());
+  }
+
+  return result;
+};
+
 template<typename T>
 struct ToRoot {
-  explicit ToRoot(std::string filename, std::string mode = "RECREATE")
-      : filename(std::move(filename)), mode(std::move(mode)) {}
+  explicit ToRoot(std::string filename,
+                  std::string mode = "RECREATE",
+                  std::filesystem::path parent_path = "/")
+      : filename(std::move(filename)), mode(std::move(mode)), parent_path_(std::move(parent_path)) {}
   ToRoot(const ToRoot<T> &other) {
     filename = other.filename;
     mode = other.mode;
@@ -34,7 +62,11 @@ struct ToRoot {
     }
 
     using std::filesystem::path;
-    path p(fpathstr);
+    path p(TailPath(parent_path_, fpathstr));
+    if (p.empty()) {
+      std::cout << fpathstr << " is not a child of " << parent_path_ << ". Skipping..." << std::endl;
+      return;
+    }
 
     auto dname = p.parent_path().relative_path();
     auto bname = p.filename();
@@ -51,6 +83,8 @@ struct ToRoot {
   std::string filename;
   std::string mode{"RECREATE"};
   std::unique_ptr<TFile> file{};
+
+  const std::filesystem::path parent_path_;
 };
 
 

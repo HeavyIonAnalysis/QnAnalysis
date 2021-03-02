@@ -367,7 +367,7 @@ int main() {
   gResourceManager.ForEach([](VectorKey key, ResourceManager::Resource &resource) {
     const std::map<std::string, int> colors_map = {
         {"psd1", kRed},
-        {"psd2", kGreen+2},
+        {"psd2", kGreen + 2},
         {"psd3", kBlue},
         {"combined", kBlack}
     };
@@ -388,16 +388,18 @@ int main() {
     for (size_t ic = 0; ic < centrality_axis.size(); ++ic) {
       auto c_lo = centrality_axis.GetLowerBinEdge(ic);
       auto c_hi = centrality_axis.GetUpperBinEdge(ic);
-      auto centrality_range_str = (Format("%1%-%2%") % c_lo % c_hi).str();
+      auto centrality_range_str = (Format("centrality_%1%-%2%") % c_lo % c_hi).str();
 
       auto selected = resource.As<DTCalc>().Select(Qn::AxisD(centrality_axis.Name(), 1, c_lo, c_hi));
       auto selected_graph = Qn::ToTGraph(selected);
       /// TODO SetName
       selected_graph->SetTitle(centrality_range_str.c_str());
       selected_graph->GetXaxis()->SetTitle(resource.As<DTCalc>().GetAxes()[1].Name().c_str());
-      selected_graph->GetYaxis()->SetRangeUser(
-          boost::lexical_cast<float>(META["plot.y_lo"](resource)),
-          boost::lexical_cast<float>(META["plot.y_hi"](resource)));
+      if (META["type"](resource) == "v1") {
+        selected_graph->GetYaxis()->SetRangeUser(-0.2, 0.2);
+      } else if (META["type"](resource) == "ratio_v1") {
+        selected_graph->GetYaxis()->SetRangeUser(0.5, 1.5);
+      }
       selected_graph->SetLineColor(colors_map.at(META["v1.ref"](resource)));
       selected_graph->SetMarkerColor(colors_map.at(META["v1.ref"](resource)));
       selected_graph->SetMarkerStyle(markers_map.at({META["v1.ref"](resource), META["v1.component"](resource)}));
@@ -412,8 +414,17 @@ int main() {
   gResourceManager.Print();
 
   /***************** SAVING OUTPUT *****************/
+
+  using ::Tools::ToRoot;
+  /// Save individual cases to separate ROOT file
+  for (const auto &v1_case : gResourceManager.SelectUniq(KEY.MatchGroup(1, "^/profiles/v1/(\\w+)/.*$"))) {
+    if (v1_case == "NOT-FOUND") continue;
+
+    gResourceManager.ForEach(ToRoot<TGraphErrors>("v1_" + v1_case + ".root", "RECREATE",
+                                                  "/profiles/v1/" + v1_case));
+  }
+
   {
-    using ::Tools::ToRoot;
     gResourceManager.ForEach(ToRoot<Qn::DataContainerStatCalculate>("correlation_proc.root"));
     gResourceManager.ForEach(ToRoot<TGraphErrors>("prof.root"));
     gResourceManager.ForEach(ToRoot<TGraphAsymmErrors>("prof.root", "UPDATE"));
