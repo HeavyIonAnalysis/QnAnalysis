@@ -299,13 +299,17 @@ pbpb_13agev_mc:
         - *ax-mc-pt
       cuts: &cuts-mc-proton
         SimTracks/pdg: { equals: 2212 }
+      cuts-primary: &cuts-sim-primary
+        SimTracks/mother_id: { equals: -1 }
     - name: mc_pion_neg_pt_standard
       tags: [ observable ]
       _from: *sim-base-detector
       axes:
         - *ax-mc-pt
+      cuts-primary: *cuts-sim-primary
       cuts: &cuts-mc-pion-neg
         SimTracks/pdg: { equals: -211 }
+# References
     - name: psi_rp
       tags: [reference]
       type: psi
