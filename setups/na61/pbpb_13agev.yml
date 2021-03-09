@@ -9,7 +9,7 @@ _layouts:
 _axes:
   - &ax-centrality {name: Centrality/Centrality_Epsd, nb: 20, lo: 0, hi: 100}
   - &ax-pt {name: RecParticles/pT, bin-edges: [0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0]}
-  - &ax-mc-pt {name: SimTracks/pT, bin-edges: [0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0]}
+  - &ax-mc-pt {name: SimTracksProc/pT, bin-edges: [0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0]}
 #efficiency map for pions is defined in [0, 1.5] GeV
   - &ax-pt-corr-protons {name: RecParticles/pT, nb: 1, lo: 0., hi: 1.5}
 #efficiency map for pions is defined in [0, 1] GeV
@@ -77,13 +77,16 @@ _qa:
     - [*ax-p-qa, *ax-eta-qa]
     - [*ax-p-qa, *ax-pt-qa]
   - &sim-particle-qa-kinematics
-    - &ax-sim-phi-qa { name: SimTracks/phi,nb: 400, lo: -4., hi: 4.}
-    - &ax-sim-pt-qa  { name: SimTracks/pT, nb: 1000, lo: 0., hi: 2. }
-    - &ax-sim-pz-qa  { name: SimTracks/pz, nb: 1000, lo: 0., hi: 20.}
-    - &ax-sim-p-qa   { name: SimTracks/p,  nb: 1000, lo: 0., hi: 20.}
-    - &ax-sim-eta-qa { name: SimTracks/eta,nb: 1000, lo: -2., hi: 6. }
+    - &ax-sim-phi-qa { name: SimTracksProc/phi,nb: 400, lo: -4., hi: 4.}
+    - &ax-sim-pt-qa  { name: SimTracksProc/pT, nb: 1000, lo: 0., hi: 2. }
+    - &ax-sim-pz-qa  { name: SimTracksProc/pz, nb: 1000, lo: 0., hi: 20.}
+    - &ax-sim-p-qa   { name: SimTracksProc/p,  nb: 1000, lo: 0., hi: 20.}
+    - &ax-sim-rapidity-qa { name: SimTracksProc/y_cm, nb: 1000, lo: -4., hi: 4. }
+    - &ax-sim-eta-qa { name: SimTracksProc/eta,nb: 1000, lo: -2., hi: 6. }
+    - [*ax-sim-rapidity-qa, *ax-sim-pt-qa]
     - [*ax-sim-eta-qa, *ax-sim-pt-qa]
     - [*ax-sim-phi-qa, *ax-sim-pt-qa]
+    - [*ax-sim-phi-qa, *ax-sim-rapidity-qa]
     - [*ax-sim-p-qa, *ax-sim-eta-qa]
     - [*ax-sim-p-qa, *ax-sim-pt-qa]
   - &rec-particle-qa-kinematics-weighted
@@ -291,16 +294,16 @@ pbpb_13agev_mc:
       tags: [ observable ]
       _from: &sim-base-detector
         type: track
-        phi: SimTracks/phi
+        phi: SimTracksProc/phi
         weight: Ones
         norm: m
         qa-kinematics: *sim-particle-qa-kinematics
       axes:
         - *ax-mc-pt
       cuts: &cuts-mc-proton
-        SimTracks/pdg: { equals: 2212 }
+        SimTracksProc/pdg: { equals: 2212 }
       cuts-primary: &cuts-sim-primary
-        SimTracks/mother_id: { equals: -1 }
+        SimTracksProc/mother_id: { equals: -1 }
     - name: mc_pion_neg_pt_standard
       tags: [ observable ]
       _from: *sim-base-detector
@@ -308,7 +311,7 @@ pbpb_13agev_mc:
         - *ax-mc-pt
       cuts-primary: *cuts-sim-primary
       cuts: &cuts-mc-pion-neg
-        SimTracks/pdg: { equals: -211 }
+        SimTracksProc/pdg: { equals: -211 }
 # References
     - name: psi_rp
       tags: [reference]
