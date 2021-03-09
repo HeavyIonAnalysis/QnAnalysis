@@ -250,19 +250,28 @@ pbpb_13agev_16_025:
 ########################################################################################
 pbpb_13agev_mc:
   event-variables:
-#    - Centrality/Centrality_Epsd
-    - RecEventHeader/vtx_x
-    - RecEventHeader/vtx_y
-    - RecEventHeader/vtx_z
-    - RecEventHeader/Epsd
+    - RecEventHeaderProc/Centrality_Epsd
+    - RecEventHeaderProc/vtx_x
+    - RecEventHeaderProc/vtx_y
+    - RecEventHeaderProc/vtx_z
+    - RecEventHeaderProc/Epsd
     - SimEventHeader/psi_RP
     - SimEventHeader/vtx_x
     - SimEventHeader/vtx_y
     - SimEventHeader/vtx_z
-  axes: []
-#    - *ax-centrality
-  qa-vertex: *qa-vertex
-#  qa-centrality: *qa-centrality
+  axes:
+    - &ax-centrality {name: RecEventHeaderProc/Centrality_Epsd, nb: 20, lo: 0, hi: 100}
+  qa-vertex:
+    - &ax-vtx-x-qa { name: RecEventHeaderProc/vtx_x, nb: 1000, lo: -10., hi: 10}
+    - &ax-vtx-y-qa { name: RecEventHeaderProc/vtx_y, nb: 1000, lo: -10., hi: 10}
+    - [*ax-vtx-x-qa, *ax-vtx-y-qa]
+    - &ax-vtx-z-qa { name: RecEventHeaderProc/vtx_z, nb: 1000, lo: -602., hi: -582.}
+  qa-centrality: &qa-centrality
+    - &ax-epsd-qa { name: RecEventHeaderProc/Epsd, nb: 500, lo: 0, hi: 5000}
+    - *ax-centrality
+    - [*ax-epsd-qa, *ax-centrality]
+    - [*ax-vtx-z-qa, *ax-epsd-qa]
+    - [*ax-vtx-z-qa, *ax-centrality]
   qa-mc: &qa-mc
     -  &ax-psi-rp-qa { name: SimEventHeader/psi_RP, nb: 400, lo: -4., hi: 4.}
     -  &ax-sim-vtx-x-qa { name: SimEventHeader/vtx_x, nb: 1000, lo: -10., hi: 10.}
