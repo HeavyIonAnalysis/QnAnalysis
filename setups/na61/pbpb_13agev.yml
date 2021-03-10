@@ -299,6 +299,7 @@ pbpb_13agev_mc:
     - &var-rec-vtx-y        RecEventHeaderProc/vtx_y
     - &var-rec-vtx-z        RecEventHeaderProc/vtx_z
     - &var-rec-e-psd        RecEventHeaderProc/Epsd
+    - RecEventHeaderProc/M
     - &var-sim-psi-rp       SimEventHeader/psi_RP
     - &var-sim-b            SimEventHeader/b
     - &var-sim-vtx-x        SimEventHeader/vtx_x
@@ -313,8 +314,10 @@ pbpb_13agev_mc:
     - [*ax-vtx-x-qa, *ax-vtx-y-qa]
   qa-centrality:
     - &ax-epsd-qa { name: *var-rec-e-psd, nb: 500, lo: 0, hi: 5000}
+    - &ax-mult-qa { name: RecEventHeaderProc/M, nb: 500, lo: 0, hi: 500 }
     - *ax-centrality
     - [*ax-epsd-qa, *ax-centrality]
+    - [*ax-mult-qa, *ax-epsd-qa]
     - [*ax-vtx-z-qa, *ax-epsd-qa]
     - [*ax-vtx-z-qa, *ax-centrality]
   qa-mc:
