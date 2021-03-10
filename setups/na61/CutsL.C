@@ -7,7 +7,9 @@ int CutsL() {
 
     SimpleCut vtx_z(Variable("RecEventHeaderProc","vtx_z"), -594., -590.);
     SimpleCut geant4_Epsd_bug({"RecEventHeaderProc/M", "RecEventHeaderProc/Epsd"}, [] (std::vector<double> &args) -> bool {
-      if (args[0] < 70 && args[1] < 1800) {
+      float x = args[0];
+      float y = args[1];
+      if (y < 2356 - (2356.0 - 380.0)/430 * x) {
         return false;
       }
       return true;
