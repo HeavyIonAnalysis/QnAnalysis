@@ -33,7 +33,7 @@ struct YAMLSequenceQuery {
   std::vector<YAMLQueryPredicate> predicates;
 };
 
-inline bool EvalQueryPredicate(const YAML::Node& node, const YAMLQueryPredicate& predicate) {
+inline bool EvalQueryPredicate(const YAML::Node &node, const YAMLQueryPredicate &predicate) {
   auto target_field_node = node[predicate.target_field];
 
   if (!target_field_node)
@@ -46,13 +46,14 @@ inline bool EvalQueryPredicate(const YAML::Node& node, const YAMLQueryPredicate&
     return target_field_node.Scalar() == predicate.equals_value;
   } else if (
       predicate.type._value == EYAMLQueryPredicateType::ANY_IN ||
-      predicate.type._value == EYAMLQueryPredicateType::ALL_IN
+          predicate.type._value == EYAMLQueryPredicateType::ALL_IN
       ) {
     if (predicate.in_list.empty()) {
       throw std::runtime_error("Predicate argument must be not empty");
     }
     if (target_field_node.IsScalar()) {
-      return std::find(predicate.in_list.cbegin(), predicate.in_list.cend(), target_field_node.Scalar()) != predicate.in_list.cend();
+      return std::find(predicate.in_list.cbegin(), predicate.in_list.cend(), target_field_node.Scalar())
+          != predicate.in_list.cend();
     } else if (target_field_node.IsSequence()) {
       if (target_field_node.size() == 0) {
         return false;
@@ -61,11 +62,11 @@ inline bool EvalQueryPredicate(const YAML::Node& node, const YAMLQueryPredicate&
       std::vector<std::string> target_seq_scalars(target_field_node.size());
       std::vector<std::string> intersection;
       std::transform(target_field_node.begin(), target_field_node.end(),
-                     target_seq_scalars.begin(), [] (const YAML::Node& n) { return n.Scalar(); });
+                     target_seq_scalars.begin(), [](const YAML::Node &n) { return n.Scalar(); });
       std::sort(target_seq_scalars.begin(), target_seq_scalars.end());
       std::sort(predicate_list.begin(), predicate_list.end());
       std::set_intersection(target_seq_scalars.begin(), target_seq_scalars.end(),
-                            predicate.in_list.begin(), predicate.in_list.end(),
+                            predicate_list.begin(), predicate_list.end(),
                             std::back_inserter(intersection));
       if (predicate.type._value == EYAMLQueryPredicateType::ALL_IN) {
         return intersection.size() == target_seq_scalars.size();
@@ -85,7 +86,7 @@ inline bool EvalQueryPredicate(const YAML::Node& node, const YAMLQueryPredicate&
   __builtin_unreachable();
 }
 
-inline YAML::Node QuerySequence(const YAML::Node& node, const YAMLSequenceQuery& query) {
+inline YAML::Node QuerySequence(const YAML::Node &node, const YAMLSequenceQuery &query) {
   using namespace YAML;
   Node result;
 
@@ -113,10 +114,11 @@ namespace Qn::Analysis::Correlate {
 BETTER_ENUM(EQnWeight, int, OBSERVABLE, REFERENCE)
 BETTER_ENUM(EQnCorrectionStep, int, PLAIN, RECENTERED, TWIST, RESCALED, ALIGNED)
 
-
 struct AxisConfig {
-  enum EAxisType { RANGE,
-    BIN_EDGES };
+  enum EAxisType {
+    RANGE,
+    BIN_EDGES
+  };
 
   std::string variable;
 
@@ -169,7 +171,7 @@ struct Enum {
   Enum() = default;
   Enum(const T &v) { opt_enum = v; }
   Enum(typename T::_integral v) { opt_enum = T::_from_integral(v); }
-  operator T () const {
+  operator T() const {
     return opt_enum.value();
   }
 };
@@ -201,7 +203,7 @@ struct convert<Enum<T>> {
 template<>
 struct convert<Qn::Analysis::Correlate::AxisConfig> {
 
-  static bool decode(const Node& node, Qn::Analysis::Correlate::AxisConfig& axis_config) {
+  static bool decode(const Node &node, Qn::Analysis::Correlate::AxisConfig &axis_config) {
     using namespace Qn::Analysis::Correlate;
     if (node.IsMap()) {
       axis_config.variable = node["name"].as<std::string>();
@@ -242,7 +244,6 @@ struct convert<Qn::Analysis::Correlate::QVectorTagged> {
   }
 
 };
-
 
 template<>
 struct convert<YAMLHelper::YAMLQueryPredicate> {
@@ -299,7 +300,7 @@ struct convert<YAMLHelper::YAMLSequenceQuery> {
 template<>
 struct convert<Qn::Analysis::Correlate::CorrelationTaskArgument> {
 
-  static bool decode(const Node& node, Qn::Analysis::Correlate::CorrelationTaskArgument& arg) {
+  static bool decode(const Node &node, Qn::Analysis::Correlate::CorrelationTaskArgument &arg) {
     using namespace Qn::Analysis::Correlate;
     if (node["query"]) {
       arg.query = node["query"].as<YAMLHelper::YAMLSequenceQuery>();
@@ -309,7 +310,7 @@ struct convert<Qn::Analysis::Correlate::CorrelationTaskArgument> {
     auto correction_steps = node["correction-steps"].as<std::vector<Enum<EQnCorrectionStep>>>();
     std::transform(std::begin(correction_steps), std::end(correction_steps),
                    std::back_inserter(arg.corrections_steps),
-                   [] (const auto &step) { return EQnCorrectionStep(step); });
+                   [](const auto &step) { return EQnCorrectionStep(step); });
     arg.components = node["components"].as<std::vector<std::string>>();
     arg.weight = node["weight"].as<std::string>("ones");
     return true;
@@ -320,7 +321,7 @@ struct convert<Qn::Analysis::Correlate::CorrelationTaskArgument> {
 template<>
 struct convert<Qn::Analysis::Correlate::CorrelationTask> {
 
-  static bool decode(const Node& node, Qn::Analysis::Correlate::CorrelationTask& task) {
+  static bool decode(const Node &node, Qn::Analysis::Correlate::CorrelationTask &task) {
     using namespace Qn::Analysis::Correlate;
     task.arguments = node["args"].as<std::vector<CorrelationTaskArgument>>();
 //    task.actions = node["actions"].as<std::vector<std::string>>();
@@ -335,7 +336,6 @@ struct convert<Qn::Analysis::Correlate::CorrelationTask> {
     return true;
   }
 };
-
 
 }
 
