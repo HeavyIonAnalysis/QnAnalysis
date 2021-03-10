@@ -6,17 +6,19 @@ _layouts:
   - &layout-na61-psd3
     [ 28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43 ]
 
+
+_commons:
+  - &common-pt-bin-edges [0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0]
+  - &common-y-cm-bin-edges [-0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4]
+  # for pT distributions
+  - &common-y-cm-correction-range [0., 1.2]
+
 _axes:
   - &ax-centrality {name: Centrality/Centrality_Epsd, nb: 20, lo: 0, hi: 100}
-  - &ax-pt {name: RecParticles/pT, bin-edges: [0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0]}
-  - &ax-mc-pt {name: SimTracksProc/pT, bin-edges: [0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0]}
 #efficiency map for pions is defined in [0, 1.5] GeV
   - &ax-pt-corr-protons {name: RecParticles/pT, nb: 1, lo: 0., hi: 1.5}
 #efficiency map for pions is defined in [0, 1] GeV
   - &ax-pt-corr-pions {name: RecParticles/pT, nb: 1, lo: 0., hi: 1.}
-  - &ax-y-cm {name: RecParticles/y_cm, nb: 15, lo: -0.6, hi: 2.4}
-  - &ax-y-cm-corr-1 {name: RecParticles/y_cm, nb: 1, lo: 0., hi: 1.2}
-  - &ax-y-cm-corr-2 {name: RecParticles/y_cm, nb: 3, lo: 0., hi: 1.2}
 
 _cuts:
   - &rec-particle-cuts-quality-standard
@@ -157,8 +159,8 @@ pbpb_13agev_16_025:
         qa-quality: *rec-particle-qa-quality
         qa-kinematics: *rec-particle-qa-kinematics
       axes: &correction-axes-pt-standard
-        - *ax-pt
-        - *ax-y-cm-corr-1
+        - &ax-pt          {name: RecParticles/pT, bin-edges: *common-pt-bin-edges}
+        - &ax-y-cm-corr-1 {name: RecParticles/y_cm, bin-edges: *common-y-cm-correction-range}
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: &cuts-proton
         RecParticles/pid : { equals: 2212 }
@@ -166,7 +168,7 @@ pbpb_13agev_16_025:
       tags: [observable]
       _from: *tpc-base-detector
       axes: &correction-axes-y-proton-standard
-        - *ax-y-cm
+        - &ax-y-cm {name: RecParticles/y_cm, bin-edges: *common-y-cm-bin-edges}
         - *ax-pt-corr-protons
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-proton
@@ -245,40 +247,48 @@ pbpb_13agev_16_025:
       tags: [reference]
       _from: *reference-base-detector
       channel-ids: *layout-na61-psd3
+
 ########################################################################################
 #   Monte-Carlo
 ########################################################################################
 pbpb_13agev_mc:
   event-variables:
-    - RecEventHeaderProc/Centrality_Epsd
-    - RecEventHeaderProc/vtx_x
-    - RecEventHeaderProc/vtx_y
-    - RecEventHeaderProc/vtx_z
-    - RecEventHeaderProc/Epsd
-    - SimEventHeader/psi_RP
-    - SimEventHeader/vtx_x
-    - SimEventHeader/vtx_y
-    - SimEventHeader/vtx_z
+    - &var-rec-centrality   RecEventHeaderProc/Centrality_Epsd
+    - &var-rec-vtx-x        RecEventHeaderProc/vtx_x
+    - &var-rec-vtx-y        RecEventHeaderProc/vtx_y
+    - &var-rec-vtx-z        RecEventHeaderProc/vtx_z
+    - &var-rec-e-psd        RecEventHeaderProc/Epsd
+    - &var-sim-psi-rp       SimEventHeader/psi_RP
+    - &var-sim-b            SimEventHeader/b
+    - &var-sim-vtx-x        SimEventHeader/vtx_x
+    - &var-sim-vtx-y        SimEventHeader/vtx_y
+    - &var-sim-vtx-z        SimEventHeader/vtx_z
   axes:
-    - &ax-centrality {name: RecEventHeaderProc/Centrality_Epsd, nb: 20, lo: 0, hi: 100}
+    - &ax-centrality {name: *var-rec-centrality, nb: 20, lo: 0, hi: 100}
   qa-vertex:
-    - &ax-vtx-x-qa { name: RecEventHeaderProc/vtx_x, nb: 1000, lo: -10., hi: 10}
-    - &ax-vtx-y-qa { name: RecEventHeaderProc/vtx_y, nb: 1000, lo: -10., hi: 10}
+    - &ax-vtx-x-qa { name: *var-rec-vtx-x, nb: 1000, lo: -10., hi: 10}
+    - &ax-vtx-y-qa { name: *var-rec-vtx-y, nb: 1000, lo: -10., hi: 10}
+    - &ax-vtx-z-qa { name: *var-rec-vtx-z, nb: 1000, lo: -602., hi: -582.}
     - [*ax-vtx-x-qa, *ax-vtx-y-qa]
-    - &ax-vtx-z-qa { name: RecEventHeaderProc/vtx_z, nb: 1000, lo: -602., hi: -582.}
-  qa-centrality: &qa-centrality
-    - &ax-epsd-qa { name: RecEventHeaderProc/Epsd, nb: 500, lo: 0, hi: 5000}
+  qa-centrality:
+    - &ax-epsd-qa { name: *var-rec-e-psd, nb: 500, lo: 0, hi: 5000}
     - *ax-centrality
     - [*ax-epsd-qa, *ax-centrality]
     - [*ax-vtx-z-qa, *ax-epsd-qa]
     - [*ax-vtx-z-qa, *ax-centrality]
-  qa-mc: &qa-mc
+  qa-mc:
     -  &ax-psi-rp-qa { name: SimEventHeader/psi_RP, nb: 400, lo: -4., hi: 4.}
-    -  &ax-sim-vtx-x-qa { name: SimEventHeader/vtx_x, nb: 1000, lo: -10., hi: 10.}
-    -  &ax-sim-vtx-y-qa { name: SimEventHeader/vtx_y, nb: 1000, lo: -10., hi: 10.}
+    -  &ax-sim-vtx-x-qa { name: *var-sim-vtx-x, nb: 1000, lo: -10., hi: 10.}
+    -  &ax-sim-vtx-y-qa { name: *var-sim-vtx-y, nb: 1000, lo: -10., hi: 10.}
+    -  &ax-sim-vtx-z-qa { name: *var-sim-vtx-z, nb: 1000, lo: -602., hi: -582.}
     - [*ax-sim-vtx-x-qa, *ax-sim-vtx-y-qa]
-    -  &ax-sim-vtx-z-qa { name: SimEventHeader/vtx_z, nb: 1000, lo: -602., hi: -582.}
-  q-vectors:
+    - [*ax-sim-vtx-x-qa, *ax-vtx-x-qa]
+    - [*ax-sim-vtx-y-qa, *ax-vtx-y-qa]
+    - [*ax-sim-vtx-z-qa, *ax-vtx-z-qa]
+    -  &ax-sim-b-qa     { name: *var-sim-b, nb: 200, lo: 0., hi: 20}
+    - [*ax-sim-b-qa, *ax-centrality]
+    - [*ax-vtx-z-qa, *ax-sim-b-qa]
+  q-vectors: &q-vectors-list-mc
 #   Rec particles
     - name: protons_pt_standard
       tags: [observable]
@@ -307,25 +317,38 @@ pbpb_13agev_mc:
         weight: Ones
         norm: m
         qa-kinematics: *sim-particle-qa-kinematics
+        cuts-primary: &cuts-sim-primary
+          SimTracksProc/mother_id: { equals: -1 }
       axes:
-        - *ax-mc-pt
+        - &ax-mc-pt       {name: SimTracksProc/pT, bin-edges: *common-pt-bin-edges}
+        - &ax-y-cm-corr-1 {name: SimTracksProc/y_cm, bin-edges: *common-y-cm-correction-range}
       cuts: &cuts-mc-proton
         SimTracksProc/pdg: { equals: 2212 }
-      cuts-primary: &cuts-sim-primary
-        SimTracksProc/mother_id: { equals: -1 }
     - name: mc_pion_neg_pt_standard
       tags: [ observable ]
       _from: *sim-base-detector
       axes:
         - *ax-mc-pt
-      cuts-primary: *cuts-sim-primary
+        - *ax-y-cm-corr-1
       cuts: &cuts-mc-pion-neg
         SimTracksProc/pdg: { equals: -211 }
 # References
+    - name: psd1
+      tags: [reference]
+      _from: *reference-base-detector
+      channel-ids: *layout-na61-psd1
+    - name: psd2
+      tags: [reference]
+      _from: *reference-base-detector
+      channel-ids: *layout-na61-psd2
+    - name: psd3
+      tags: [reference]
+      _from: *reference-base-detector
+      channel-ids: *layout-na61-psd3
     - name: psi_rp
       tags: [reference]
       type: psi
-      phi: SimEventHeader/psi_RP
+      phi: *var-sim-psi-rp
       norm: mag
       qa:
         - *ax-psi-rp-qa
