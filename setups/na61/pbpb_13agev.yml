@@ -422,3 +422,39 @@ pbpb_13agev_mc:
       correction-steps: []
       qa:
         - *ax-psi-rp-qa
+
+
+correlations_mc:
+  - args:
+      - query: { tags: { any-in: [ observable ] } }
+        query-list: *q-vectors-list-mc
+        components: &x1y1 [x1, y1]
+        correction-steps: [ recentered, rescaled ]
+        weight: sumw
+      - query: { tags: { any-in: [ reference ] } }
+        query-list: *q-vectors-list-mc
+        components: *x1y1
+        correction-steps: [ recentered ]
+        weight: ones
+    n-samples: 50
+    weights-type: observable
+    folder: "/uQ"
+    axes:
+      - &ax-centrality-correlation
+        name: RecEventHeaderProc_Centrality_Epsd
+        bin-edges: *common-correlation-centrality-bin-ranges
+  - args:
+      - query: { tags: { any-in: [ reference ] } }
+        query-list: *q-vectors-list
+        components: *x1y1
+        correction-steps: [ recentered ]
+        weight: ones
+      - query: { tags: { any-in: [ reference ] } }
+        query-list: *q-vectors-list
+        components: *x1y1
+        correction-steps: [ recentered ]
+        weight: ones
+    n-samples: 50
+    weights-type: reference
+    folder: "/QQ"
+    axes: [ *ax-centrality-correlation ]
