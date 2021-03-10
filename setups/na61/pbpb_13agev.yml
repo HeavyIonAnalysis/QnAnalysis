@@ -12,13 +12,17 @@ _commons:
   - &common-y-cm-bin-edges [-0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4]
   # for pT distributions
   - &common-y-cm-correction-range [0., 1.2]
+  # for y_cm distributions
+  # efficiency map for protons is defined in [0, 1.5] GeV
+  - &common-pt-correction-range-protons [0.0, 1.5]
+  #efficiency map for pions is defined in [0, 1] GeV
+  - &common-pt-correction-range-pions [0.0, 1.0]
+  - &common-correlation-centrality-bin-ranges [ 0., 5., 10., 15., 25., 35., 45., 60., 80., 100. ]
 
 _axes:
   - &ax-centrality {name: Centrality/Centrality_Epsd, nb: 20, lo: 0, hi: 100}
-#efficiency map for pions is defined in [0, 1.5] GeV
-  - &ax-pt-corr-protons {name: RecParticles/pT, nb: 1, lo: 0., hi: 1.5}
-#efficiency map for pions is defined in [0, 1] GeV
-  - &ax-pt-corr-pions {name: RecParticles/pT, nb: 1, lo: 0., hi: 1.}
+  - &ax-pt-corr-protons {name: RecParticles/pT, bin-edges: *common-pt-correction-range-protons}
+  - &ax-pt-corr-pions {name: RecParticles/pT, bin-edges: *common-pt-correction-range-pions}
 
 _cuts:
   - &rec-particle-cuts-quality-standard
@@ -248,6 +252,43 @@ pbpb_13agev_16_025:
       _from: *reference-base-detector
       channel-ids: *layout-na61-psd3
 
+
+_tasks:
+  - args:
+      - query: { tags: { any-in: [ observable ] } }
+        query-list: *q-vectors-list
+        components: &x1y1 [x1, y1]
+        correction-steps: [ recentered, rescaled ]
+        weight: sumw
+      - query: { tags: { any-in: [ reference ] } }
+        query-list: *q-vectors-list
+        components: *x1y1
+        correction-steps: [ recentered ]
+        weight: ones
+    n-samples: 50
+    weights-type: observable
+    folder: "/uQ"
+    axes:
+      - &ax-centrality-correlation
+        name: Centrality_Centrality_Epsd
+        bin-edges: *common-correlation-centrality-bin-ranges
+  - args:
+      - query: { tags: { any-in: [ reference ] } }
+        query-list: *q-vectors-list
+        components: *x1y1
+        correction-steps: [ recentered ]
+        weight: ones
+      - query: { tags: { any-in: [ reference ] } }
+        query-list: *q-vectors-list
+        components: *x1y1
+        correction-steps: [ recentered ]
+        weight: ones
+    n-samples: 50
+    weights-type: reference
+    folder: "/QQ"
+    axes: [ *ax-centrality-correlation ]
+
+
 ########################################################################################
 #   Monte-Carlo
 ########################################################################################
@@ -299,17 +340,31 @@ pbpb_13agev_mc:
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: &cuts-proton
         RecParticles/pid : { equals: 2212 }
+    - name: protons_y_standard
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-y-cm
+        - *ax-pt-corr-protons
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts: *cuts-proton
     - name: pion_neg_pt_standard
       tags: [observable]
       _from: *tpc-base-detector
-      axes: &correction-axes-pt-standard
-        - *ax-pt
-        - *ax-y-cm-corr-1
+      axes: *correction-axes-pt-standard
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: &cuts-pion-neg
         RecParticles/pid : { equals: -211 }
+    - name: pion_neg_y_standard
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-y-cm
+        - *ax-pt-corr-pions
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts: *cuts-pion-neg
 #   MC true
-    - name: mc_protons_pt_standard
+    - name: mc_protons_pt
       tags: [ observable ]
       _from: &sim-base-detector
         type: track
@@ -317,14 +372,21 @@ pbpb_13agev_mc:
         weight: Ones
         norm: m
         qa-kinematics: *sim-particle-qa-kinematics
-        cuts-primary: &cuts-sim-primary
+        cuts-primary:
           SimTracksProc/mother_id: { equals: -1 }
       axes:
         - &ax-mc-pt       {name: SimTracksProc/pT, bin-edges: *common-pt-bin-edges}
         - &ax-y-cm-corr-1 {name: SimTracksProc/y_cm, bin-edges: *common-y-cm-correction-range}
       cuts: &cuts-mc-proton
         SimTracksProc/pdg: { equals: 2212 }
-    - name: mc_pion_neg_pt_standard
+    - name: mc_protons_y
+      tags: [ observable ]
+      _from: *sim-base-detector
+      axes:
+        - &ax-mc-y-cm       { name: SimTracksProc/y_cm, bin-edges: *common-y-cm-bin-edges }
+        - {name: SimTracksProc/pT, bin-edges: *common-pt-correction-range-protons}
+      cuts: *cuts-mc-proton
+    - name: mc_pion_neg_pt
       tags: [ observable ]
       _from: *sim-base-detector
       axes:
@@ -332,6 +394,13 @@ pbpb_13agev_mc:
         - *ax-y-cm-corr-1
       cuts: &cuts-mc-pion-neg
         SimTracksProc/pdg: { equals: -211 }
+    - name: mc_pion_neg_y
+      tags: [ observable ]
+      _from: *sim-base-detector
+      axes:
+        - *ax-mc-y-cm
+        - {name: SimTracksProc/pT, bin-edges: *common-pt-correction-range-pions}
+      cuts: *cuts-mc-pion-neg
 # References
     - name: psd1
       tags: [reference]
@@ -350,54 +419,6 @@ pbpb_13agev_mc:
       type: psi
       phi: *var-sim-psi-rp
       norm: mag
+      correction-steps: []
       qa:
         - *ax-psi-rp-qa
-
-########################################################################################
-#   CORRELATION
-########################################################################################
-
-_axes_analysis:
-  - &ax-centrality-correlation
-    name: Centrality_Centrality_Epsd
-    bin-edges: [ 0., 5., 10., 15., 25., 35., 45., 60., 80., 100. ]
-
-_tasks:
-  - args:
-      - query: { tags: { any-in: [ observable ] } }
-        query-list: *q-vectors-list
-        components: &x1y1 [x1, y1]
-        correction-steps: [ recentered, rescaled ]
-        weight: sumw
-      - query: { tags: { any-in: [ reference ] } }
-        query-list: *q-vectors-list
-        components: *x1y1
-        correction-steps: [ recentered ]
-        weight: ones
-    # temporarily ignored
-    #    actions: [xx,xy,yx,yy]
-    n-samples: 50
-    weights-type: observable
-    # temporarily ignored
-    #    weights-function: xx
-    folder: "/uQ"
-    axes: [ *ax-centrality-correlation ]
-  - args:
-      - query: { tags: { any-in: [ reference ] } }
-        query-list: *q-vectors-list
-        components: *x1y1
-        correction-steps: [ recentered ]
-        weight: ones
-      - query: { tags: { any-in: [ reference ] } }
-        query-list: *q-vectors-list
-        components: *x1y1
-        correction-steps: [ recentered ]
-        weight: ones
-    # temporarily ignored
-    #    actions: [xx,xy,yx,yy]
-    n-samples: 50
-    weights-type: reference
-    # temporarily ignored
-    #    weights-function: xx
-    folder: "/QQ"
-    axes: [ *ax-centrality-correlation ]
