@@ -20,9 +20,13 @@ struct TensorIndex {
   std::vector<size_t> shape;
 
   [[nodiscard]] size_t size() const {
-    size_t result = 0;
+    size_t result = 1;
+    if (shape.empty())
+      return 0;
     for (auto i_size : shape) {
-      result = result == 0 ? i_size : result * i_size;
+      if (i_size == 0)
+        return 0;
+      result *= i_size;
     }
     return result;
   }
