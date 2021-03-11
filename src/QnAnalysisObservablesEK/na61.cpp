@@ -130,12 +130,12 @@ int main() {
   {
     /* Projection _y correlations to pT axis  */
     gResourceManager.ForEach([](StringKey name, DTCalc &calc) {
-                               calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_y_cm"});
+                               calc = calc.Projection({calc.GetAxes()[0].Name(), "RecParticles_y_cm"});
                              },
                              KEY.Matches(R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
     /* Projection _pT correlations to 'y' axis  */
     gResourceManager.ForEach([](StringKey name, DTCalc &calc) {
-                               calc = calc.Projection({"Centrality_Centrality_Epsd", "RecParticles_pT"});
+                               calc = calc.Projection({calc.GetAxes()[0].Name(), "RecParticles_pT"});
                              },
                              KEY.Matches(R"(/calc/uQ/(\w+)_pt_(\w+)\..*)"));
   }
@@ -167,6 +167,28 @@ int main() {
   }
 
   {
+    /***************** RESOLUTION MC ******************/
+    std::vector<std::string> reference = {"psd1", "psd2", "psd3"};
+    std::vector<std::string> components = {"x1x1", "y1y1"};
+
+    for (auto&&[component, reference] : Tools::Combination(components, reference)) {
+
+      Meta meta;
+      meta.put("type", "resolution");
+      meta.put("resolution.ref", reference);
+      meta.put("resolution.component", component == "x1x1" ? "X" : "Y");
+      meta.put("resolution.method", "mc");
+      meta.put("resolution.meta_key", "mc");
+
+      auto name = (Format("/resolution/mc/RES_%1%_%2%") % reference % component).str();
+      auto arg_name = (Format("/calc/QQ/%1%_RECENTERED.psi_rp_PLAIN.%2%") % reference % component).str();
+      Define(name, [] (const DTCalc &calc) { return 2*calc; }, {arg_name}, meta);
+    }
+
+  }
+
+
+  {
     /***************** RESOLUTION 4-sub ******************/
 
     /*
@@ -180,30 +202,32 @@ int main() {
       auto meta = r.meta;
       meta.put("type", "4sub_tpc_ref");
 
+      auto reference_name = "reference_" + META["arg1.name"](r);
+      auto component = META["component"](r);
+
       {
         auto selected = calc.Select(Qn::AxisD("RecParticles_y_cm", 1, 0.8, 1.2));
-        VectorKey new_key = {"resolution", "4sub_protons_08_12", key.back()};
+        VectorKey new_key = {"resolution", "4sub_protons_08_12", "4sub", reference_name, component};
         meta.put("4sub_meta_key", "4sub_protons_08_12");
         AddResource(new_key, Resource(selected, meta));
       }
       {
         auto selected = calc.Select(Qn::AxisD("RecParticles_y_cm", 1, 0.4, 0.8));
-        VectorKey new_key = {"resolution", "4sub_protons_04_08", key.back()};
+        VectorKey new_key = {"resolution", "4sub_protons_04_08", "4sub", reference_name, component};
         meta.put("4sub_meta_key", "4sub_protons_04_08");
         AddResource(new_key, Resource(selected, meta));
       }
       {
         auto selected = calc.Select(Qn::AxisD("RecParticles_y_cm", 1, 0.0, 0.4));
-        VectorKey new_key = {"resolution", "4sub_protons_00_04", key.back()};
+        VectorKey new_key = {"resolution", "4sub_protons_00_04", "4sub", reference_name, component};
         meta.put("4sub_meta_key", "4sub_protons_00_04");
         AddResource(new_key, Resource(selected, meta));
       }
     }, KEY.Matches("/calc/uQ/protons_y_standard_RESCALED\\.(psd[1-3])_RECENTERED\\.(x1x1|y1y1)$"));
 
-    for (auto &&[resolution_meta_key, component] : Tools::Combination(gResourceManager.SelectUniq(META["4sub_meta_key"],
-                                                                                                  META["type"]
-                                                                                                      == "4sub_tpc_ref"),
-                                                                      std::vector<std::string>{"x1x1", "y1y1"})) {
+    for (auto &&[resolution_meta_key, component] : Tools::Combination(
+        gResourceManager.SelectUniq(META["4sub_meta_key"], META["type"] == "4sub_tpc_ref"),
+        std::vector<std::string>{"x1x1", "y1y1"})) {
 
       auto key_generator =
           "/resolution/" + META["resolution.meta_key"] +
@@ -269,10 +293,6 @@ int main() {
       }
     }
   } // directed flow
-
-
-
-
 
 
 
@@ -380,7 +400,8 @@ int main() {
 /* export everything to TGraph */
   gResourceManager.ForEach([](StringKey name, DTCalc calc) {
                              auto graph = Qn::ToTGraph(calc);
-                             AddResource("/profiles" + name, graph);
+                             if (graph)
+                                AddResource("/profiles" + name, graph);
                            },
                            KEY.Matches("^/x2/QQ/.*$"));
 
