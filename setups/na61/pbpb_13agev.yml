@@ -429,12 +429,12 @@ pbpb_13agev_mc:
 
 correlations_mc:
   - args:
-      - query: { tags: { any-in: [ observable ] } }
+      - query: { tags: { all-in: [ observable, reco ] } }
         query-list: *q-vectors-list-mc
         components: &x1y1 [ x1, y1 ]
         correction-steps: [ recentered, rescaled ]
         weight: sumw
-      - query: { tags: { any-in: [ reference ] } }
+      - query: { tags: { all-in: [ reference, reco ] } }
         query-list: *q-vectors-list-mc
         components: *x1y1
         correction-steps: [ recentered ]
@@ -447,12 +447,12 @@ correlations_mc:
         name: RecEventHeaderProc_Centrality_Epsd
         bin-edges: *common-correlation-centrality-bin-ranges
   - args:
-      - query: { tags: { any-in: [ reference ] } }
+      - query: { tags: { all-in: [ reference, reco ] } }
         query-list: *q-vectors-list-mc
         components: *x1y1
         correction-steps: [ recentered ]
         weight: ones
-      - query: { tags: { any-in: [ reference ] } }
+      - query: { tags: { all-in: [ reference, reco ] } }
         query-list: *q-vectors-list-mc
         components: *x1y1
         correction-steps: [ recentered ]
