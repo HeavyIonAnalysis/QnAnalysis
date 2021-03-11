@@ -52,9 +52,9 @@ class CorrelationTaskRunner {
       } else if (component == kY) {
         return qv.y(harmonic);
       } else if (component == kCos) {
-        return qv.x(harmonic)/qv.mag(harmonic);
+        return qv.x(harmonic) / qv.mag(harmonic);
       } else if (component == kSin) {
-        return qv.y(harmonic)/qv.mag(harmonic);
+        return qv.y(harmonic) / qv.mag(harmonic);
       }
       __builtin_unreachable();
     }
@@ -105,7 +105,7 @@ class CorrelationTaskRunner {
   struct bad_qvector_weight : public std::exception {
   };
 
-public:
+ public:
   static constexpr size_t MAX_ARITY = 8;
   static constexpr size_t MAX_AXES = 4;
 
@@ -115,7 +115,7 @@ public:
 
   void Run();
 
-private:
+ private:
   std::shared_ptr<TTree> GetTree();
   std::shared_ptr<ROOT::RDataFrame> GetRDF();
   void LookupConfiguration();
@@ -176,7 +176,6 @@ private:
 
   static QVectorWeightFct GetQVectorWeightFct(const CorrelationArg &arg);
 
-
   template<size_t I>
   using IndexedQVectorArg = const QVector &;
 
@@ -231,19 +230,23 @@ private:
       std::copy(std::begin(correlation.argument_names), std::end(correlation.argument_names),
                 std::begin(args_list_array));
 
-      auto booked_action = Qn::MakeAverageHelper(Qn::Correlation::MakeCorrelationAction(
-          correlation.meta_key,
-          BuildFunction(GetQVectorComponentFct, correlation, std::make_index_sequence<Arity>()),
-          BuildFunction(GetQVectorWeightFct, correlation, std::make_index_sequence<Arity>()),
-          use_weights,
-          args_list_array,
-          axes_config,
-          t.n_samples)).BookMe(df_sampled);
+      try {
+        auto booked_action = Qn::MakeAverageHelper(Qn::Correlation::MakeCorrelationAction(
+            correlation.meta_key,
+            BuildFunction(GetQVectorComponentFct, correlation, std::make_index_sequence<Arity>()),
+            BuildFunction(GetQVectorWeightFct, correlation, std::make_index_sequence<Arity>()),
+            use_weights,
+            args_list_array,
+            axes_config,
+            t.n_samples)).BookMe(df_sampled);
 
-      correlation.result_ptr = booked_action;
+        correlation.result_ptr = booked_action;
 
-      result->correlations.emplace_back(correlation);
-      Info(__func__, "%s", correlation.meta_key.c_str());
+        result->correlations.emplace_back(correlation);
+        Info(__func__, "%s", correlation.meta_key.c_str());
+      } catch (std::exception &e) {
+        Warning(__func__, "Skipping correlation: %s", e.what());
+      }
     }
 
     result->arity = Arity;
