@@ -22,6 +22,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+#include <TCanvas.h>
+#include <TLegend.h>
 
 namespace Details {
 
@@ -111,12 +113,13 @@ int main() {
   });
 
   gResourceManager.ForEach([](const StringKey &key, ResourceManager::Resource &r) {
-    r.meta.put("particle", "pion_neg");
-  }, KEY.Matches("^.*pion_neg.*$"));
-  gResourceManager.ForEach([](const StringKey &key, ResourceManager::Resource &r) {
-    r.meta.put("particle", "proton");
-  }, KEY.Matches("^.*proton.*$"));
-
+    const std::regex re_expr("^.*(pion_neg|protons)_(pt|y).*$");
+    auto particle = KEY.MatchGroup(1, re_expr)(r);
+    auto axis = KEY.MatchGroup(2, re_expr)(r);
+    r.meta.put("type", "uQ");
+    r.meta.put("u.particle", particle);
+    r.meta.put("u.axis", axis);
+  }, KEY.Matches("^/calc/uQ/.*$"));
 
 
 
@@ -272,6 +275,14 @@ int main() {
     }
 
   }
+  const auto v1_key_generator =
+      "/v1/reco/" +
+          META["v1.particle"] + "/" +
+          "AX_" + META["v1.axis"] + "/" +
+          "systematics" + "/" +
+          "RES_" + META["v1.resolution.meta_key"] + "/" +
+          "REF_" + META["v1.ref"] + "/" +
+          META["v1.component"];
 
   {
     /***************** Directed flow ******************/
@@ -295,14 +306,13 @@ int main() {
                                                               gResourceManager.GetMatching(res_query))) {
         Meta meta;
         meta.put("v1.ref", reference);
-//        meta.put("v1.particle", particle);
         meta.put("v1.component", projection);
-//        meta.put("v1.axis", axis);
+        meta.put("v1.src", "reco");
 
         VectorKey key = {"v1", u_vector_base, "systematics", resolution_method,
                          "reference_" + reference,
                          projection};
-        Define(key, Methods::v1, {u_vector, resolution}, meta);
+        Define(v1_key_generator, Methods::v1, {u_vector, resolution}, meta);
       }
     }
   } // directed flow
@@ -313,19 +323,30 @@ int main() {
     gResourceManager.ForEach([re_expr](const StringKey &key, ResourceManager::Resource &r) {
       std::string component = KEY.MatchGroup(2, re_expr)(r);
       std::string u_vector = KEY.MatchGroup(1, re_expr)(r);
+
+      auto result = 2. * r.As<DTCalc>();
+
       Meta meta;
       meta.put("type", "v1");
       meta.put("v1.ref", "psi_rp");
       meta.put("v1.component", component);
-      AddResource(VectorKey({"v1", u_vector, "psi_RP", "systematics", component}),
-                  ResourceManager::Resource(2*r.As<DTCalc>(), meta));
+      meta.put("v1.particle", r.meta.get<std::string>("u.particle"));
+      meta.put("v1.axis", r.meta.get<std::string>("u.axis"));
+      meta.put("v1.resolution.meta_key", "NA");
+      meta.put("v1.src", "mc");
+
+      ResourceManager::Resource new_res(result, meta);
+
+      auto new_key = ("/v1/mc/" + META["v1.particle"] + "/" + "AX_" + META["v1.axis"] + "/" + "systematics" + "/"
+          + META["v1.component"])(new_res);
+
+      AddResource(new_key, new_res);
     }, KEY.Matches(re_expr));
   }
 
 
 
   /******************** v1 vs Centrality *********************/
-  // folder structure /v1/<particle>/centrality_%lo_%hi
   {
 
     gResourceManager.ForEach([](VectorKey key, ResourceManager::Resource &res) {
@@ -341,6 +362,7 @@ int main() {
         auto selected = calc.Select(Qn::AxisD(centrality_axis.Name(), 1, c_lo, c_hi));
 
         meta.put("type", "v1_centrality");
+        meta.put("centrality.no", std::to_string(ic));
         meta.put("centrality.lo", c_lo);
         meta.put("centrality.hi", c_hi);
 
@@ -388,7 +410,7 @@ int main() {
             return;
           }
           assert(!objs.empty());
-          auto combined_psd_name = base_dir + "/" + "reference_combined" + "/" + component;
+          auto combined_psd_name = base_dir + "/" + "REF_combined" + "/" + component;
           auto combined = objs[0]->As<DTCalc>(); // taking copy of first object
           for (int iobjs = 1; iobjs < objs.size(); ++iobjs) {
             combined =
@@ -406,17 +428,18 @@ int main() {
             auto ratio_meta = ref->meta;
             ratio_meta.put("type", "ratio_v1");
             auto ratio_key_name =
-                base_dir + "/" + "reference_combined" + "/" + "ratio_" + META["v1.ref"](*ref) + "_" + component;
+                base_dir + "/" + "REF_combined" + "/" + "ratio_" + META["v1.ref"](*ref) + "_" + component;
             AddResource(ratio_key_name, ResourceManager::Resource(ratio_ref_combined, ratio_meta));
           }
         };
+    const std::regex re_ref("^(.*)/REF_psd\\d/.*$");
     gResourceManager.GroupBy(
-        KEY.MatchGroup(1, "^(.*)/reference_psd[1-3].*$"),
+        KEY.MatchGroup(1, re_ref),
         combine_reference_function,
         META["type"] == "v1_centrality" && META["v1.component"] == component);
     component = "y1y1";
     gResourceManager.GroupBy(
-        KEY.MatchGroup(1, "^(.*)/reference_psd[1-3].*$"),
+        KEY.MatchGroup(1, re_ref),
         combine_reference_function,
         META["type"] == "v1_centrality" && META["v1.component"] == component);
     /* Combine x1x1 and y1y1 in combined reference path */
@@ -429,7 +452,7 @@ int main() {
 /****************** DRAWING *********************/
 
 /* export everything to TGraph */
-  gResourceManager.ForEach([](StringKey name, DTCalc calc) {
+  gResourceManager.ForEach([](const StringKey &name, DTCalc calc) {
                              auto graph = Qn::ToTGraph(calc);
                              if (graph)
                                AddResource("/profiles" + name, graph);
@@ -525,7 +548,52 @@ int main() {
     graph.GetYaxis()->SetRangeUser(0., 2.);
   }, META["type"] == "profile_ratio");
 
-  gResourceManager.Print();
+  gResourceManager.GroupBy(
+      META["v1.particle"] + "__" +
+          META["v1.axis"] + "__" +
+          META["centrality.lo"] + "_" + META["centrality.hi"] + "__" +
+          META["v1.component"],
+      [](std::string f, std::vector<ResourceManager::ResourcePtr> &resources) {
+        if (resources.empty())
+          return;
+
+        const std::map<std::string, int> map_colors{
+            {"3sub_standard", kBlue},
+            {"mc", kRed},
+        };
+
+        TCanvas c(("c__" + f).c_str(), "");
+        c.SetCanvasSize(800, 600);
+        c.SetBatch(false);
+
+        bool is_first = true;
+        for (auto &res : resources) {
+          auto draw_opts = is_first ? "Apl" : "pl";
+          is_first = false;
+
+          auto graph = (TGraphErrors*) res->As<TGraphErrors>().Clone();
+          if (META["v1.src"](*res) == "mc") {
+            graph->SetLineColor(kBlack);
+            graph->SetMarkerColor(kBlack);
+            graph->SetTitle("True MC");
+          } else {
+            auto resolution_meta_key = META["v1.resolution.meta_key"](*res);
+            graph->SetLineColor(map_colors.at(resolution_meta_key));
+            graph->SetMarkerColor(map_colors.at(resolution_meta_key));
+            graph->SetTitle(resolution_meta_key.c_str());
+          }
+          graph->Draw(draw_opts);
+        }
+        auto legend = c.BuildLegend(0.1, 0.7, 0.4, 0.9);
+        legend->SetHeader(f.c_str());
+        c.SaveAs(("plots/resolution_methods/" + f + ".png").c_str());
+        c.SaveAs(("plots/resolution_methods/" + f + ".C").c_str());
+        c.SaveAs(("plots/resolution_methods/" + f + ".eps").c_str());
+      }, META["type"] == "profile_v1" &&
+          META["centrality.no"] == "2" &&
+          (META["v1.src"] == "mc" || (META["v1.src"] == "reco" && META["v1.ref"] == "combined")));
+
+
 
   /***************** SAVING OUTPUT *****************/
 
