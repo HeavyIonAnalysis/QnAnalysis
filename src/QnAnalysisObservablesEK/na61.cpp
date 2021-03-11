@@ -130,12 +130,26 @@ int main() {
   {
     /* Projection _y correlations to pT axis  */
     gResourceManager.ForEach([](StringKey name, DTCalc &calc) {
-                               calc = calc.Projection({calc.GetAxes()[0].Name(), "RecParticles_y_cm"});
+                               try {
+                                 calc = calc.Projection({calc.GetAxes()[0].Name(), "RecParticles_y_cm"});
+                                 return;
+                               } catch (std::exception &e) {}
+                               try {
+                                 calc = calc.Projection({calc.GetAxes()[0].Name(), "SimTracksProc_y_cm"});
+                                 return;
+                               } catch (std::exception &e) {}
                              },
                              KEY.Matches(R"(/calc/uQ/(\w+)_y_(\w+)\..*)"));
     /* Projection _pT correlations to 'y' axis  */
     gResourceManager.ForEach([](StringKey name, DTCalc &calc) {
-                               calc = calc.Projection({calc.GetAxes()[0].Name(), "RecParticles_pT"});
+                               try {
+                                 calc = calc.Projection({calc.GetAxes()[0].Name(), "RecParticles_pT"});
+                                 return;
+                               } catch (std::exception &e) {}
+                               try {
+                                 calc = calc.Projection({calc.GetAxes()[0].Name(), "SimTracksProc_pT"});
+                                 return;
+                               } catch (std::exception &e) {}
                              },
                              KEY.Matches(R"(/calc/uQ/(\w+)_pt_(\w+)\..*)"));
   }
@@ -182,11 +196,10 @@ int main() {
 
       auto name = (Format("/resolution/mc/RES_%1%_%2%") % reference % component).str();
       auto arg_name = (Format("/calc/QQ/%1%_RECENTERED.psi_rp_PLAIN.%2%") % reference % component).str();
-      Define(name, [] (const DTCalc &calc) { return 2*calc; }, {arg_name}, meta);
+      Define(name, [](const DTCalc &calc) { return 2 * calc; }, {arg_name}, meta);
     }
 
   }
-
 
   {
     /***************** RESOLUTION 4-sub ******************/
@@ -294,6 +307,21 @@ int main() {
     }
   } // directed flow
 
+  {
+    /***************** Directed flow (MC) ******************/
+    const std::regex re_expr(R"(^/calc/uQ/(mc_\w+)_PLAIN\.psi_rp_PLAIN\.(x1x1|y1y1)$)");
+    gResourceManager.ForEach([re_expr](const StringKey &key, ResourceManager::Resource &r) {
+      std::string component = KEY.MatchGroup(2, re_expr)(r);
+      std::string u_vector = KEY.MatchGroup(1, re_expr)(r);
+      Meta meta;
+      meta.put("type", "v1");
+      meta.put("v1.ref", "psi_rp");
+      meta.put("v1.component", component);
+      AddResource(VectorKey({"v1", u_vector, "psi_RP", "systematics", component}),
+                  ResourceManager::Resource(2*r.As<DTCalc>(), meta));
+    }, KEY.Matches(re_expr));
+  }
+
 
 
   /******************** v1 vs Centrality *********************/
@@ -356,6 +384,9 @@ int main() {
     std::string component = "x1x1";
     auto combine_reference_function =
         [&component](const std::string &base_dir, std::vector<ResourceManager::ResourcePtr> &objs) {
+          if (base_dir == "NOT-FOUND") {
+            return;
+          }
           assert(!objs.empty());
           auto combined_psd_name = base_dir + "/" + "reference_combined" + "/" + component;
           auto combined = objs[0]->As<DTCalc>(); // taking copy of first object
@@ -401,13 +432,12 @@ int main() {
   gResourceManager.ForEach([](StringKey name, DTCalc calc) {
                              auto graph = Qn::ToTGraph(calc);
                              if (graph)
-                                AddResource("/profiles" + name, graph);
+                               AddResource("/profiles" + name, graph);
                            },
                            KEY.Matches("^/x2/QQ/.*$"));
 
   /* export ALL resolution to TGraph */
-  gResourceManager.ForEach([](const StringKey& name, ResourceManager::Resource r) {
-
+  gResourceManager.ForEach([](const StringKey &name, ResourceManager::Resource r) {
 
     auto graph = Qn::ToTGraph(r.As<DTCalc>());
 
@@ -431,15 +461,18 @@ int main() {
   /* v1 profiles */
   // /profiles/v1/<particle>/<axis>/<centrality range>/
   gResourceManager.ForEach([](VectorKey key, ResourceManager::Resource &resource) {
-    const std::map<std::string,std::string> remap_axis_name = {
+    const std::map<std::string, std::string> remap_axis_name = {
         {"RecParticles_pT", "p_{T} (GeV/#it{c})"},
-        {"RecParticles_y_cm", "#it{y}_{CM}"}
+        {"SimTracksProc_pT", "p_{T} (GeV/#it{c})"},
+        {"RecParticles_y_cm", "#it{y}_{CM}"},
+        {"SimTracksProc_y_cm", "#it{y}_{CM}"},
     };
     const std::map<std::string, int> colors_map = {
         {"psd1", kRed},
         {"psd2", kGreen + 2},
         {"psd3", kBlue},
-        {"combined", kBlack}
+        {"combined", kBlack},
+        {"psi_rp", kBlack}
     };
     const std::map<std::pair<std::string, std::string>, int> markers_map = {
         {{"psd1", "x1x1"}, kFullSquare},
@@ -453,10 +486,16 @@ int main() {
         {{"psd3", "combined"}, kFullStar},
         {{"combined", "x1x1"}, kFullDiamond},
         {{"combined", "y1y1"}, kOpenDiamond},
-        {{"combined", "combined"}, kOpenDiamond}
+        {{"combined", "combined"}, kOpenDiamond},
+        {{"psi_rp", "x1x1"}, kFullSquare},
+        {{"psi_rp", "y1y1"}, kOpenSquare},
+        {{"psi_rp", "combined"}, kFullStar}
     };
 
     auto selected_graph = Qn::ToTGraph(resource.As<DTCalc>());
+    if (!selected_graph) {
+      return;
+    }
     selected_graph->SetName(key.back().c_str());
     selected_graph->GetXaxis()->SetTitle(remap_axis_name.at(resource.As<DTCalc>().GetAxes()[0].Name()).c_str());
     selected_graph->SetLineColor(colors_map.at(META["v1.ref"](resource)));
@@ -474,15 +513,15 @@ int main() {
     AddResource(new_key, ResourceManager::Resource(*selected_graph, meta));
   }, KEY.Matches("^/v1_centrality/.*$"));
 
-  gResourceManager.ForEach([] (const StringKey &, TGraphErrors &graph) {
+  gResourceManager.ForEach([](const StringKey &, TGraphErrors &graph) {
     graph.GetYaxis()->SetRangeUser(-0.1, 0.1);
   }, META["type"] == "profile_v1" && META["v1.particle"] == "pion_neg");
 
-  gResourceManager.ForEach([] (const StringKey &, TGraphErrors &graph) {
+  gResourceManager.ForEach([](const StringKey &, TGraphErrors &graph) {
     graph.GetYaxis()->SetRangeUser(-0.1, 0.3);
   }, META["type"] == "profile_v1" && META["v1.particle"] == "proton");
 
-  gResourceManager.ForEach([] (const StringKey &, TGraphErrors &graph) {
+  gResourceManager.ForEach([](const StringKey &, TGraphErrors &graph) {
     graph.GetYaxis()->SetRangeUser(0., 2.);
   }, META["type"] == "profile_ratio");
 
@@ -497,8 +536,8 @@ int main() {
     gResourceManager.ForEach(ToRoot<TGraphErrors>("v1_" + v1_case + ".root", "RECREATE",
                                                   "/profiles/v1_centrality/" + v1_case),
                              META["type"] == "profile_v1" &&
-                             META["v1.component"] == "combined" &&
-                             META["v1.ref"] == "combined");
+                                 META["v1.component"] == "combined" &&
+                                 META["v1.ref"] == "combined");
   }
 
   {
