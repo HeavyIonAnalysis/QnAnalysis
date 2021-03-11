@@ -8,59 +8,59 @@ _layouts:
 
 
 _commons:
-  - &common-pt-bin-edges [0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0]
-  - &common-y-cm-bin-edges [-0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4]
+  - &common-pt-bin-edges [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0 ]
+  - &common-y-cm-bin-edges [ -0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4 ]
   # for pT distributions
-  - &common-y-cm-correction-range [0., 1.2]
+  - &common-y-cm-correction-range [ 0., 1.2 ]
   # for y_cm distributions
   # efficiency map for protons is defined in [0, 1.5] GeV
-  - &common-pt-correction-range-protons [0.0, 1.5]
+  - &common-pt-correction-range-protons [ 0.0, 1.5 ]
   #efficiency map for pions is defined in [0, 1] GeV
-  - &common-pt-correction-range-pions [0.0, 1.0]
+  - &common-pt-correction-range-pions [ 0.0, 1.0 ]
   - &common-correlation-centrality-bin-ranges [ 0., 5., 10., 15., 25., 35., 45., 60., 80., 100. ]
 
 _axes:
-  - &ax-centrality {name: Centrality/Centrality_Epsd, nb: 20, lo: 0, hi: 100}
-  - &ax-pt-corr-protons {name: RecParticles/pT, bin-edges: *common-pt-correction-range-protons}
-  - &ax-pt-corr-pions {name: RecParticles/pT, bin-edges: *common-pt-correction-range-pions}
+  - &ax-centrality { name: Centrality/Centrality_Epsd, nb: 20, lo: 0, hi: 100 }
+  - &ax-pt-corr-protons { name: RecParticles/pT, bin-edges: *common-pt-correction-range-protons }
+  - &ax-pt-corr-pions { name: RecParticles/pT, bin-edges: *common-pt-correction-range-pions }
 
 _cuts:
   - &rec-particle-cuts-quality-standard
-    RecParticles/nhits_total : { range: [30, 1000] }
-    RecParticles/nhits_vtpc : { range: [10, 1000] }
-    RecParticles/nhits_pot_total : { range: [1, 1000] }
-    RecParticles/nhits_ratio : { range: [0.55, 1.1] }
-    RecParticles/dcax : { range: [-2., 2.] }
-    RecParticles/dcay : { range: [-1., 1.] }
+    RecParticles/nhits_total: { range: [ 30, 1000 ] }
+    RecParticles/nhits_vtpc: { range: [ 10, 1000 ] }
+    RecParticles/nhits_pot_total: { range: [ 1, 1000 ] }
+    RecParticles/nhits_ratio: { range: [ 0.55, 1.1 ] }
+    RecParticles/dcax: { range: [ -2., 2. ] }
+    RecParticles/dcay: { range: [ -1., 1. ] }
   - &rec-particle-cuts-quality-dca-tight
     _from: *rec-particle-cuts-quality-standard
-    RecParticles/dcax : { range: [-1, 1.] }
-    RecParticles/dcay : { range: [-0.5, 0.5] }
+    RecParticles/dcax: { range: [ -1, 1. ] }
+    RecParticles/dcay: { range: [ -0.5, 0.5 ] }
   - &rec-particle-cuts-quality-dca-loose
     _from: *rec-particle-cuts-quality-standard
     RecParticles/dcax: { range: [ -3, 3. ] }
     RecParticles/dcay: { range: [ -1.5, 1.5 ] }
   - &rec-particle-cuts-quality-nhits-vtpc-loose
     _from: *rec-particle-cuts-quality-standard
-    RecParticles/nhits_vtpc : { range: [5, 1000] }
+    RecParticles/nhits_vtpc: { range: [ 5, 1000 ] }
   - &rec-particle-cuts-quality-nhits-vtpc-tight
     _from: *rec-particle-cuts-quality-standard
-    RecParticles/nhits_vtpc : { range: [15, 1000] }
+    RecParticles/nhits_vtpc: { range: [ 15, 1000 ] }
   - &rec-particle-cuts-quality-nhits-total-loose
     _from: *rec-particle-cuts-quality-standard
-    RecParticles/nhits_total : { range: [20, 1000] }
+    RecParticles/nhits_total: { range: [ 20, 1000 ] }
   - &rec-particle-cuts-quality-nhits-total-tight
     _from: *rec-particle-cuts-quality-standard
-    RecParticles/nhits_total : { range: [40, 1000] }
+    RecParticles/nhits_total: { range: [ 40, 1000 ] }
   - &rec-particle-cuts-quality-nhits-ratio-lowedge-tight
     _from: *rec-particle-cuts-quality-standard
-    RecParticles/nhits_ratio : { range: [0.7, 1.1] }
+    RecParticles/nhits_ratio: { range: [ 0.7, 1.1 ] }
   - &rec-particle-cuts-quality-nhits-ratio-lowedge-loose
     _from: *rec-particle-cuts-quality-standard
-    RecParticles/nhits_ratio : { range: [0.4, 1.1] }
+    RecParticles/nhits_ratio: { range: [ 0.4, 1.1 ] }
   - &rec-particle-cuts-quality-nhits-ratio-upedge-tight
     _from: *rec-particle-cuts-quality-standard
-    RecParticles/nhits_ratio : { range: [0.55, 1.0] }
+    RecParticles/nhits_ratio: { range: [ 0.55, 1.0 ] }
 
 
 
@@ -70,46 +70,46 @@ _qa:
     - { name: PsdModules/phi, nb: 100, lo: -4., hi: 4. }
     - { name: PsdModules/signal, nb: 100, lo: 0., hi: 100. }
   - &rec-particle-qa-kinematics
-    - &ax-phi-qa { name: RecParticles/phi, nb: 400, lo: -4., hi: 4.}
+    - &ax-phi-qa { name: RecParticles/phi, nb: 400, lo: -4., hi: 4. }
     - &ax-pt-qa { name: RecParticles/pT, nb: 1000, lo: 0., hi: 2. }
-    - &ax-pz-qa { name: RecParticles/pz, nb: 1000, lo: 0., hi: 20.}
-    - &ax-p-qa  { name: RecParticles/p, nb: 1000, lo: 0., hi: 20.}
+    - &ax-pz-qa { name: RecParticles/pz, nb: 1000, lo: 0., hi: 20. }
+    - &ax-p-qa  { name: RecParticles/p, nb: 1000, lo: 0., hi: 20. }
     - &ax-rapidity-qa { name: RecParticles/y_cm, nb: 1000, lo: -4., hi: 4. }
     - &ax-eta-qa { name: RecParticles/eta, nb: 1000, lo: -2., hi: 6. }
-    - [*ax-rapidity-qa, *ax-pt-qa]
-    - [*ax-eta-qa, *ax-pt-qa]
-    - [*ax-phi-qa, *ax-rapidity-qa]
-    - [*ax-phi-qa, *ax-pt-qa]
-    - [*ax-p-qa, *ax-eta-qa]
-    - [*ax-p-qa, *ax-pt-qa]
+    - [ *ax-rapidity-qa, *ax-pt-qa ]
+    - [ *ax-eta-qa, *ax-pt-qa ]
+    - [ *ax-phi-qa, *ax-rapidity-qa ]
+    - [ *ax-phi-qa, *ax-pt-qa ]
+    - [ *ax-p-qa, *ax-eta-qa ]
+    - [ *ax-p-qa, *ax-pt-qa ]
   - &sim-particle-qa-kinematics
-    - &ax-sim-phi-qa { name: SimTracksProc/phi,nb: 400, lo: -4., hi: 4.}
+    - &ax-sim-phi-qa { name: SimTracksProc/phi,nb: 400, lo: -4., hi: 4. }
     - &ax-sim-pt-qa  { name: SimTracksProc/pT, nb: 1000, lo: 0., hi: 2. }
-    - &ax-sim-pz-qa  { name: SimTracksProc/pz, nb: 1000, lo: 0., hi: 20.}
-    - &ax-sim-p-qa   { name: SimTracksProc/p,  nb: 1000, lo: 0., hi: 20.}
+    - &ax-sim-pz-qa  { name: SimTracksProc/pz, nb: 1000, lo: 0., hi: 20. }
+    - &ax-sim-p-qa   { name: SimTracksProc/p,  nb: 1000, lo: 0., hi: 20. }
     - &ax-sim-rapidity-qa { name: SimTracksProc/y_cm, nb: 1000, lo: -4., hi: 4. }
     - &ax-sim-eta-qa { name: SimTracksProc/eta,nb: 1000, lo: -2., hi: 6. }
-    - [*ax-sim-rapidity-qa, *ax-sim-pt-qa]
-    - [*ax-sim-eta-qa, *ax-sim-pt-qa]
-    - [*ax-sim-phi-qa, *ax-sim-pt-qa]
-    - [*ax-sim-phi-qa, *ax-sim-rapidity-qa]
-    - [*ax-sim-p-qa, *ax-sim-eta-qa]
-    - [*ax-sim-p-qa, *ax-sim-pt-qa]
+    - [ *ax-sim-rapidity-qa, *ax-sim-pt-qa ]
+    - [ *ax-sim-eta-qa, *ax-sim-pt-qa ]
+    - [ *ax-sim-phi-qa, *ax-sim-pt-qa ]
+    - [ *ax-sim-phi-qa, *ax-sim-rapidity-qa ]
+    - [ *ax-sim-p-qa, *ax-sim-eta-qa ]
+    - [ *ax-sim-p-qa, *ax-sim-pt-qa ]
   - &rec-particle-qa-kinematics-weighted
-    - { axes: [*ax-rapidity-qa], weight: RecParticles_w_eff_standard_cuts }
-    - { axes: [*ax-pt-qa], weight: RecParticles_w_eff_standard_cuts }
-    - { axes: [*ax-phi-qa], weight: RecParticles_w_eff_standard_cuts }
-    - { axes: [*ax-rapidity-qa, *ax-pt-qa], weight: RecParticles_w_eff_standard_cuts }
-    - { axes: [*ax-phi-qa, *ax-pt-qa], weight: RecParticles_w_eff_standard_cuts }
-    - { axes: [*ax-phi-qa, *ax-rapidity-qa], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [ *ax-rapidity-qa ], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [ *ax-pt-qa ], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [ *ax-phi-qa ], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [ *ax-rapidity-qa, *ax-pt-qa ], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [ *ax-phi-qa, *ax-pt-qa ], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [ *ax-phi-qa, *ax-rapidity-qa ], weight: RecParticles_w_eff_standard_cuts }
   - &rec-particle-qa-quality
     - &ax-dcax-qa { name: RecParticles/dcax, nb: 200, lo: -10, hi: 10 }
     - &ax-dcay-qa { name: RecParticles/dcay, nb: 200, lo: -10, hi: 10 }
-    - [*ax-dcax-qa, *ax-dcay-qa]
+    - [ *ax-dcax-qa, *ax-dcay-qa ]
     - &ax-nhits-vtpc-qa { name: RecParticles/nhits_vtpc, nb: 300, lo: 0, hi: 300 }
     - &ax-nhits-total-qa { name: RecParticles/nhits_total, nb: 300, lo: 0, hi: 300 }
     - &ax-nhits-pot-total-qa { name: RecParticles/nhits_pot_total, nb: 300, lo: 0, hi: 300 }
-    - [*ax-nhits-pot-total-qa, *ax-nhits-total-qa]
+    - [ *ax-nhits-pot-total-qa, *ax-nhits-total-qa ]
 
 
 ########################################################################################
@@ -130,28 +130,28 @@ pbpb_13agev_16_025:
     - RecEventHeader/s1
     - RecEventHeader/s2
   qa-vertex: &qa-vertex
-    - &ax-vtx-x-qa { name: RecEventHeader/vtx_x, nb: 1000, lo: -10., hi: 10}
-    - &ax-vtx-y-qa { name: RecEventHeader/vtx_y, nb: 1000, lo: -10., hi: 10}
-    - [*ax-vtx-x-qa, *ax-vtx-y-qa]
-    - &ax-vtx-z-qa { name: RecEventHeader/vtx_z, nb: 1000, lo: -602., hi: -582.}
+    - &ax-vtx-x-qa { name: RecEventHeader/vtx_x, nb: 1000, lo: -10., hi: 10 }
+    - &ax-vtx-y-qa { name: RecEventHeader/vtx_y, nb: 1000, lo: -10., hi: 10 }
+    - [ *ax-vtx-x-qa, *ax-vtx-y-qa ]
+    - &ax-vtx-z-qa { name: RecEventHeader/vtx_z, nb: 1000, lo: -602., hi: -582. }
   qa-centrality: &qa-centrality
-    - &ax-epsd-qa { name: RecEventHeader/Epsd, nb: 500, lo: 0, hi: 5000}
+    - &ax-epsd-qa { name: RecEventHeader/Epsd, nb: 500, lo: 0, hi: 5000 }
     - *ax-centrality
-    - [*ax-epsd-qa, *ax-centrality]
-    - [*ax-vtx-z-qa, *ax-epsd-qa]
-    - [*ax-vtx-z-qa, *ax-centrality]
+    - [ *ax-epsd-qa, *ax-centrality ]
+    - [ *ax-vtx-z-qa, *ax-epsd-qa ]
+    - [ *ax-vtx-z-qa, *ax-centrality ]
   qa:
-    - &ax-s1-qa { name: RecEventHeader/s1, nb: 500, lo: 0, hi: 500}
-    - &ax-s2-qa { name: RecEventHeader/s2, nb: 500, lo: 0, hi: 500}
-    - [*ax-s1-qa, *ax-s2-qa]
-    - [*ax-s1-qa, *ax-epsd-qa]
-    - [*ax-s2-qa, *ax-epsd-qa]
+    - &ax-s1-qa { name: RecEventHeader/s1, nb: 500, lo: 0, hi: 500 }
+    - &ax-s2-qa { name: RecEventHeader/s2, nb: 500, lo: 0, hi: 500 }
+    - [ *ax-s1-qa, *ax-s2-qa ]
+    - [ *ax-s1-qa, *ax-epsd-qa ]
+    - [ *ax-s2-qa, *ax-epsd-qa ]
   axes: [ *ax-centrality ]
   q-vectors: &q-vectors-list
-# OBSERVABLES
-# STANDARD CUTS
+    # OBSERVABLES
+    # STANDARD CUTS
     - name: protons_pt_standard
-      tags: [observable]
+      tags: [ observable ]
       _from: &tpc-base-detector
         type: track
         phi: RecParticles/phi
@@ -163,33 +163,33 @@ pbpb_13agev_16_025:
         qa-quality: *rec-particle-qa-quality
         qa-kinematics: *rec-particle-qa-kinematics
       axes: &correction-axes-pt-standard
-        - &ax-pt          {name: RecParticles/pT, bin-edges: *common-pt-bin-edges}
-        - &ax-y-cm-corr-1 {name: RecParticles/y_cm, bin-edges: *common-y-cm-correction-range}
+        - &ax-pt          { name: RecParticles/pT, bin-edges: *common-pt-bin-edges }
+        - &ax-y-cm-corr-1 { name: RecParticles/y_cm, bin-edges: *common-y-cm-correction-range }
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: &cuts-proton
-        RecParticles/pid : { equals: 2212 }
+        RecParticles/pid: { equals: 2212 }
     - name: protons_y_standard
-      tags: [observable]
+      tags: [ observable ]
       _from: *tpc-base-detector
       axes: &correction-axes-y-proton-standard
-        - &ax-y-cm {name: RecParticles/y_cm, bin-edges: *common-y-cm-bin-edges}
+        - &ax-y-cm { name: RecParticles/y_cm, bin-edges: *common-y-cm-bin-edges }
         - *ax-pt-corr-protons
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-proton
     - name: pion_neg_pt_standard
-      tags: [observable]
+      tags: [ observable ]
       _from: *tpc-base-detector
       axes: *correction-axes-pt-standard
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: &cuts-pion-neg
-        RecParticles/pid : { equals: -211 }
+        RecParticles/pid: { equals: -211 }
     - name: pion_neg_y_standard
-      tags: [observable]
+      tags: [ observable ]
       _from: *tpc-base-detector
       axes: *correction-axes-y-proton-standard
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-pion-neg
-# STANDARD CUTS (WEIGHTED)
+    # STANDARD CUTS (WEIGHTED)
     - name: protons_pt_standard_weighted
       tags: [ observable ]
       _from: &tpc-base-detector-weighted
@@ -232,9 +232,9 @@ pbpb_13agev_16_025:
         - *ax-pt-corr-pions
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-pion-neg
-# REFERENCE DETECTORS
+    # REFERENCE DETECTORS
     - name: psd1
-      tags: [reference]
+      tags: [ reference ]
       _from: &reference-base-detector
         type: channel
         phi: PsdModules/phi
@@ -244,11 +244,11 @@ pbpb_13agev_16_025:
         qa: *psd-qa
       channel-ids: *layout-na61-psd1
     - name: psd2
-      tags: [reference]
+      tags: [ reference ]
       _from: *reference-base-detector
       channel-ids: *layout-na61-psd2
     - name: psd3
-      tags: [reference]
+      tags: [ reference ]
       _from: *reference-base-detector
       channel-ids: *layout-na61-psd3
 
@@ -257,7 +257,7 @@ _tasks:
   - args:
       - query: { tags: { any-in: [ observable ] } }
         query-list: *q-vectors-list
-        components: &x1y1 [x1, y1]
+        components: &x1y1 [ x1, y1 ]
         correction-steps: [ recentered, rescaled ]
         weight: sumw
       - query: { tags: { any-in: [ reference ] } }
@@ -306,45 +306,45 @@ pbpb_13agev_mc:
     - &var-sim-vtx-y        SimEventHeader/vtx_y
     - &var-sim-vtx-z        SimEventHeader/vtx_z
   axes:
-    - &ax-centrality {name: *var-rec-centrality, nb: 20, lo: 0, hi: 100}
+    - &ax-centrality { name: *var-rec-centrality, nb: 20, lo: 0, hi: 100 }
   qa-vertex:
-    - &ax-vtx-x-qa { name: *var-rec-vtx-x, nb: 1000, lo: -10., hi: 10}
-    - &ax-vtx-y-qa { name: *var-rec-vtx-y, nb: 1000, lo: -10., hi: 10}
-    - &ax-vtx-z-qa { name: *var-rec-vtx-z, nb: 1000, lo: -602., hi: -582.}
-    - [*ax-vtx-x-qa, *ax-vtx-y-qa]
+    - &ax-vtx-x-qa { name: *var-rec-vtx-x, nb: 1000, lo: -10., hi: 10 }
+    - &ax-vtx-y-qa { name: *var-rec-vtx-y, nb: 1000, lo: -10., hi: 10 }
+    - &ax-vtx-z-qa { name: *var-rec-vtx-z, nb: 1000, lo: -602., hi: -582. }
+    - [ *ax-vtx-x-qa, *ax-vtx-y-qa ]
   qa-centrality:
-    - &ax-epsd-qa { name: *var-rec-e-psd, nb: 500, lo: 0, hi: 5000}
+    - &ax-epsd-qa { name: *var-rec-e-psd, nb: 500, lo: 0, hi: 5000 }
     - &ax-mult-qa { name: RecEventHeaderProc/M, nb: 500, lo: 0, hi: 500 }
     - *ax-centrality
-    - [*ax-epsd-qa, *ax-centrality]
-    - [*ax-mult-qa, *ax-epsd-qa]
-    - [*ax-vtx-z-qa, *ax-epsd-qa]
-    - [*ax-vtx-z-qa, *ax-centrality]
+    - [ *ax-epsd-qa, *ax-centrality ]
+    - [ *ax-mult-qa, *ax-epsd-qa ]
+    - [ *ax-vtx-z-qa, *ax-epsd-qa ]
+    - [ *ax-vtx-z-qa, *ax-centrality ]
   qa-mc:
-    -  &ax-psi-rp-qa { name: SimEventHeader/psi_RP, nb: 400, lo: -4., hi: 4.}
-    -  &ax-sim-vtx-x-qa { name: *var-sim-vtx-x, nb: 1000, lo: -10., hi: 10.}
-    -  &ax-sim-vtx-y-qa { name: *var-sim-vtx-y, nb: 1000, lo: -10., hi: 10.}
-    -  &ax-sim-vtx-z-qa { name: *var-sim-vtx-z, nb: 1000, lo: -602., hi: -582.}
-    - [*ax-sim-vtx-x-qa, *ax-sim-vtx-y-qa]
-    - [*ax-sim-vtx-x-qa, *ax-vtx-x-qa]
-    - [*ax-sim-vtx-y-qa, *ax-vtx-y-qa]
-    - [*ax-sim-vtx-z-qa, *ax-vtx-z-qa]
-    -  &ax-sim-b-qa     { name: *var-sim-b, nb: 200, lo: 0., hi: 20}
-    - [*ax-sim-b-qa, *ax-centrality]
-    - [*ax-vtx-z-qa, *ax-sim-b-qa]
+    - &ax-psi-rp-qa { name: SimEventHeader/psi_RP, nb: 400, lo: -4., hi: 4. }
+    - &ax-sim-vtx-x-qa { name: *var-sim-vtx-x, nb: 1000, lo: -10., hi: 10. }
+    - &ax-sim-vtx-y-qa { name: *var-sim-vtx-y, nb: 1000, lo: -10., hi: 10. }
+    - &ax-sim-vtx-z-qa { name: *var-sim-vtx-z, nb: 1000, lo: -602., hi: -582. }
+    - [ *ax-sim-vtx-x-qa, *ax-sim-vtx-y-qa ]
+    - [ *ax-sim-vtx-x-qa, *ax-vtx-x-qa ]
+    - [ *ax-sim-vtx-y-qa, *ax-vtx-y-qa ]
+    - [ *ax-sim-vtx-z-qa, *ax-vtx-z-qa ]
+    - &ax-sim-b-qa     { name: *var-sim-b, nb: 200, lo: 0., hi: 20 }
+    - [ *ax-sim-b-qa, *ax-centrality ]
+    - [ *ax-vtx-z-qa, *ax-sim-b-qa ]
   q-vectors: &q-vectors-list-mc
-#   Rec particles
+    #   Rec particles
     - name: protons_pt_standard
-      tags: [observable]
+      tags: [ observable, reco ]
       _from: *tpc-base-detector
       axes: &correction-axes-pt-standard
         - *ax-pt
         - *ax-y-cm-corr-1
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: &cuts-proton
-        RecParticles/pid : { equals: 2212 }
+        RecParticles/pid: { equals: 2212 }
     - name: protons_y_standard
-      tags: [ observable ]
+      tags: [ observable, reco ]
       _from: *tpc-base-detector
       axes:
         - *ax-y-cm
@@ -352,23 +352,23 @@ pbpb_13agev_mc:
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-proton
     - name: pion_neg_pt_standard
-      tags: [observable]
+      tags: [ observable, reco ]
       _from: *tpc-base-detector
       axes: *correction-axes-pt-standard
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: &cuts-pion-neg
-        RecParticles/pid : { equals: -211 }
+        RecParticles/pid: { equals: -211 }
     - name: pion_neg_y_standard
-      tags: [ observable ]
+      tags: [ observable, reco ]
       _from: *tpc-base-detector
       axes:
         - *ax-y-cm
         - *ax-pt-corr-pions
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-pion-neg
-#   MC true
+    #   MC true
     - name: mc_protons_pt
-      tags: [ observable ]
+      tags: [ observable, mc ]
       _from: &sim-base-detector
         type: track
         phi: SimTracksProc/phi
@@ -378,19 +378,19 @@ pbpb_13agev_mc:
         cuts-primary:
           SimTracksProc/mother_id: { equals: -1 }
       axes:
-        - &ax-mc-pt       {name: SimTracksProc/pT, bin-edges: *common-pt-bin-edges}
-        - &ax-y-cm-corr-1 {name: SimTracksProc/y_cm, bin-edges: *common-y-cm-correction-range}
+        - &ax-mc-pt       { name: SimTracksProc/pT, bin-edges: *common-pt-bin-edges }
+        - &ax-y-cm-corr-1 { name: SimTracksProc/y_cm, bin-edges: *common-y-cm-correction-range }
       cuts: &cuts-mc-proton
         SimTracksProc/pdg: { equals: 2212 }
     - name: mc_protons_y
-      tags: [ observable ]
+      tags: [ observable, mc ]
       _from: *sim-base-detector
       axes:
         - &ax-mc-y-cm       { name: SimTracksProc/y_cm, bin-edges: *common-y-cm-bin-edges }
-        - {name: SimTracksProc/pT, bin-edges: *common-pt-correction-range-protons}
+        - { name: SimTracksProc/pT, bin-edges: *common-pt-correction-range-protons }
       cuts: *cuts-mc-proton
     - name: mc_pion_neg_pt
-      tags: [ observable ]
+      tags: [ observable, mc ]
       _from: *sim-base-detector
       axes:
         - *ax-mc-pt
@@ -398,31 +398,31 @@ pbpb_13agev_mc:
       cuts: &cuts-mc-pion-neg
         SimTracksProc/pdg: { equals: -211 }
     - name: mc_pion_neg_y
-      tags: [ observable ]
+      tags: [ observable, mc ]
       _from: *sim-base-detector
       axes:
         - *ax-mc-y-cm
-        - {name: SimTracksProc/pT, bin-edges: *common-pt-correction-range-pions}
+        - { name: SimTracksProc/pT, bin-edges: *common-pt-correction-range-pions }
       cuts: *cuts-mc-pion-neg
-# References
+    # References
     - name: psd1
-      tags: [reference]
+      tags: [ reference, reco ]
       _from: *reference-base-detector
       channel-ids: *layout-na61-psd1
     - name: psd2
-      tags: [reference]
+      tags: [ reference, reco ]
       _from: *reference-base-detector
       channel-ids: *layout-na61-psd2
     - name: psd3
-      tags: [reference]
+      tags: [ reference, reco ]
       _from: *reference-base-detector
       channel-ids: *layout-na61-psd3
     - name: psi_rp
-      tags: [reference]
+      tags: [ reference, mc ]
       type: psi
       phi: *var-sim-psi-rp
       norm: mag
-      correction-steps: []
+      correction-steps: [ ]
       qa:
         - *ax-psi-rp-qa
 
@@ -431,7 +431,7 @@ correlations_mc:
   - args:
       - query: { tags: { any-in: [ observable ] } }
         query-list: *q-vectors-list-mc
-        components: &x1y1 [x1, y1]
+        components: &x1y1 [ x1, y1 ]
         correction-steps: [ recentered, rescaled ]
         weight: sumw
       - query: { tags: { any-in: [ reference ] } }
@@ -448,15 +448,45 @@ correlations_mc:
         bin-edges: *common-correlation-centrality-bin-ranges
   - args:
       - query: { tags: { any-in: [ reference ] } }
-        query-list: *q-vectors-list
+        query-list: *q-vectors-list-mc
         components: *x1y1
         correction-steps: [ recentered ]
         weight: ones
       - query: { tags: { any-in: [ reference ] } }
-        query-list: *q-vectors-list
+        query-list: *q-vectors-list-mc
         components: *x1y1
         correction-steps: [ recentered ]
         weight: ones
+    n-samples: 50
+    weights-type: reference
+    folder: "/QQ"
+    axes: [ *ax-centrality-correlation ]
+  - args:
+    - query: { tags: { all-in: [ mc, observable ] } }
+      query-list: *q-vectors-list-mc
+      components: *x1y1
+      correction-steps: [ plain ]
+      weight: sumw
+    - query: { tags: { all-in: [ mc, reference ] } }
+      query-list: *q-vectors-list-mc
+      components: *x1y1
+      correction-steps: [ plain ]
+      weight: ones
+    n-samples: 50
+    weights-type: observable
+    folder: "/QQ"
+    axes: [ *ax-centrality-correlation ]
+  - args:
+    - query: { tags: { all-in: [ reco, reference ] } }
+      query-list: *q-vectors-list-mc
+      components: *x1y1
+      correction-steps: [ plain, recentered ]
+      weight: ones
+    - query: { tags: { all-in: [ mc, reference ] } }
+      query-list: *q-vectors-list-mc
+      components: *x1y1
+      correction-steps: [ plain ]
+      weight: ones
     n-samples: 50
     weights-type: reference
     folder: "/QQ"
