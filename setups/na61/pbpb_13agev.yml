@@ -474,7 +474,7 @@ correlations_mc:
       weight: ones
     n-samples: 50
     weights-type: observable
-    folder: "/QQ"
+    folder: "/uQ"
     axes: [ *ax-centrality-correlation ]
   - args:
     - query: { tags: { all-in: [ reco, reference ] } }
