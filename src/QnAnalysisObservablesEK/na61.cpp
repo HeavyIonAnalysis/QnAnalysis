@@ -112,15 +112,29 @@ int main() {
     r.meta.put("component", tokens.back());
   });
 
-  gResourceManager.ForEach([](const StringKey &key, ResourceManager::Resource &r) {
-    const std::regex re_expr("^.*(pion_neg|protons)_(pt|y).*$");
-    auto particle = KEY.MatchGroup(1, re_expr)(r);
-    auto axis = KEY.MatchGroup(2, re_expr)(r);
-    r.meta.put("type", "uQ");
-    r.meta.put("u.particle", particle);
-    r.meta.put("u.axis", axis);
-  }, KEY.Matches("^/calc/uQ/.*$"));
 
+  {
+    const std::regex u_reco_expr("^/calc/uQ/(pion_neg|protons)_(pt|y)_set_(\\w+)_(PLAIN|RECENTERED|TWIST|RESCALED).*$");
+    gResourceManager.ForEach([&u_reco_expr](const StringKey &key, ResourceManager::Resource &r) {
+      auto particle = KEY.MatchGroup(1, u_reco_expr)(r);
+      auto axis = KEY.MatchGroup(2, u_reco_expr)(r);
+      auto set = KEY.MatchGroup(3, u_reco_expr)(r);
+      r.meta.put("type", "uQ");
+      r.meta.put("u.particle", particle);
+      r.meta.put("u.axis", axis);
+      r.meta.put("u.set", set);
+    },KEY.Matches(u_reco_expr));
+  }
+  {
+    const std::regex u_mc_expr("^/calc/uQ/mc_(pion_neg|protons)_(pt|y)_PLAIN.*$");
+    gResourceManager.ForEach([&u_mc_expr](const StringKey &key, ResourceManager::Resource &r) {
+      auto particle = KEY.MatchGroup(1, u_mc_expr)(r);
+      auto axis = KEY.MatchGroup(2, u_mc_expr)(r);
+      r.meta.put("type", "uQ");
+      r.meta.put("u.particle", particle);
+      r.meta.put("u.axis", axis);
+    },KEY.Matches(u_mc_expr));
+  }
 
 
   /* To check compatibility with old stuff, multiply raw correlations by factor of 2 */
@@ -280,6 +294,7 @@ int main() {
           META["v1.particle"] + "/" +
           "AX_" + META["v1.axis"] + "/" +
           "systematics" + "/" +
+          "SET_" + META["v1.set"] + "/"
           "RES_" + META["v1.resolution.meta_key"] + "/" +
           "REF_" + META["v1.ref"] + "/" +
           META["v1.component"];
@@ -553,7 +568,7 @@ int main() {
           META["v1.axis"] + "__" +
           META["centrality.lo"] + "_" + META["centrality.hi"] + "__" +
           META["v1.component"],
-      [](std::string f, std::vector<ResourceManager::ResourcePtr> &resources) {
+      [](const std::string& f, std::vector<ResourceManager::ResourcePtr> &resources) {
         if (resources.empty())
           return;
 
@@ -561,9 +576,13 @@ int main() {
             {"3sub_standard", kBlue},
             {"mc", kRed},
         };
+        const std::map<std::string, int> map_linestyle{
+            {"standard", kSolid},
+            {"weighted", kDotted},
+        };
 
         TCanvas c(("c__" + f).c_str(), "");
-        c.SetCanvasSize(800, 600);
+        c.SetCanvasSize(1280, 1024);
         c.SetBatch(false);
 
         bool is_first = true;
@@ -578,9 +597,11 @@ int main() {
             graph->SetTitle("True MC");
           } else {
             auto resolution_meta_key = META["v1.resolution.meta_key"](*res);
+            auto v1_set = META["v1.set"](*res);
             graph->SetLineColor(map_colors.at(resolution_meta_key));
+            graph->SetLineStyle(map_linestyle.at(v1_set));
             graph->SetMarkerColor(map_colors.at(resolution_meta_key));
-            graph->SetTitle(resolution_meta_key.c_str());
+            graph->SetTitle((v1_set + " " + resolution_meta_key).c_str());
           }
           graph->Draw(draw_opts);
         }
@@ -588,12 +609,37 @@ int main() {
         legend->SetHeader(f.c_str());
         c.SaveAs(("plots/resolution_methods/" + f + ".png").c_str());
         c.SaveAs(("plots/resolution_methods/" + f + ".C").c_str());
-        c.SaveAs(("plots/resolution_methods/" + f + ".eps").c_str());
       }, META["type"] == "profile_v1" &&
-          META["centrality.no"] == "2" &&
+          META["centrality.no"] == "3" &&
           (META["v1.src"] == "mc" || (META["v1.src"] == "reco" && META["v1.ref"] == "combined")));
 
+  gResourceManager.GroupBy(
+      META["v1.particle"] + "__" +
+      META["v1.axis"],
+      [] (const std::string &f, const std::vector<ResourceManager::ResourcePtr> &resources) {
+        if (resources.empty())
+          return;
+        TCanvas c(("c__" + f).c_str(), "");
+        c.SetCanvasSize(1280, 1024);
+        c.SetBatch(false);
 
+        bool is_first = true;
+        for (auto &res : resources) {
+          auto draw_opts = is_first ? "Apl" : "pl";
+          is_first = false;
+
+          auto graph = (TGraphErrors*) res->As<TGraphErrors>().Clone();
+          graph->Draw(draw_opts);
+        }
+        c.SaveAs(("plots/v1_centrality/" + f + ".png").c_str());
+        c.SaveAs(("plots/v1_centrality/" + f + ".C").c_str());
+        c.SaveAs(("plots/v1_centrality/" + f + ".eps").c_str());
+      },
+      META["type"] == "profile_v1" &&
+      META["v1.src"] == "reco" &&
+      META["v1.ref"] == "combined" &&
+      META["v1.component"] == "combined" &&
+      META["v1.resolution.meta_key"] == "3sub_standard");
 
   /***************** SAVING OUTPUT *****************/
 

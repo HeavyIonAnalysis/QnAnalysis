@@ -75,6 +75,7 @@ v1(Resource &uQ, Resource & resolution) {
   meta.put_child("v1.resolution", resolution.meta.get_child("resolution", {}));
   meta.put("v1.particle", uQ.meta.get("u.particle","unknown"));
   meta.put("v1.axis", uQ.meta.get("u.axis","unknown"));
+  meta.put("v1.set", uQ.meta.get("u.set","unknown"));
   return {result, meta};
 }
 
