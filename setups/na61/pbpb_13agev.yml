@@ -334,7 +334,7 @@ pbpb_13agev_mc:
     - [ *ax-vtx-z-qa, *ax-sim-b-qa ]
   q-vectors: &q-vectors-list-mc
     #   Rec particles
-    - name: protons_pt_standard
+    - name: protons_pt_set_standard
       tags: [ observable, reco ]
       _from: *tpc-base-detector
       axes: &correction-axes-pt-standard
@@ -343,7 +343,7 @@ pbpb_13agev_mc:
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: &cuts-proton
         RecParticles/pid: { equals: 2212 }
-    - name: protons_y_standard
+    - name: protons_y_set_standard
       tags: [ observable, reco ]
       _from: *tpc-base-detector
       axes:
@@ -351,14 +351,14 @@ pbpb_13agev_mc:
         - *ax-pt-corr-protons
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-proton
-    - name: pion_neg_pt_standard
+    - name: pion_neg_pt_set_standard
       tags: [ observable, reco ]
       _from: *tpc-base-detector
       axes: *correction-axes-pt-standard
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: &cuts-pion-neg
         RecParticles/pid: { equals: -211 }
-    - name: pion_neg_y_standard
+    - name: pion_neg_y_set_standard
       tags: [ observable, reco ]
       _from: *tpc-base-detector
       axes:
@@ -366,6 +366,47 @@ pbpb_13agev_mc:
         - *ax-pt-corr-pions
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-pion-neg
+    # weighted
+    - name: protons_pt_set_weighted
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      weight: RecParticles/w_eff_standard_cuts
+      axes: &correction-axes-pt-standard
+        - *ax-pt
+        - *ax-y-cm-corr-1
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts: &cuts-proton
+        RecParticles/pid: { equals: 2212 }
+      qa-weighted: *rec-particle-qa-kinematics-weighted
+    - name: protons_y_set_weighted
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      weight: RecParticles/w_eff_standard_cuts
+      axes:
+        - *ax-y-cm
+        - *ax-pt-corr-protons
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts: *cuts-proton
+      qa-weighted: *rec-particle-qa-kinematics-weighted
+    - name: pion_neg_pt_set_weighted
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      weight: RecParticles/w_eff_standard_cuts
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts: &cuts-pion-neg
+        RecParticles/pid: { equals: -211 }
+      qa-weighted: *rec-particle-qa-kinematics-weighted
+    - name: pion_neg_y_set_weighted
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      weight: RecParticles/w_eff_standard_cuts
+      axes:
+        - *ax-y-cm
+        - *ax-pt-corr-pions
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts: *cuts-pion-neg
+      qa-weighted: *rec-particle-qa-kinematics-weighted
     #   MC true
     - name: mc_protons_pt
       tags: [ observable, mc ]
