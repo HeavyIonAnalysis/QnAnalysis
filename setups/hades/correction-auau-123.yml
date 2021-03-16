@@ -76,7 +76,7 @@ hades_analysis:
         - recentering
         - twist-and-rescale
       axes:
-        - *axis_pT_uniform
+        - *axis_protons_pT
         - *axis_protons_rapidity
       cuts-pid:
         *protons_cuts
@@ -84,9 +84,9 @@ hades_analysis:
         *good_particle_cuts
       qa:
         - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
-        - *axis_pT_uniform
+        - *axis_protons_pT
         - *axis_protons_rapidity
-        - [*axis_protons_rapidity, *axis_pT_uniform]
+        - [*axis_protons_rapidity, *axis_protons_pT]
     #############################################################
     - name: pi_plus
       type: track
