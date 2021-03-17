@@ -72,9 +72,9 @@ hades_analysis:
       phi:  mdc_vtx_tracks_rapidity/phi
       weight: mdc_vtx_tracks_rapidity/efficiency
       norm: none
-      corrections:
-        - recentering
-        - twist-and-rescale
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
       axes:
         - *axis_protons_pT
         - *axis_protons_rapidity
