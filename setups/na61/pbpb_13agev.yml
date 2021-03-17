@@ -419,6 +419,44 @@ pbpb_13agev_mc:
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-pion-neg
       qa-weighted: *rec-particle-qa-kinematics-weighted
+    #   Rec particles (TRUE PRIMARIES)
+    - name: protons_pt_set_primaries
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes: &correction-axes-pt-standard
+        - *ax-pt
+        - *ax-y-cm-corr-1
+      cuts-quality: &rec-particle-cuts-quality-true-primaries
+        RecParticles/nhits_total: { range: [ 30, 1000 ] }
+        RecParticles/nhits_vtpc: { range: [ 10, 1000 ] }
+        RecParticles/nhits_pot_total: { range: [ 1, 1000 ] }
+        RecParticles/nhits_ratio: { range: [ 0.55, 1.1 ] }
+        RecParticles/sim_mother_id: { equals: -1 }
+      cuts: &cuts-proton
+        RecParticles/pid: { equals: 2212 }
+    - name: protons_y_set_primaries
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-y-cm
+        - *ax-pt-corr-protons
+      cuts-quality: *rec-particle-cuts-quality-true-primaries
+      cuts: *cuts-proton
+    - name: pion_neg_pt_set_primaries
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes: *correction-axes-pt-standard
+      cuts-quality: *rec-particle-cuts-quality-true-primaries
+      cuts: &cuts-pion-neg
+        RecParticles/pid: { equals: -211 }
+    - name: pion_neg_y_set_primaries
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-y-cm
+        - *ax-pt-corr-pions
+      cuts-quality: *rec-particle-cuts-quality-true-primaries
+      cuts: *cuts-pion-neg
     #   MC true
     - name: mc_protons_pt
       tags: [ observable, mc ]
