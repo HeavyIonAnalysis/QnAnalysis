@@ -1,0 +1,200 @@
+_layouts:
+
+_axes:
+  - &axis_rapidity
+    name: mdc_vtx_tracks_rapidity/rapidity
+    nb: 15
+    lo: -0.01
+    hi: 1.49
+  - &axis_gen_rapidity
+    name: sim_tracks/rapidity
+    nb: 15
+    lo: -0.01
+    hi: 1.49
+  - &axis_pT_non_uniform
+    name: mdc_vtx_tracks_rapidity/pT
+    bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
+  - &axis_pT_uniform
+    name: mdc_vtx_tracks_rapidity/pT
+    nb: 16
+    lo: 0.0
+    hi: 1.6
+  - &axis_gen_pT_non_uniform
+    name: sim_tracks/pT
+    bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
+  - &axis_gen_pT_uniform
+    name: sim_tracks/pT
+    nb: 16
+    lo: 0.0
+    hi: 1.6
+_cuts:
+  - &pid_protons_cut
+    mdc_vtx_tracks_rapidity/pid: { equals: 2212 }
+  - &gen_prim_protons_cut
+    sim_tracks/pid: { equals: 2212 }
+    sim_tracks/is_primary: { equals: 1 }
+  - &good_track_cuts
+    mdc_vtx_tracks_rapidity/dca_xy: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks_rapidity/dca_z: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks_rapidity/chi2: {range: [0.0, 100.0]}
+
+hades_analysis:
+  event-variables:
+    - event_header/selected_tof_rpc_hits_centrality
+  axes:
+    - { name: event_header/selected_tof_rpc_hits_centrality, nb: 12, lo: 0.0, hi: 60 }
+  q-vectors:
+    ###########################################################################
+    - name: rec_non_uniform_none
+      type: track
+      phi:  mdc_vtx_tracks_rapidity/phi
+      weight: mdc_vtx_tracks_rapidity/efficiency
+      norm: none
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *axis_pT_non_uniform
+        - *axis_rapidity
+      cuts-pid:
+        *pid_protons_cut
+      cuts-quality:
+        *good_track_cuts
+      qa:
+        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_pT_non_uniform
+        - *axis_rapidity
+        - [*axis_rapidity, *axis_pT_non_uniform]
+  ###########################################################################
+    - name: rec_non_uniform_m
+      type: track
+      phi:  mdc_vtx_tracks_rapidity/phi
+      weight: mdc_vtx_tracks_rapidity/efficiency
+      norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *axis_pT_non_uniform
+        - *axis_rapidity
+      cuts-pid:
+        *pid_protons_cut
+      cuts-quality:
+        *good_track_cuts
+      qa:
+        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_pT_non_uniform
+        - *axis_rapidity
+        - [*axis_rapidity, *axis_pT_non_uniform]
+  ###########################################################################
+    - name: rec_uniform_none
+      type: track
+      phi:  mdc_vtx_tracks_rapidity/phi
+      weight: mdc_vtx_tracks_rapidity/efficiency
+      norm: none
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *axis_pT_uniform
+        - *axis_rapidity
+      cuts-pid:
+        *pid_protons_cut
+      cuts-quality:
+        *good_track_cuts
+      qa:
+        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_pT_uniform
+        - *axis_rapidity
+        - [*axis_rapidity, *axis_pT_uniform]
+  ###########################################################################
+    - name: rec_uniform_m
+      type: track
+      phi:  mdc_vtx_tracks_rapidity/phi
+      weight: mdc_vtx_tracks_rapidity/efficiency
+      norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *axis_pT_uniform
+        - *axis_rapidity
+      cuts-pid:
+        *pid_protons_cut
+      cuts-quality:
+        *good_track_cuts
+      qa:
+        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_pT_uniform
+        - *axis_rapidity
+        - [*axis_rapidity, *axis_pT_uniform]
+  #############################################################
+    - name: gen_non_uniform_none
+      type: track
+      phi:  sim_tracks/phi
+      weight: Ones
+      norm: none
+      axes:
+        - *axis_gen_pT_non_uniform
+        - *axis_gen_rapidity
+      cuts-pid:
+        *gen_prim_protons_cut
+      qa:
+        - {name: sim_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_pT_non_uniform
+        - *axis_gen_rapidity
+        - [*axis_gen_rapidity, *axis_gen_pT_non_uniform]
+  #############################################################
+    - name: gen_non_uniform_m
+      type: track
+      phi:  sim_tracks/phi
+      weight: m
+      norm: none
+      axes:
+        - *axis_gen_pT_non_uniform
+        - *axis_gen_rapidity
+      cuts-pid:
+        *gen_prim_protons_cut
+      qa:
+        - {name: sim_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_pT_non_uniform
+        - *axis_gen_rapidity
+        - [*axis_gen_rapidity, *axis_gen_pT_non_uniform]
+  #############################################################
+    - name: gen_uniform_none
+      type: track
+      phi:  sim_tracks/phi
+      weight: Ones
+      norm: none
+      axes:
+        - *axis_gen_pT_uniform
+        - *axis_gen_rapidity
+      cuts-pid:
+        *gen_prim_protons_cut
+      qa:
+        - {name: sim_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_pT_uniform
+        - *axis_gen_rapidity
+        - [*axis_gen_rapidity, *axis_gen_pT_uniform]
+  #############################################################
+    - name: gen_uniform_m
+      type: track
+      phi:  sim_tracks/phi
+      weight: m
+      norm: none
+      axes:
+        - *axis_gen_pT_uniform
+        - *axis_gen_rapidity
+      cuts-pid:
+        *gen_prim_protons_cut
+      qa:
+        - {name: sim_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_pT_uniform
+        - *axis_gen_rapidity
+        - [*axis_gen_rapidity, *axis_gen_pT_uniform]
+  ###########################################################################
+    - name: psi_rp
+      type: psi
+      phi: sim_header/reaction_plane
+      weight: Ones
+      norm: mag
