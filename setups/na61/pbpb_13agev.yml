@@ -508,14 +508,28 @@ pbpb_13agev_mc:
       tags: [ reference, reco ]
       _from: *reference-base-detector
       channel-ids: *layout-na61-psd3
-    - name: psd1l
+    # Removed 1st section
+    - name: psd1_90
       tags: [ reference, reco ]
-      _from: *reference-base-detector
-      channel-ids: *layout-na61-psd1l
-    - name: psd1r
+      _from: &psd-90-base
+        type: channel
+        phi: PsdModules90/phi
+        weight: PsdModules90/signal
+        norm: m
+        corrections: [ recentering ]
+        qa:
+          - { name: PsdModules90/phi, nb: 100, lo: -4., hi: 4. }
+          - { name: PsdModules90/signal, nb: 100, lo: 0., hi: 100. }
+      channel-ids: *layout-na61-psd1
+    - name: psd2_90
       tags: [ reference, reco ]
-      _from: *reference-base-detector
-      channel-ids: *layout-na61-psd1r
+      _from: *psd-90-base
+      channel-ids: *layout-na61-psd2
+    - name: psd3_90
+      tags: [ reference, reco ]
+      _from: *psd-90-base
+      channel-ids: *layout-na61-psd3
+    # PSI RP
     - name: psi_rp
       tags: [ reference, mc ]
       type: psi
