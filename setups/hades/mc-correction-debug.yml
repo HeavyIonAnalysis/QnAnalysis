@@ -148,8 +148,8 @@ hades_analysis:
     - name: gen_non_uniform_m
       type: track
       phi:  sim_tracks/phi
-      weight: m
-      norm: none
+      weight: Ones
+      norm: m
       axes:
         - *axis_gen_pT_non_uniform
         - *axis_gen_rapidity
@@ -180,8 +180,8 @@ hades_analysis:
     - name: gen_uniform_m
       type: track
       phi:  sim_tracks/phi
-      weight: m
-      norm: none
+      weight: Ones
+      norm: m
       axes:
         - *axis_gen_pT_uniform
         - *axis_gen_rapidity
