@@ -48,7 +48,7 @@ hades_analysis:
     - name: rec_non_uniform_none
       type: track
       phi:  mdc_vtx_tracks_rapidity/phi
-      weight: mdc_vtx_tracks_rapidity/efficiency
+      weight: Ones
       norm: none
       corrections:
         - recentering
@@ -69,7 +69,7 @@ hades_analysis:
     - name: rec_non_uniform_m
       type: track
       phi:  mdc_vtx_tracks_rapidity/phi
-      weight: mdc_vtx_tracks_rapidity/efficiency
+      weight: Ones
       norm: m
       corrections:
         - recentering
@@ -90,7 +90,7 @@ hades_analysis:
     - name: rec_uniform_none
       type: track
       phi:  mdc_vtx_tracks_rapidity/phi
-      weight: mdc_vtx_tracks_rapidity/efficiency
+      weight: Ones
       norm: none
       corrections:
         - recentering
@@ -111,7 +111,7 @@ hades_analysis:
     - name: rec_uniform_m
       type: track
       phi:  mdc_vtx_tracks_rapidity/phi
-      weight: mdc_vtx_tracks_rapidity/efficiency
+      weight: Ones
       norm: m
       corrections:
         - recentering
