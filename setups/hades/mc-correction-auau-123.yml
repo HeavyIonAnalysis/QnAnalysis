@@ -2,63 +2,51 @@ _layouts:
 
 _axes:
   - &axis_protons_pT
-    name: mdc_vtx_tracks_rapidity/pT
+    name: mdc_vtx_tracks_extra/pT
     bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
-  - &axis_pions_pT
-    name: mdc_vtx_tracks_rapidity/pT
-    bin-edges: [0, 0.0825, 0.1075, 0.1275, 0.1525, 0.1775, 0.2075, 0.2475, 0.3075, 0.4725, 1.0]
   - &axis_gen_protons_pT
-    name: sim_tracks/pT
+    name: sim_particles_extra/pT
     bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
   - &axis_gen_pions_pT
-    name: sim_tracks/pT
+    name: sim_particles_extra/pT
     bin-edges: [0, 0.0825, 0.1075, 0.1275, 0.1525, 0.1775, 0.2075, 0.2475, 0.3075, 0.4725, 1.0]
   - &axis_protons_rapidity
-    name: mdc_vtx_tracks_rapidity/rapidity
+    name: mdc_vtx_tracks_extra/rapidity
     nb: 15
     lo: -0.01
     hi: 1.49
-  - &axis_pions_rapidity
-    name: mdc_vtx_tracks_rapidity/rapidity
-    nb: 17
-    lo: 0.09
-    hi: 1.79
   - &axis_gen_protons_rapidity
-    name: sim_tracks/rapidity
+    name: sim_particles_extra/rapidity
     nb: 15
     lo: -0.01
     hi: 1.49
   - &axis_gen_pions_rapidity
-    name: sim_tracks/rapidity
+    name: sim_particles_extra/rapidity
     nb: 17
     lo: 0.09
     hi: 1.79
 _cuts:
   - &pid_protons_cut
-    mdc_vtx_tracks_rapidity/pid: { equals: 2212 }
-  - &pid_pi_plus_cut
-    mdc_vtx_tracks_rapidity/pid: { equals: 211 }
-  - &pid_pi_minus_cut
-    mdc_vtx_tracks_rapidity/pid: { equals: -211 }
+    mdc_vtx_tracks_extra/pid: { equals: 2212 }
   - &mf_cuts
-    mdc_vtx_tracks_rapidity/pT: {range: [0.0, 2.0]}
-    mdc_vtx_tracks_rapidity/rapidity: {range: [1.09, 1.29]}
+    mdc_vtx_tracks_extra/pT: {range: [0.0, 2.0]}
+    mdc_vtx_tracks_extra/rapidity: {range: [1.09, 1.29]}
   - &mb_cuts
-    mdc_vtx_tracks_rapidity/pT: {range: [0.0, 2.0]}
-    mdc_vtx_tracks_rapidity/rapidity: {range: [0.19, 0.39]}
+    mdc_vtx_tracks_extra/pT: {range: [0.0, 2.0]}
+    mdc_vtx_tracks_extra/rapidity: {range: [0.19, 0.39]}
   - &gen_prim_protons_cut
-    sim_tracks/pid: { equals: 2212 }
-    sim_tracks/is_primary: { equals: 1 }
+    sim_particles_extra/pid: { equals: 2212 }
+    sim_particles_extra/is_primary: { equals: 1 }
   - &gen_prim_pi_plus_cut
-    sim_tracks/pid: { equals: 211 }
-    sim_tracks/is_primary: { equals: 1 }
+    sim_particles_extra/pid: { equals: 211 }
+    sim_particles_extra/is_primary: { equals: 1 }
   - &gen_prim_pi_minus_cut
-    sim_tracks/pid: { equals: -211 }
-    sim_tracks/is_primary: { equals: 1 }
+    sim_particles_extra/pid: { equals: -211 }
+    sim_particles_extra/is_primary: { equals: 1 }
   - &good_track_cuts
-    mdc_vtx_tracks_rapidity/dca_xy: {range: [-10.0, 10.0]}
-    mdc_vtx_tracks_rapidity/dca_z: {range: [-10.0, 10.0]}
-    mdc_vtx_tracks_rapidity/chi2: {range: [0.0, 100.0]}
+    mdc_vtx_tracks_extra/dca_xy: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks_extra/dca_z: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks_extra/chi2: {range: [0.0, 100.0]}
   - &w1_cuts
     reconstructed_forward_wall_hits/ring: { range: [1.0, 5.0] }
     reconstructed_forward_wall_hits/signal: { range: [80.0, 999.0] }
@@ -78,8 +66,8 @@ hades_analysis:
     ###########################################################################
     - name: pid_protons
       type: track
-      phi:  mdc_vtx_tracks_rapidity/phi
-      weight: mdc_vtx_tracks_rapidity/efficiency
+      phi:  mdc_vtx_tracks_extra/phi
+      weight: mdc_vtx_tracks_extra/efficiency
       norm: m
       corrections:
         - recentering
@@ -92,56 +80,14 @@ hades_analysis:
       cuts-quality:
         *good_track_cuts
       qa:
-        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_protons_pT
         - *axis_protons_rapidity
         - [*axis_protons_rapidity, *axis_protons_pT]
   ###########################################################################
-    - name: pid_pi_plus
-      type: track
-      phi:  mdc_vtx_tracks_rapidity/phi
-      weight: ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
-      axes:
-        - *axis_pions_pT
-        - *axis_pions_rapidity
-      cuts-pid:
-        *pid_pi_plus_cut
-      cuts-quality:
-        *good_track_cuts
-      qa:
-        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
-        - *axis_pions_pT
-        - *axis_pions_rapidity
-        - [*axis_pions_rapidity, *axis_pions_pT]
-  ###########################################################################
-    - name: pid_pi_minus
-      type: track
-      phi:  mdc_vtx_tracks_rapidity/phi
-      weight: ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
-      axes:
-        - *axis_pions_pT
-        - *axis_pions_rapidity
-      cuts-pid:
-        *pid_pi_minus_cut
-      cuts-quality:
-        *good_track_cuts
-      qa:
-        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
-        - *axis_pions_pT
-        - *axis_pions_rapidity
-        - [*axis_pions_rapidity, *axis_pions_pT]
-  ###########################################################################
     - name: Mf
       type: track
-      phi:  mdc_vtx_tracks_rapidity/phi
+      phi:  mdc_vtx_tracks_extra/phi
       weight: Ones
       norm: m
       corrections:
@@ -154,11 +100,11 @@ hades_analysis:
       cuts-pid:
         *pid_protons_cut
       qa:
-        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
   #############################################################
     - name: Mb
       type: track
-      phi:  mdc_vtx_tracks_rapidity/phi
+      phi:  mdc_vtx_tracks_extra/phi
       weight: Ones
       norm: m
       corrections:
@@ -171,11 +117,11 @@ hades_analysis:
       cuts-pid:
         *pid_protons_cut
       qa:
-        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
   #############################################################
     - name: gen_prim_protons
       type: track
-      phi:  sim_tracks/phi
+      phi:  sim_particles_extra/phi
       weight: Ones
       norm: m
       axes:
@@ -184,14 +130,14 @@ hades_analysis:
       cuts-pid:
         *gen_prim_protons_cut
       qa:
-        - {name: sim_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_gen_protons_pT
         - *axis_gen_protons_rapidity
         - [*axis_gen_protons_rapidity, *axis_gen_protons_pT]
   ###########################################################################
     - name: gen_prim_pi_plus
       type: track
-      phi:  sim_tracks/phi
+      phi:  sim_particles_extra/phi
       weight: Ones
       norm: m
       axes:
@@ -200,14 +146,14 @@ hades_analysis:
       cuts-pid:
         *gen_prim_pi_plus_cut
       qa:
-        - {name: sim_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_gen_pions_pT
         - *axis_gen_pions_rapidity
         - [*axis_gen_pions_rapidity, *axis_gen_pions_pT]
   ###########################################################################
     - name: gen_prim_pi_minus
       type: track
-      phi:  sim_tracks/phi
+      phi:  sim_particles_extra/phi
       weight: Ones
       norm: m
       axes:
@@ -216,7 +162,7 @@ hades_analysis:
       cuts-pid:
         *gen_prim_pi_minus_cut
       qa:
-        - {name: sim_tracks/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_gen_pions_pT
         - *axis_gen_pions_rapidity
         - [*axis_gen_pions_rapidity, *axis_gen_pions_pT]
