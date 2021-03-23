@@ -303,13 +303,14 @@ int main() {
     }
 
   }
+
   const auto v1_key_generator =
       "/" + META["type"] + "/reco/" +
           META["v1.particle"] + "/" +
           "AX_" + META["v1.axis"] + "/" +
           "systematics" + "/" +
-          "SET_" + META["v1.set"] + "/"
-                                    "RES_" + META["v1.resolution.meta_key"] + "/" +
+          "SET_" + META["v1.set"] + "/" +
+          "RES_" + META["v1.resolution.meta_key"] + "/" +
           "REF_" + META["v1.ref"] + "/" +
           META["v1.component"];
 
@@ -478,6 +479,7 @@ int main() {
                   return Qn::Merge(a, b);
                 });
           }
+          combined.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
           auto combined_meta = objs[0]->meta;
           combined_meta.put("v1.ref", "combined");
           combined_meta.put("v1.resolution.ref", "combined");
@@ -544,56 +546,56 @@ int main() {
   /* v1 profiles */
   // /profiles/v1/<particle>/<axis>/<centrality range>/
   gResourceManager.ForEach([](VectorKey key, ResourceManager::Resource &resource) {
-    const std::map<std::string, std::string> remap_axis_name = {
-        {"pT", "p_{T} (GeV/#it{c})"},
-        {"y_cm", "#it{y}_{CM}"},
-    };
-    const std::map<std::string, int> colors_map = {
-        {"psd1", kRed},
-        {"psd2", kGreen + 2},
-        {"psd3", kBlue},
-        {"combined", kBlack},
-        {"psi_rp", kBlack}
-    };
-    const std::map<std::pair<std::string, std::string>, int> markers_map = {
-        {{"psd1", "x1x1"}, kFullSquare},
-        {{"psd1", "y1y1"}, kOpenSquare},
-        {{"psd1", "combined"}, kFullStar},
-        {{"psd2", "x1x1"}, kFullCircle},
-        {{"psd2", "y1y1"}, kOpenCircle},
-        {{"psd2", "combined"}, kFullStar},
-        {{"psd3", "x1x1"}, kFullTriangleDown},
-        {{"psd3", "y1y1"}, kOpenTriangleDown},
-        {{"psd3", "combined"}, kFullStar},
-        {{"combined", "x1x1"}, kFullDiamond},
-        {{"combined", "y1y1"}, kOpenDiamond},
-        {{"combined", "combined"}, kOpenDiamond},
-        {{"psi_rp", "x1x1"}, kFullSquare},
-        {{"psi_rp", "y1y1"}, kOpenSquare},
-        {{"psi_rp", "combined"}, kFullStar}
-    };
+                             const std::map<std::string, std::string> remap_axis_name = {
+                                 {"pT", "p_{T} (GeV/#it{c})"},
+                                 {"y_cm", "#it{y}_{CM}"},
+                             };
+                             const std::map<std::string, int> colors_map = {
+                                 {"psd1", kRed},
+                                 {"psd2", kGreen + 2},
+                                 {"psd3", kBlue},
+                                 {"combined", kBlack},
+                                 {"psi_rp", kBlack}
+                             };
+                             const std::map<std::pair<std::string, std::string>, int> markers_map = {
+                                 {{"psd1", "x1x1"}, kFullSquare},
+                                 {{"psd1", "y1y1"}, kOpenSquare},
+                                 {{"psd1", "combined"}, kFullStar},
+                                 {{"psd2", "x1x1"}, kFullCircle},
+                                 {{"psd2", "y1y1"}, kOpenCircle},
+                                 {{"psd2", "combined"}, kFullStar},
+                                 {{"psd3", "x1x1"}, kFullTriangleDown},
+                                 {{"psd3", "y1y1"}, kOpenTriangleDown},
+                                 {{"psd3", "combined"}, kFullStar},
+                                 {{"combined", "x1x1"}, kFullDiamond},
+                                 {{"combined", "y1y1"}, kOpenDiamond},
+                                 {{"combined", "combined"}, kOpenDiamond},
+                                 {{"psi_rp", "x1x1"}, kFullSquare},
+                                 {{"psi_rp", "y1y1"}, kOpenSquare},
+                                 {{"psi_rp", "combined"}, kFullStar}
+                             };
 
-    auto selected_graph = Qn::ToTGraph(resource.As<DTCalc>());
-    if (!selected_graph) {
-      return;
-    }
-    selected_graph->SetName(key.back().c_str());
-    selected_graph->GetXaxis()->SetTitle(remap_axis_name.at(resource.As<DTCalc>().GetAxes()[0].Name()).c_str());
+                             auto selected_graph = Qn::ToTGraph(resource.As<DTCalc>());
+                             if (!selected_graph) {
+                               return;
+                             }
+                             selected_graph->SetName(key.back().c_str());
+                             selected_graph->GetXaxis()->SetTitle(remap_axis_name.at(resource.As<DTCalc>().GetAxes()[0].Name()).c_str());
 //    selected_graph->SetLineColor(colors_map.at(META["v1.ref"](resource)));
 //    selected_graph->SetMarkerColor(colors_map.at(META["v1.ref"](resource)));
 
-    VectorKey new_key(key.begin(), key.end());
-    new_key.insert(new_key.begin(), "profiles");
-    auto meta = resource.meta;
-    if (META["type"](resource) == "v1_centrality") {
-      meta.put("type", "profile_v1");
-    } else if (META["type"](resource) == "ratio_v1") {
-      meta.put("type", "profile_ratio");
-    }
-    AddResource(new_key, ResourceManager::Resource(*selected_graph, meta));
-  },
+                             VectorKey new_key(key.begin(), key.end());
+                             new_key.insert(new_key.begin(), "profiles");
+                             auto meta = resource.meta;
+                             if (META["type"](resource) == "v1_centrality") {
+                               meta.put("type", "profile_v1");
+                             } else if (META["type"](resource) == "ratio_v1") {
+                               meta.put("type", "profile_ratio");
+                             }
+                             AddResource(new_key, ResourceManager::Resource(*selected_graph, meta));
+                           },
                            META["type"] == "v1_centrality" ||
-                           META["type"] == "c1_centrality");
+                               META["type"] == "c1_centrality");
 
   gResourceManager.ForEach([](const StringKey &, TGraphErrors &graph) {
     graph.GetYaxis()->SetRangeUser(-0.1, 0.1);
@@ -628,7 +630,7 @@ int main() {
               };
               std::map<std::string, std::pair<double, double>> ranges_map{
                   {"protons__pt", {-0.1, 0.25}},
-                  {"protons__y", {-0.05, 0.3}},
+                  {"protons__y", {-0.05, 0.4}},
                   {"pion_neg__pt", {-0.15, 0.15}},
                   {"pion_neg__y", {-0.15, 0.15}},
               };
@@ -727,7 +729,7 @@ int main() {
                       const auto resolution_key = META["v1.resolution.meta_key"](reco);
 
                       const auto draw_color = ref_rgb_colors.at(reco_ref);
-                      const auto draw_marker_style = [reco_component, reco_ref] () {
+                      const auto draw_marker_style = [reco_component, reco_ref]() {
                         if (reco_component == "x1x1")
                           return kFullCircle;
                         else if (reco_component == "y1y1")
@@ -776,8 +778,8 @@ int main() {
                     ) &&
                         (
                             META["v1.component"].Matches("^(x1x1|y1y1)$") && META["v1.ref"].Matches("psd[0-9]") ||
-                            META["v1.component"] == "combined" && META["v1.ref"] == "combined"
-                            ));
+                                META["v1.component"] == "combined" && META["v1.ref"] == "combined"
+                        ));
               }
 
               c_overview->BuildLegend();
@@ -792,104 +794,14 @@ int main() {
               delete c_overview;
             },
             META["type"] == "v1_centrality" &&
-            META["v1.src"] == "mc" &&
-            centrality_predicate &&
-            META["v1.component"] == "combined");
+                META["v1.src"] == "mc" &&
+                centrality_predicate &&
+                META["v1.component"] == "combined");
   }
-
-  gResourceManager.GroupBy(
-      META["v1.particle"] + "__" +
-          META["v1.axis"] + "__" +
-          META["centrality.lo"] + "_" + META["centrality.hi"] + "__" +
-          META["v1.component"],
-      [](const std::string &f, std::vector<ResourceManager::ResourcePtr> &resources) {
-        if (resources.empty())
-          return;
-
-        const std::map<std::string, int> map_colors{
-            {"3sub_standard", kBlue},
-            {"mc", kRed},
-        };
-        const std::map<std::string, int> map_linestyle{
-            {"standard", kSolid},
-            {"weighted", kDotted},
-            {"primaries", kSolid},
-        };
-
-        TCanvas c(("c__" + f).c_str(), "");
-        c.SetCanvasSize(1280, 1024);
-        c.SetBatch(false);
-
-        bool is_first = true;
-        for (auto &res : resources) {
-          auto draw_opts = is_first ? "Apl" : "pl";
-          is_first = false;
-
-          auto graph = (TGraphErrors *) res->As<TGraphErrors>().Clone();
-          if (META["v1.src"](*res) == "mc") {
-            graph->SetLineColor(kBlack);
-            graph->SetMarkerColor(kBlack);
-            graph->SetTitle("True MC");
-          } else {
-            auto resolution_meta_key = META["v1.resolution.meta_key"](*res);
-            auto v1_set = META["v1.set"](*res);
-            graph->SetLineColor(map_colors.at(resolution_meta_key));
-            graph->SetLineStyle(map_linestyle.at(v1_set));
-            graph->SetMarkerColor(map_colors.at(resolution_meta_key));
-            graph->SetTitle((v1_set + " " + resolution_meta_key).c_str());
-          }
-          graph->Draw(draw_opts);
-        }
-        auto legend = c.BuildLegend(0.1, 0.7, 0.4, 0.9);
-        legend->SetHeader(f.c_str());
-        c.SaveAs(("plots/resolution_methods/" + f + ".png").c_str());
-        c.SaveAs(("plots/resolution_methods/" + f + ".C").c_str());
-      }, META["type"] == "profile_v1" &&
-          META["centrality.no"] == "3" &&
-          (META["v1.src"] == "mc" || (META["v1.src"] == "reco" && META["v1.ref"] == "combined")));
-
-  gResourceManager.GroupBy(
-      META["v1.particle"] + "__" +
-          META["v1.axis"],
-      [](const std::string &f, const std::vector<ResourceManager::ResourcePtr> &resources) {
-        if (resources.empty())
-          return;
-        TCanvas c(("c__" + f).c_str(), "");
-        c.SetCanvasSize(1280, 1024);
-        c.SetBatch(false);
-
-        bool is_first = true;
-        for (auto &res : resources) {
-          auto draw_opts = is_first ? "Apl" : "pl";
-          is_first = false;
-
-          auto graph = (TGraphErrors *) res->As<TGraphErrors>().Clone();
-          graph->Draw(draw_opts);
-        }
-        c.SaveAs(("plots/v1_centrality/" + f + ".png").c_str());
-        c.SaveAs(("plots/v1_centrality/" + f + ".C").c_str());
-        c.SaveAs(("plots/v1_centrality/" + f + ".eps").c_str());
-      },
-      META["type"] == "profile_v1" &&
-          META["v1.src"] == "reco" &&
-          META["v1.ref"] == "combined" &&
-          META["v1.component"] == "combined" &&
-          META["v1.resolution.meta_key"] == "3sub_standard");
 
   /***************** SAVING OUTPUT *****************/
-
-  using ::Tools::ToRoot;
-  /// Save individual cases to separate ROOT file
-  for (const auto &v1_case : gResourceManager.SelectUniq(KEY.MatchGroup(1, "^/profiles/v1_centrality/(\\w+)/.*$"))) {
-    if (v1_case == "NOT-FOUND") continue;
-    gResourceManager.ForEach(ToRoot<TGraphErrors>("v1_" + v1_case + ".root", "RECREATE",
-                                                  "/profiles/v1_centrality/" + v1_case),
-                             META["type"] == "profile_v1" &&
-                                 META["v1.component"] == "combined" &&
-                                 META["v1.ref"] == "combined");
-  }
-
   {
+    using ::Tools::ToRoot;
     gResourceManager.ForEach(ToRoot<Qn::DataContainerStatCalculate>("correlation_proc.root"));
     gResourceManager.ForEach(ToRoot<TGraphErrors>("prof.root"));
     gResourceManager.ForEach(ToRoot<TGraphAsymmErrors>("prof.root", "UPDATE"));

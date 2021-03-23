@@ -190,7 +190,6 @@ class CorrelationTaskRunner {
 
   /**
    * @brief Takes task config and initializes IO
-   *        TODO shrink as possible
    * @tparam Arity
    * @tparam NAxis
    * @param t
