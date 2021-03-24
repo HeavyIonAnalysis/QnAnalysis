@@ -59,6 +59,42 @@ void LoadROOTFile(const std::string &file_name, const std::string &manager_prefi
   }
 }
 
+inline
+std::string PlotTitle(const ResourceManager::Resource &r) {
+  using Predicates::Resource::META;
+  using ::Tools::Format;
+
+  const std::map<std::string, std::string> map_particle{
+      {"proton", "p"},
+      {"protons", "p"},
+      {"pion_neg", "#pi-"},
+  };
+  const std::map<std::string, std::string> map_component{
+      {"x1x1", "X"},
+      {"y1y1", "Y"},
+      {"combined", "X+Y"},
+  };
+
+  auto src = META["v1.src"](r);
+  auto particle = META["v1.particle"](r);
+  auto component = META["v1.component"](r);
+  if (src == "mc") {
+    return (Format("v_{1,%2%}^{%1%} (#Psi_{RP})")
+        % map_particle.at(particle)
+        % map_component.at(component)).str();
+  } else if (src == "reco") {
+    auto reference = META["v1.ref"](r);
+    auto part_1 = (Format("v_{1,%2%}^{%1%} (%3%)")
+        % map_particle.at(particle)
+        % map_component.at(component)
+        % reference).str();
+    std::string part_2 = META["v1.resolution.title"](r);
+    auto part_3 = "setup:" + META["v1.set"](r);
+    return part_1.append(" ").append(part_2).append(" ").append(part_3);
+  }
+  return "";
+};
+
 int main() {
 
   using std::get;
@@ -195,7 +231,8 @@ int main() {
     const auto build_3sub_resolution = [](
         const std::string &meta_key,
         const std::array<std::string, 3> &base_q_vectors,
-        const std::map<std::string, std::string> &ref_alias_map = {}) {
+        const std::map<std::string, std::string> &ref_alias_map = {},
+        const std::string title = "") {
 
       const std::vector<std::tuple<string, string, string>> q_permutations = {
           {base_q_vectors[0], base_q_vectors[1], base_q_vectors[2]},
@@ -227,6 +264,10 @@ int main() {
         meta.put("resolution.ref_alias", ref_alias);
         meta.put("resolution.component", component);
         meta.put("resolution.meta_key", meta_key);
+        meta.put("resolution.title", (Format("R_{1,%1%} (%2%) - %3%")
+            % component
+            % ref_alias
+            % (title.empty() ? meta_key : title)).str());
         Define(resolution, Methods::Resolution3S, {arg1_name, arg2_name, arg3_name}, meta);
       }
     };
@@ -266,6 +307,9 @@ int main() {
         meta.put("resolution.component", resolution_component);
         meta.put("resolution.method", "mc");
         meta.put("resolution.meta_key", meta_key);
+        meta.put("resolution.title", (Format("R_{1,%1%} (%2%) from MC")
+            % resolution_component
+            % ref_alias).str());
 
         auto name = (Format("/resolution/%3%/RES_%1%_%2%") % ref_alias % resolution_component % meta_key).str();
         auto arg_name = (Format("/calc/QQ/%1%_RECENTERED.psi_rp_PLAIN.%2%") % base_q_vector % q_component).str();
@@ -534,15 +578,6 @@ int main() {
           combined_meta.put("v1.ref", "combined");
           combined_meta.put("v1.resolution.ref", "combined");
           AddResource(combined_psd_name, ResourceManager::Resource(combined, combined_meta));
-
-          for (auto &ref : objs) {
-            auto ratio_ref_combined = ref->As<DTCalc>() / combined;
-            auto ratio_meta = ref->meta;
-            ratio_meta.put("type", "ratio_v1");
-            auto ratio_key_name =
-                base_dir + "/" + "REF_combined" + "/" + "ratio_" + META["v1.ref"](*ref) + "_" + component;
-            AddResource(ratio_key_name, ResourceManager::Resource(ratio_ref_combined, ratio_meta));
-          }
         };
     const std::regex re_ref("^(.*)/REF_psd\\d/.*$");
     gResourceManager.GroupBy(
@@ -692,43 +727,6 @@ int main() {
               for (auto &mc_ref : mc_correlations) {
                 auto mc_ref_calc = mc_ref->As<DTCalc>();
 
-                auto get_plot_title = [](const ResourceManager::Resource &r) -> std::string {
-                  const std::map<std::string, std::string> map_particle{
-                      {"proton", "p"},
-                      {"protons", "p"},
-                      {"pion_neg", "#pi-"},
-                  };
-                  const std::map<std::string, std::string> map_component{
-                      {"x1x1", "X"},
-                      {"y1y1", "Y"},
-                      {"combined", "X+Y"},
-                  };
-
-                  auto src = META["v1.src"](r);
-                  auto particle = META["v1.particle"](r);
-                  auto component = META["v1.component"](r);
-                  if (src == "mc") {
-                    return (Format("v_{1,%2%}^{%1%} (#Psi_{RP})")
-                        % map_particle.at(particle)
-                        % map_component.at(component)).str();
-                  } else if (src == "reco") {
-                    auto reference = META["v1.ref"](r);
-                    auto part_1 = (Format("v_{1,%2%}^{%1%} (%3%)")
-                        % map_particle.at(particle)
-                        % map_component.at(component)
-                        % reference).str();
-                    std::string part_2;
-                    if (META["v1.resolution.meta_key"](r) == "mc") {
-                      part_2 = "R_{1} (MC)";
-                    } else if (META["v1.resolution.method"](r) == "3sub") {
-                      part_2 = "R_{1} (3-sub)";
-                    }
-                    auto part_3 = "setup:" + META["v1.set"](r);
-                    return part_1.append(" ").append(part_2).append(" ").append(part_3);
-                  }
-                  return "";
-                };
-
                 /* plot to overview */
                 auto mc_ref_graph = Qn::ToTGraph(mc_ref_calc);
 
@@ -741,7 +739,7 @@ int main() {
                 mc_ref_graph->GetYaxis()->SetTitle("v_{1}");
                 mc_ref_graph->GetYaxis()->SetRangeUser(ranges_map.at(meta_key).first, ranges_map.at(meta_key).second);
                 mc_ref_graph->SetLineStyle(line_style);
-                mc_ref_graph->SetTitle(get_plot_title(*mc_ref).c_str());
+                mc_ref_graph->SetTitle(PlotTitle(*mc_ref).c_str());
                 mc_ref_graph->SetLineWidth(2.);
 
                 c_overview->cd();
@@ -750,7 +748,7 @@ int main() {
 
                 auto ratio_self_calc = mc_ref_calc / mc_ref_calc;
                 auto ratio_self_graph = Qn::ToTGraph(ratio_self_calc);
-                ratio_self_graph->SetTitle(get_plot_title(*mc_ref).c_str());
+                ratio_self_graph->SetTitle(PlotTitle(*mc_ref).c_str());
                 ratio_self_graph->SetLineStyle(kSolid);
                 ratio_self_graph->SetLineWidth(2.);
                 ratio_self_graph->SetLineColor(kBlack);
@@ -798,12 +796,12 @@ int main() {
 
                       auto ratio_graph = Qn::ToTGraph(ratio_calc);
 
-                      ratio_graph->SetTitle(get_plot_title(reco).c_str());
+                      ratio_graph->SetTitle(PlotTitle(reco).c_str());
                       ratio_graph->SetLineColor(draw_color);
                       ratio_graph->SetMarkerColor(draw_color);
                       ratio_graph->SetMarkerStyle(draw_marker_style);
 
-                      reco_graph->SetTitle(get_plot_title(reco).c_str());
+                      reco_graph->SetTitle(PlotTitle(reco).c_str());
                       reco_graph->SetLineColor(draw_color);
                       reco_graph->SetMarkerColor(draw_color);
                       reco_graph->SetMarkerStyle(draw_marker_style);
