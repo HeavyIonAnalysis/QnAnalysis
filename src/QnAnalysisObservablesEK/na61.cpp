@@ -405,6 +405,16 @@ int main() {
           "REF_" + META["v1.ref"] + "/" +
           META["v1.component"];
 
+  const ::Predicates::MetaFeatureSet v1_reco_full_feature_set{
+    "v1.particle",
+    "v1.axis",
+    // systematics
+    "v1.set",
+    "v1.resolution.meta_key",
+    "v1.ref",
+    "v1.component"
+  };
+
   {
     /***************** Directed flow ******************/
     // folder structure /v1/<particle>/<axis>
@@ -537,6 +547,8 @@ int main() {
       }
     }, META["type"] == "v1" || META["type"] == "c1");
   }
+
+  const auto v1_reco_centrality_feature_set = v1_reco_full_feature_set + "centrality.key";
 
   /* Combine x1x1 and y1y1 */
   {

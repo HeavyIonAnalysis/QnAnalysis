@@ -172,6 +172,73 @@ typename ResourceQueryExpr<Expr>::result_type ResourceQueryExpr<Expr>::operator(
   return boost::proto::eval(*this, ctx);
 }
 
+namespace Impl {
+
+inline
+std::string JoinStrings(const std::vector<std::string> &strings, std::string delim = "__") {
+  assert(!strings.empty());
+  if (strings.size() == 1)
+    return strings[0];
+
+  auto result = strings.front();
+  for (std::size_t is = 1; is < strings.size(); ++is) {
+    result.append(delim).append(strings[is]);
+  }
+  return result;
+}
+} // namespace Impl
+
+
+template<typename ... Features>
+struct StaticFeatureSet {
+
+  typedef std::string result_type;
+
+  StaticFeatureSet(Features...features) : feature_set(std::make_tuple(features...)) {}
+
+  result_type operator()(const ResourceManager::Resource &r) const {
+    return std::apply([&r](auto ... feature) { return Impl::JoinStrings({feature(r)...}); }, feature_set);
+  }
+
+  std::tuple<Features...> feature_set;
+};
+
+struct MetaFeatureSet {
+
+  typedef std::string result_type;
+
+  MetaFeatureSet(std::initializer_list<std::string> feature_paths) :
+      meta_feature_paths_(feature_paths.begin(), feature_paths.end()) {}
+  MetaFeatureSet(const std::set<std::string> &meta_features) :
+      meta_feature_paths_(meta_features) {}
+
+  result_type operator()(const ResourceManager::Resource &r) const {
+    std::vector<std::string> feature_list;
+    feature_list.reserve(meta_feature_paths_.size());
+    for (auto &meta_feature_path: meta_feature_paths_) {
+      feature_list.push_back(Resource::META[meta_feature_path](r));
+    }
+    return Impl::JoinStrings(feature_list);
+  }
+
+  MetaFeatureSet operator- (const std::string& feature) const {
+    assert(meta_feature_paths_.find(feature) != meta_feature_paths_.end());
+    auto new_feature_set = meta_feature_paths_;
+    new_feature_set.erase(feature);
+    return MetaFeatureSet(new_feature_set);
+  }
+
+  MetaFeatureSet operator+ (const std::string &feature) const {
+    assert(meta_feature_paths_.find(feature) == meta_feature_paths_.end());
+    auto new_feature_set = meta_feature_paths_;
+    new_feature_set.emplace(feature);
+    return MetaFeatureSet(new_feature_set);
+  }
+
+  std::set<std::string> meta_feature_paths_;
+
+};
+
 } /// namespace Predicates
 
 #endif //QNANALYSIS_SRC_QNANALYSISOBSERVABLES_PREDICATES_HPP
