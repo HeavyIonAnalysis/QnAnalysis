@@ -395,15 +395,13 @@ int main() {
 
   }
 
-  const auto v1_key_generator =
-      "/" + META["type"] + "/reco/" +
-          META["v1.particle"] + "/" +
-          "AX_" + META["v1.axis"] + "/" +
-          "systematics" + "/" +
-          "SET_" + META["v1.set"] + "/" +
-          "RES_" + META["v1.resolution.meta_key"] + "/" +
-          "REF_" + META["v1.ref"] + "/" +
-          META["v1.component"];
+
+  const ::Predicates::MetaTemplateGenerator v1_reco_key_generator(
+      "/{{type}}/{{v1.src}}/{{v1.particle}}/AX_{{v1.axis}}/systematics/"
+      "SET_{{v1.set}}/RES_{{v1.resolution.meta_key}}/REF_{{v1.ref}}/{{v1.component}}");
+  const ::Predicates::MetaTemplateGenerator v1_reco_centrality_key_generator(
+      "/{{type}}/{{v1.src}}/{{v1.particle}}/AX_{{v1.axis}}/centrality_{{centrality.key}}/systematics/"
+      "SET_{{v1.set}}/RES_{{v1.resolution.meta_key}}/REF_{{v1.ref}}/{{v1.component}}");
 
   const ::Predicates::MetaFeatureSet v1_reco_full_feature_set{
     "v1.particle",
@@ -427,7 +425,7 @@ int main() {
     const auto resolution_filter = (META["type"] == "resolution");
 
     /* Lookup uQ */
-    gResourceManager.ForEach([v1_key_generator](const StringKey &uq_key, const ResourceManager::Resource &uQ_res) {
+    gResourceManager.ForEach([v1_reco_key_generator](const StringKey &uq_key, const ResourceManager::Resource &uQ_res) {
       auto reference = META["arg1.name"](uQ_res);
       auto correlation_component = META["component"](uQ_res);
       if (!(correlation_component == "x1x1" || correlation_component == "y1y1")) {
@@ -439,14 +437,14 @@ int main() {
           META["resolution.component"] == resolution_component &&
           META["resolution.ref"] == reference);
       /* Lookup resolution */
-      gResourceManager.ForEach([uq_key, correlation_component, v1_key_generator](const StringKey &resolution_key,
+      gResourceManager.ForEach([uq_key, correlation_component, v1_reco_key_generator](const StringKey &resolution_key,
                                                                                  const ResourceManager::Resource &res) {
         std::cout << resolution_key << std::endl;
         Meta meta;
         meta.put("v1.ref", META["resolution.ref"](res));
         meta.put("v1.component", correlation_component);
         meta.put("v1.src", "reco");
-        Define(v1_key_generator, Methods::v1, {uq_key, resolution_key}, meta);
+        Define(v1_reco_key_generator, Methods::v1, {uq_key, resolution_key}, meta);
       }, resolution_filter);
     }, uQ_filter);
 
@@ -458,7 +456,7 @@ int main() {
         META["u.particle"] + "__" +
             META["u.axis"] + "__" +
             META["arg1.name"],
-        [v1_key_generator](const std::string &meta_key,
+        [v1_reco_key_generator](const std::string &meta_key,
                            const std::vector<ResourceManager::ResourcePtr> &list_resources) {
           for (auto &uQ_resource : list_resources) {
             auto reference = META["arg1.name"](*uQ_resource);
@@ -478,7 +476,7 @@ int main() {
             meta.put("v1.ref", reference);
             meta.put("v1.component", c1_component);
             meta.put("v1.src", "reco");
-            Define(v1_key_generator, Methods::v1, {KEY(*uQ_resource), resolution_keys[0]}, meta);
+            Define(v1_reco_key_generator, Methods::v1, {KEY(*uQ_resource), resolution_keys[0]}, meta);
           }
         },
         META["type"] == "uQ" &&
@@ -488,10 +486,14 @@ int main() {
 
   }
 
+  const ::Predicates::MetaTemplateGenerator v1_mc_key_generator{
+    "/{{type}}/{{v1.src}}/{{v1.particle}}/AX_{{v1.axis}}/systematics/{{v1.component}}"};
+  const ::Predicates::MetaTemplateGenerator v1_mc_centrality_key_generator{
+      "/{{type}}/{{v1.src}}/{{v1.particle}}/AX_{{v1.axis}}/centrality_{{centrality.key}}/systematics/{{v1.component}}"};
   {
     /***************** Directed flow (MC) ******************/
     const std::regex re_expr(R"(^/calc/uQ/(mc_\w+)_PLAIN\.psi_rp_PLAIN\.(x1x1|y1y1)$)");
-    gResourceManager.ForEach([re_expr](const StringKey &key, ResourceManager::Resource &r) {
+    gResourceManager.ForEach([re_expr,v1_mc_key_generator](const StringKey &key, ResourceManager::Resource &r) {
       std::string component = KEY.MatchGroup(2, re_expr)(r);
       std::string u_vector = KEY.MatchGroup(1, re_expr)(r);
 
@@ -508,8 +510,7 @@ int main() {
 
       ResourceManager::Resource new_res(result, meta);
 
-      auto new_key = ("/v1/mc/" + META["v1.particle"] + "/" + "AX_" + META["v1.axis"] + "/" + "systematics" + "/"
-          + META["v1.component"])(new_res);
+      auto new_key = v1_mc_key_generator(new_res);
 
       AddResource(new_key, new_res);
     }, KEY.Matches(re_expr));
@@ -519,8 +520,8 @@ int main() {
 
   /******************** v1 vs Centrality *********************/
   {
-
-    gResourceManager.ForEach([](VectorKey key, ResourceManager::Resource &res) {
+    auto key_generator = v1_reco_centrality_key_generator;
+    auto expand_centrality_projection = [&key_generator](const VectorKey& key, ResourceManager::Resource &res) {
       auto calc = res.As<DTCalc>();
       auto meta = res.meta;
 
@@ -539,13 +540,17 @@ int main() {
         meta.put("centrality.hi", c_hi);
         meta.put("centrality.key", centrality_key);
 
-        VectorKey new_key(key.begin(), key.end());
-        new_key[0] = META["type"](res) + "_centrality";
-        new_key.insert(std::find(new_key.begin(), new_key.end(), "systematics"), centrality_range_str);
+        auto new_resource = ResourceManager::Resource(selected, meta);
+        auto new_key = key_generator(new_resource);
 
-        AddResource(new_key, ResourceManager::Resource(selected, meta));
-      }
-    }, META["type"] == "v1" || META["type"] == "c1");
+        AddResource(new_key, new_resource);
+      } // centrality bin
+    };
+    gResourceManager.ForEach(expand_centrality_projection,
+                             (META["type"] == "v1" || META["type"] == "c1") && META["v1.src"] == "reco");
+    key_generator = v1_mc_centrality_key_generator;
+    gResourceManager.ForEach(expand_centrality_projection,
+                             META["type"] == "v1" && META["v1.src"] == "mc");
   }
 
   const auto v1_reco_centrality_feature_set = v1_reco_full_feature_set + "centrality.key";

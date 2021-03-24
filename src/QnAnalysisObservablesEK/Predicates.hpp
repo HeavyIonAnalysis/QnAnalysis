@@ -221,7 +221,7 @@ struct MetaFeatureSet {
     return Impl::JoinStrings(feature_list);
   }
 
-  MetaFeatureSet operator- (const std::string& feature) const {
+  MetaFeatureSet operator-(const std::string &feature) const {
     auto new_feature_set = meta_feature_paths_;
     auto feature_pos = std::find(new_feature_set.begin(), new_feature_set.end(), feature);
     assert(feature_pos != new_feature_set.end());
@@ -229,7 +229,7 @@ struct MetaFeatureSet {
     return MetaFeatureSet(new_feature_set);
   }
 
-  MetaFeatureSet operator+ (const std::string &feature) const {
+  MetaFeatureSet operator+(const std::string &feature) const {
     assert(std::find(meta_feature_paths_.begin(), meta_feature_paths_.end(), feature) == meta_feature_paths_.end());
     auto new_feature_set = meta_feature_paths_;
     new_feature_set.emplace_back(feature);
@@ -238,6 +238,40 @@ struct MetaFeatureSet {
 
   std::vector<std::string> meta_feature_paths_;
 
+};
+
+struct MetaTemplateGenerator {
+
+  typedef std::string result_type;
+
+  explicit MetaTemplateGenerator(std::string template_str) : template_str(std::move(template_str)) {}
+
+  result_type operator()(const ResourceManager::Resource &r) const {
+    const std::regex re_meta_token{R"(\{\{([\w\.-]+)\}\})"};
+    using std::sregex_iterator;
+    using std::smatch;
+    using Resource::META;
+
+    auto result = template_str;
+    std::string::difference_type offset = 0;
+
+    for (
+        auto it = sregex_iterator(template_str.begin(), template_str.end(), re_meta_token);
+        it != sregex_iterator();
+        ++it) {
+      smatch match = *it;
+      auto meta_path = match.str(1);
+      auto meta_value = META[meta_path](r);
+
+      auto replace_start = match.position(0) + offset;
+      auto replace_length = match.length();
+      result.replace(replace_start, replace_length, meta_value);
+      offset += meta_value.length() - replace_length;
+    }
+    return result;
+  }
+
+  std::string template_str;
 };
 
 } /// namespace Predicates
