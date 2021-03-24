@@ -129,8 +129,10 @@ int main() {
       const std::regex arg_re("^(\\w+)_(PLAIN|RECENTERED|RESCALED)$");
       std::smatch match_results;
       std::regex_search(tokens[iarg], match_results, arg_re);
-      std::string arg_name = match_results.str(1);
-      std::string arg_cstep = match_results.str(2);
+      auto arg_name_raw = match_results.str(0);
+      auto arg_name = match_results.str(1);
+      auto arg_cstep = match_results.str(2);
+      r.meta.put("arg" + std::to_string(iarg) + ".raw-name", arg_name_raw);
       r.meta.put("arg" + std::to_string(iarg) + ".name", arg_name);
       r.meta.put("arg" + std::to_string(iarg) + ".c-step", arg_cstep);
     }
@@ -138,16 +140,20 @@ int main() {
   });
 
   {
-    const std::regex u_reco_expr("^/calc/uQ/(pion_neg|protons)_(pt|y)_set_(\\w+)_(PLAIN|RECENTERED|TWIST|RESCALED).*$");
-    gResourceManager.ForEach([&u_reco_expr](const StringKey &key, ResourceManager::Resource &r) {
-      auto particle = KEY.MatchGroup(1, u_reco_expr)(r);
-      auto axis = KEY.MatchGroup(2, u_reco_expr)(r);
-      auto set = KEY.MatchGroup(3, u_reco_expr)(r);
+    const std::regex
+        uQ_reco_expr("^/calc/uQ/(pion_neg|protons)_(pt|y)_set_(\\w+)_(PLAIN|RECENTERED|TWIST|RESCALED).*$");
+    gResourceManager.ForEach([&uQ_reco_expr](const StringKey &key, ResourceManager::Resource &r) {
+      auto particle = KEY.MatchGroup(1, uQ_reco_expr)(r);
+      auto axis = KEY.MatchGroup(2, uQ_reco_expr)(r);
+      auto set = KEY.MatchGroup(3, uQ_reco_expr)(r);
+      auto correction_step = KEY.MatchGroup(4, uQ_reco_expr)(r);
       r.meta.put("type", "uQ");
       r.meta.put("u.particle", particle);
       r.meta.put("u.axis", axis);
       r.meta.put("u.set", set);
-    }, KEY.Matches(u_reco_expr));
+      r.meta.put("u.src", "reco");
+      r.meta.put("u.correction-step", correction_step);
+    }, KEY.Matches(uQ_reco_expr));
   }
   {
     const std::regex u_mc_expr("^/calc/uQ/mc_(pion_neg|protons)_(pt|y)_PLAIN.*$");
@@ -157,6 +163,7 @@ int main() {
       r.meta.put("type", "uQ");
       r.meta.put("u.particle", particle);
       r.meta.put("u.axis", axis);
+      r.meta.put("u.src", "mc");
     }, KEY.Matches(u_mc_expr));
   }
 
@@ -185,50 +192,90 @@ int main() {
 
   {
     /***************** RESOLUTION 3-sub ******************/
-    std::vector<std::tuple<string, string, string>> args_list = {
-        {"psd1", "psd2", "psd3"},
-        {"psd2", "psd1", "psd3"},
-        {"psd3", "psd1", "psd2"},
+    const auto build_3sub_resolution = [](
+        const std::string &meta_key,
+        const std::array<std::string, 3> &base_q_vectors,
+        const std::map<std::string, std::string> &ref_alias_map = {}) {
+
+      const std::vector<std::tuple<string, string, string>> q_permutations = {
+          {base_q_vectors[0], base_q_vectors[1], base_q_vectors[2]},
+          {base_q_vectors[1], base_q_vectors[0], base_q_vectors[2]},
+          {base_q_vectors[2], base_q_vectors[0], base_q_vectors[1]},
+      };
+      const std::vector<std::string> q_components = {"x1x1", "y1y1"};
+
+      for (auto&&[q_component, ref_args] : Tools::Combination(q_components, q_permutations)) {
+        std::string subA, subB, subC;
+        std::tie(subA, subB, subC) = ref_args;
+
+        auto ref_alias = [&ref_alias_map, subA]() {
+          auto remap_ref_it = ref_alias_map.find(subA);
+          if (remap_ref_it != ref_alias_map.end()) {
+            return remap_ref_it->second;
+          }
+          return subA;
+        }();
+        auto component = q_component == "x1x1" ? "X" : "Y";
+
+        auto arg1_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subB % q_component).str();
+        auto arg2_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subC % q_component).str();
+        auto arg3_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subB % subC % q_component).str();
+        auto resolution = (Format("/resolution/%3%/RES_%1%_%2%") % ref_alias % q_component % meta_key).str();
+
+        Meta meta;
+        meta.put("resolution.ref", subA);
+        meta.put("resolution.ref_alias", ref_alias);
+        meta.put("resolution.component", component);
+        meta.put("resolution.meta_key", meta_key);
+        Define(resolution, Methods::Resolution3S, {arg1_name, arg2_name, arg3_name}, meta);
+      }
     };
-    std::vector<std::string> components = {"x1x1", "y1y1"};
 
-    for (auto&&[component, ref_args] : Tools::Combination(components, args_list)) {
-      std::string subA, subB, subC;
-      std::tie(subA, subB, subC) = ref_args;
-      auto arg1_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subB % component).str();
-      auto arg2_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subA % subC % component).str();
-      auto arg3_name = (Format("/calc/QQ/%1%_RECENTERED.%2%_RECENTERED.%3%") % subB % subC % component).str();
-      auto resolution = (Format("/resolution/3sub_standard/RES_%1%_%2%") % subA % component).str();
+    build_3sub_resolution("3sub_standard",
+                          {"psd1", "psd2", "psd3"});
+    build_3sub_resolution("3sub_psd90",
+                          {"psd1_90", "psd2_90", "psd3_90"},
+                          {{"psd1_90", "psd1"}, {"psd2_90", "psd2"}, {"psd3_90", "psd3"}});
 
-      Meta meta;
-      meta.put("resolution.ref", subA);
-      meta.put("resolution.component", component == "x1x1" ? "X" : "Y");
-      meta.put("resolution.meta_key", "3sub_standard");
-
-      Define(resolution, Methods::Resolution3S, {arg1_name, arg2_name, arg3_name}, meta);
-    }
   }
 
   {
     /***************** RESOLUTION MC ******************/
-    std::vector<std::string> reference = {
-        "psd1", "psd2", "psd3",
-        "psd1_90", "psd2_90", "psd3_90"};
-    std::vector<std::string> components = {"x1x1", "y1y1"};
+    auto build_psd_mc_resolution = [](
+        const std::string &meta_key,
+        const std::vector<std::string> &base_q_vectors,
+        const std::map<std::string, std::string> &ref_alias_map = {}
+    ) {
+      std::vector<std::string> components = {"x1x1", "y1y1"};
+      for (auto&&[q_component, base_q_vector] : Tools::Combination(components, base_q_vectors)) {
 
-    for (auto&&[component, reference] : Tools::Combination(components, reference)) {
+        auto ref_alias = [&ref_alias_map, &base_q_vector]() {
+          auto remap_ref_it = ref_alias_map.find(base_q_vector);
+          if (remap_ref_it != ref_alias_map.end()) {
+            return remap_ref_it->second;
+          }
+          return base_q_vector;
+        }();
 
-      Meta meta;
-      meta.put("type", "resolution");
-      meta.put("resolution.ref", reference);
-      meta.put("resolution.component", component == "x1x1" ? "X" : "Y");
-      meta.put("resolution.method", "mc");
-      meta.put("resolution.meta_key", "mc");
+        auto resolution_component = q_component == "x1x1" ? "X" : "Y";
 
-      auto name = (Format("/resolution/mc/RES_%1%_%2%") % reference % component).str();
-      auto arg_name = (Format("/calc/QQ/%1%_RECENTERED.psi_rp_PLAIN.%2%") % reference % component).str();
-      Define(name, [](const DTCalc &calc) { return 2 * calc; }, {arg_name}, meta);
-    }
+        Meta meta;
+        meta.put("type", "resolution");
+        meta.put("resolution.ref", base_q_vector);
+        meta.put("resolution.ref_alias", ref_alias);
+        meta.put("resolution.component", resolution_component);
+        meta.put("resolution.method", "mc");
+        meta.put("resolution.meta_key", meta_key);
+
+        auto name = (Format("/resolution/%3%/RES_%1%_%2%") % ref_alias % resolution_component % meta_key).str();
+        auto arg_name = (Format("/calc/QQ/%1%_RECENTERED.psi_rp_PLAIN.%2%") % base_q_vector % q_component).str();
+        Define(name, [](const DTCalc &calc) { return 2 * calc; }, {arg_name}, meta);
+      } // component, base_q_vector
+    };
+
+    build_psd_mc_resolution("psd_mc", {"psd1", "psd2", "psd3"});
+    build_psd_mc_resolution("psd90_mc", {"psd1_90", "psd2_90", "psd3_90"},
+                            {{"psd1_90", "psd1"}, {"psd2_90", "psd2"}, {"psd3_90", "psd3"}});
 
   }
 
@@ -317,30 +364,38 @@ int main() {
   {
     /***************** Directed flow ******************/
     // folder structure /v1/<particle>/<axis>
-    const auto resolution_predicate = (META["type"] == "resolution");
-    auto resolution_methods = gResourceManager.SelectUniq(META["resolution.meta_key"], resolution_predicate);
-    auto references = gResourceManager.SelectUniq(META["resolution.ref"], resolution_predicate);
-    std::vector<std::string> projections{"x1x1", "y1y1"};
 
-    auto u_vectors = gResourceManager.SelectUniq(KEY.MatchGroup(1, "/calc/uQ/(\\w+)_RESCALED.*$"),
-                                                 KEY.Matches("^/calc/uQ/.*"));
+    const auto uQ_filter = (
+        META["type"] == "uQ" &&
+            META["u.src"] == "reco" &&
+            META["u.correction-step"] == "RESCALED") &&
+        META["arg1.c-step"] == "RECENTERED";
+    const auto resolution_filter = (META["type"] == "resolution");
 
-    for (auto&&[resolution_method, reference, projection, u_vector_base] :
-        Tools::Combination(resolution_methods, references, projections, u_vectors)) {
-      auto u_query =
-          KEY.Matches((Format("/calc/uQ/%1%_RESCALED\\.%2%_RECENTERED.%3%") % u_vector_base % reference
-              % projection).str());
-      auto res_query =
-          KEY.Matches((Format("/resolution/%3%/RES_%1%_%2%") % reference % projection % resolution_method).str());
-      for (auto &&[u_vector, resolution] : Tools::Combination(gResourceManager.GetMatching(u_query),
-                                                              gResourceManager.GetMatching(res_query))) {
-        Meta meta;
-        meta.put("v1.ref", reference);
-        meta.put("v1.component", projection);
-        meta.put("v1.src", "reco");
-        Define(v1_key_generator, Methods::v1, {u_vector, resolution}, meta);
+    /* Lookup uQ */
+    gResourceManager.ForEach([v1_key_generator](const StringKey &uq_key, const ResourceManager::Resource &uQ_res) {
+      auto reference = META["arg1.name"](uQ_res);
+      auto correlation_component = META["component"](uQ_res);
+      if (!(correlation_component == "x1x1" || correlation_component == "y1y1")) {
+        return;
       }
-    }
+      auto resolution_component = correlation_component == "x1x1" ? "X" : "Y";
+
+      const auto resolution_filter = (META["type"] == "resolution" &&
+          META["resolution.component"] == resolution_component &&
+          META["resolution.ref"] == reference);
+      /* Lookup resolution */
+      gResourceManager.ForEach([uq_key, correlation_component, v1_key_generator](const StringKey &resolution_key,
+                                                                                 const ResourceManager::Resource &res) {
+        std::cout << resolution_key << std::endl;
+        Meta meta;
+        meta.put("v1.ref", META["resolution.ref"](res));
+        meta.put("v1.component", correlation_component);
+        meta.put("v1.src", "reco");
+        Define(v1_key_generator, Methods::v1, {uq_key, resolution_key}, meta);
+      }, resolution_filter);
+    }, uQ_filter);
+
   } // directed flow
 
   {
@@ -354,7 +409,8 @@ int main() {
           for (auto &uQ_resource : list_resources) {
             auto reference = META["arg1.name"](*uQ_resource);
             auto uQ_component = META["component"](*uQ_resource);
-            auto resolution_component = (uQ_component == "x1y1") ? "Y" : "X";
+            auto resolution_component = (uQ_component == "x1y1" ? "Y" : "X");
+            auto c1_component = (uQ_component == "x1y1" ? "X" : "Y");
 
             auto resolution_keys = gResourceManager
                 .SelectUniq(KEY, META["type"] == "resolution" &&
@@ -366,7 +422,7 @@ int main() {
             Meta meta;
             meta.put("type", "c1");
             meta.put("v1.ref", reference);
-            meta.put("v1.component", uQ_component);
+            meta.put("v1.component", c1_component);
             meta.put("v1.src", "reco");
             Define(v1_key_generator, Methods::v1, {KEY(*uQ_resource), resolution_keys[0]}, meta);
           }
@@ -419,6 +475,7 @@ int main() {
         auto c_lo = centrality_axis.GetLowerBinEdge(ic);
         auto c_hi = centrality_axis.GetUpperBinEdge(ic);
         auto centrality_range_str = (Format("centrality_%1%-%2%") % c_lo % c_hi).str();
+        auto centrality_key = (Format("%1%-%2%") % c_lo % c_hi).str();
 
         auto selected = calc.Select(Qn::AxisD(centrality_axis.Name(), 1, c_lo, c_hi));
 
@@ -426,6 +483,7 @@ int main() {
         meta.put("centrality.no", std::to_string(ic));
         meta.put("centrality.lo", c_lo);
         meta.put("centrality.hi", c_hi);
+        meta.put("centrality.key", centrality_key);
 
         VectorKey new_key(key.begin(), key.end());
         new_key[0] = META["type"](res) + "_centrality";
@@ -449,14 +507,6 @@ int main() {
       auto combined_meta = objs[0]->meta;
       combined_meta.put("v1.component", "combined");
       auto result = AddResource(combined_name, ResourceManager::Resource(combined, combined_meta));
-
-      for (auto &obj : objs) {
-        auto ratio = obj->As<DTCalc>() / combined;
-        auto ratio_name = base_dir + "/" + "ratio_" + META["v1.component"](*obj);
-        auto ratio_meta = obj->meta;
-        ratio_meta.put("type", "ratio_v1");
-        AddResource(ratio_name, ResourceManager::Resource(ratio, ratio_meta));
-      }
     };
 
     gResourceManager.GroupBy(
@@ -612,7 +662,7 @@ int main() {
   /* Compare MC vs Data */
   {
     auto meta_key_gen = META["v1.particle"] + "__" + META["v1.axis"];
-    auto centrality_predicate = META["centrality.no"] == "3";
+    auto centrality_predicate = META["centrality.key"] == "15-25";
 
     gResourceManager
         .GroupBy(
@@ -774,7 +824,7 @@ int main() {
                         centrality_predicate &&
                         (
 //                            (META["v1.set"] == "standard") ||
-                        (META["v1.set"] == "primaries" && META["v1.resolution.meta_key"] == "mc")
+                        (META["v1.set"] == "primaries" && META["v1.resolution.meta_key"] == "psd_mc")
                     ) &&
                         (
                             META["v1.component"].Matches("^(x1x1|y1y1)$") && META["v1.ref"].Matches("psd[0-9]") ||
