@@ -209,7 +209,7 @@ struct MetaFeatureSet {
 
   MetaFeatureSet(std::initializer_list<std::string> feature_paths) :
       meta_feature_paths_(feature_paths.begin(), feature_paths.end()) {}
-  MetaFeatureSet(const std::set<std::string> &meta_features) :
+  MetaFeatureSet(const std::vector<std::string> &meta_features) :
       meta_feature_paths_(meta_features) {}
 
   result_type operator()(const ResourceManager::Resource &r) const {
@@ -222,20 +222,21 @@ struct MetaFeatureSet {
   }
 
   MetaFeatureSet operator- (const std::string& feature) const {
-    assert(meta_feature_paths_.find(feature) != meta_feature_paths_.end());
     auto new_feature_set = meta_feature_paths_;
-    new_feature_set.erase(feature);
+    auto feature_pos = std::find(new_feature_set.begin(), new_feature_set.end(), feature);
+    assert(feature_pos != new_feature_set.end());
+    new_feature_set.erase(feature_pos);
     return MetaFeatureSet(new_feature_set);
   }
 
   MetaFeatureSet operator+ (const std::string &feature) const {
-    assert(meta_feature_paths_.find(feature) == meta_feature_paths_.end());
+    assert(std::find(meta_feature_paths_.begin(), meta_feature_paths_.end(), feature) == meta_feature_paths_.end());
     auto new_feature_set = meta_feature_paths_;
-    new_feature_set.emplace(feature);
+    new_feature_set.emplace_back(feature);
     return MetaFeatureSet(new_feature_set);
   }
 
-  std::set<std::string> meta_feature_paths_;
+  std::vector<std::string> meta_feature_paths_;
 
 };
 
