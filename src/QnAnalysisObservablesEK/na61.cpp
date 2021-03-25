@@ -225,7 +225,18 @@ int main() {
                              },
                              META["u.axis"] == "pt");
   }
-
+  {
+    /* Rebin y  */
+    gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
+                               calc = calc.Rebin(Qn::AxisD("y_cm",  {-0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 2.0, 2.4 }));
+                             },
+                             META["u.axis"] == "y");
+    /* Rebin pT  */
+    gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
+                               calc = calc.Rebin(Qn::AxisD("pT", {0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.4, 3.0}));
+                             },
+                             META["u.axis"] == "pt");
+  }
   {
     /***************** RESOLUTION 3-sub ******************/
     const auto build_3sub_resolution = [](
@@ -395,7 +406,6 @@ int main() {
 
   }
 
-
   const ::Predicates::MetaTemplateGenerator v1_reco_key_generator(
       "/{{type}}/{{v1.src}}/{{v1.particle}}/AX_{{v1.axis}}/systematics/"
       "SET_{{v1.set}}/RES_{{v1.resolution.meta_key}}/REF_{{v1.ref}}/{{v1.component}}");
@@ -404,13 +414,13 @@ int main() {
       "SET_{{v1.set}}/RES_{{v1.resolution.meta_key}}/REF_{{v1.ref}}/{{v1.component}}");
 
   const ::Predicates::MetaFeatureSet v1_reco_full_feature_set{
-    "v1.particle",
-    "v1.axis",
-    // systematics
-    "v1.set",
-    "v1.resolution.meta_key",
-    "v1.ref",
-    "v1.component"
+      "v1.particle",
+      "v1.axis",
+      // systematics
+      "v1.set",
+      "v1.resolution.meta_key",
+      "v1.ref",
+      "v1.component"
   };
 
   {
@@ -438,7 +448,7 @@ int main() {
           META["resolution.ref"] == reference);
       /* Lookup resolution */
       gResourceManager.ForEach([uq_key, correlation_component, v1_reco_key_generator](const StringKey &resolution_key,
-                                                                                 const ResourceManager::Resource &res) {
+                                                                                      const ResourceManager::Resource &res) {
         std::cout << resolution_key << std::endl;
         Meta meta;
         meta.put("v1.ref", META["resolution.ref"](res));
@@ -457,7 +467,7 @@ int main() {
             META["u.axis"] + "__" +
             META["arg1.name"],
         [v1_reco_key_generator](const std::string &meta_key,
-                           const std::vector<ResourceManager::ResourcePtr> &list_resources) {
+                                const std::vector<ResourceManager::ResourcePtr> &list_resources) {
           for (auto &uQ_resource : list_resources) {
             auto reference = META["arg1.name"](*uQ_resource);
             auto uQ_component = META["component"](*uQ_resource);
@@ -487,13 +497,13 @@ int main() {
   }
 
   const ::Predicates::MetaTemplateGenerator v1_mc_key_generator{
-    "/{{type}}/{{v1.src}}/{{v1.particle}}/AX_{{v1.axis}}/systematics/{{v1.component}}"};
+      "/{{type}}/{{v1.src}}/{{v1.particle}}/AX_{{v1.axis}}/systematics/{{v1.component}}"};
   const ::Predicates::MetaTemplateGenerator v1_mc_centrality_key_generator{
       "/{{type}}/{{v1.src}}/{{v1.particle}}/AX_{{v1.axis}}/centrality_{{centrality.key}}/systematics/{{v1.component}}"};
   {
     /***************** Directed flow (MC) ******************/
     const std::regex re_expr(R"(^/calc/uQ/(mc_\w+)_PLAIN\.psi_rp_PLAIN\.(x1x1|y1y1)$)");
-    gResourceManager.ForEach([re_expr,v1_mc_key_generator](const StringKey &key, ResourceManager::Resource &r) {
+    gResourceManager.ForEach([re_expr, v1_mc_key_generator](const StringKey &key, ResourceManager::Resource &r) {
       std::string component = KEY.MatchGroup(2, re_expr)(r);
       std::string u_vector = KEY.MatchGroup(1, re_expr)(r);
 
@@ -515,13 +525,18 @@ int main() {
       AddResource(new_key, new_res);
     }, KEY.Matches(re_expr));
   }
-
+  const ::Predicates::MetaFeatureSet v1_mc_full_feature_set{
+      "v1.particle",
+      "v1.axis",
+      // systematics
+      "v1.component"
+  };
 
 
   /******************** v1 vs Centrality *********************/
   {
     auto key_generator = v1_reco_centrality_key_generator;
-    auto expand_centrality_projection = [&key_generator](const VectorKey& key, ResourceManager::Resource &res) {
+    auto expand_centrality_projection = [&key_generator](const VectorKey &key, ResourceManager::Resource &res) {
       auto calc = res.As<DTCalc>();
       auto meta = res.meta;
 
@@ -554,35 +569,48 @@ int main() {
   }
 
   const auto v1_reco_centrality_feature_set = v1_reco_full_feature_set + "centrality.key";
+  const auto v1_mc_centrality_feature_set = v1_mc_full_feature_set + "centrality.key";
 
   /* Combine x1x1 and y1y1 */
   {
+    auto v1_key_generator = v1_reco_centrality_key_generator;
     auto
-        combine_components_function = [](const std::string &base_dir, std::vector<ResourceManager::ResourcePtr> &objs) {
+        combine_components_function = [&v1_key_generator](auto f, std::vector<ResourceManager::ResourcePtr> &objs) {
+      assert(objs.size() == 2);
       auto x1x1 = objs[0]->As<DTCalc>();
       auto y1y1 = objs[1]->As<DTCalc>();
-      auto combined_name = base_dir + "/" + "combined";
       auto combined = x1x1.Apply(y1y1, [](const Qn::StatCalculate &a, const Qn::StatCalculate &b) {
         return Qn::Merge(a, b);
       });
+      combined.SetErrors(Qn::StatCalculate::ErrorType::BOOTSTRAP);
       auto combined_meta = objs[0]->meta;
       combined_meta.put("v1.component", "combined");
-      auto result = AddResource(combined_name, ResourceManager::Resource(combined, combined_meta));
+      ResourceManager::Resource new_resource(combined, combined_meta);
+      auto new_name = v1_key_generator(new_resource);
+      AddResource(new_name, std::move(new_resource));
     };
 
     gResourceManager.GroupBy(
-        BASE_OF(KEY),
+        v1_reco_centrality_feature_set - "v1.component",
         combine_components_function,
-        META["type"] == "v1_centrality" && KEY.Matches(".*(x1x1|y1y1)$"));
+        META["type"] == "v1_centrality" &&
+            META["v1.src"] == "reco" &&
+            META["v1.component"].Matches("^(x1x1|y1y1)$"));
+
+    v1_key_generator = v1_mc_centrality_key_generator;
+    gResourceManager.GroupBy(
+        v1_mc_centrality_feature_set - "v1.component",
+        combine_components_function,
+        META["type"] == "v1_centrality" &&
+            META["v1.src"] == "mc" &&
+            META["v1.component"].Matches("^(x1x1|y1y1)$"));
+
+
+
     /* Combine all references */
-    std::string component = "x1x1";
     auto combine_reference_function =
-        [&component](const std::string &base_dir, std::vector<ResourceManager::ResourcePtr> &objs) {
-          if (base_dir == "NOT-FOUND") {
-            return;
-          }
+        [v1_reco_centrality_key_generator](auto feature, std::vector<ResourceManager::ResourcePtr> &objs) {
           assert(!objs.empty());
-          auto combined_psd_name = base_dir + "/" + "REF_combined" + "/" + component;
           auto combined = objs[0]->As<DTCalc>(); // taking copy of first object
           for (int iobjs = 1; iobjs < objs.size(); ++iobjs) {
             combined =
@@ -594,23 +622,16 @@ int main() {
           auto combined_meta = objs[0]->meta;
           combined_meta.put("v1.ref", "combined");
           combined_meta.put("v1.resolution.ref", "combined");
-          AddResource(combined_psd_name, ResourceManager::Resource(combined, combined_meta));
+          auto new_resource = ResourceManager::Resource(combined, combined_meta);
+          auto new_name = v1_reco_centrality_key_generator(new_resource);
+          AddResource(new_name, new_resource);
         };
-    const std::regex re_ref("^(.*)/REF_psd\\d/.*$");
     gResourceManager.GroupBy(
-        KEY.MatchGroup(1, re_ref),
+        v1_reco_centrality_feature_set - "v1.ref",
         combine_reference_function,
-        META["type"] == "v1_centrality" && META["v1.component"] == component);
-    component = "y1y1";
-    gResourceManager.GroupBy(
-        KEY.MatchGroup(1, re_ref),
-        combine_reference_function,
-        META["type"] == "v1_centrality" && META["v1.component"] == component);
-    /* Combine x1x1 and y1y1 in combined reference path */
-    gResourceManager.GroupBy(
-        BASE_OF(KEY),
-        combine_components_function,
-        META["type"] == "v1_centrality" && META["v1.ref"] == "combined");
+        META["type"] == "v1_centrality" &&
+            META["v1.src"] == "reco");
+
   }
 
 /****************** DRAWING *********************/
