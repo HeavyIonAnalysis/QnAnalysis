@@ -9,6 +9,7 @@
 #include <regex>
 #include <boost/proto/proto.hpp>
 #include <utility>
+#include <boost/regex.hpp>
 
 namespace Predicates {
 
@@ -22,15 +23,14 @@ namespace Impl {
 
 struct RegexMatchImpl {
   explicit RegexMatchImpl(std::string regex_str) : re_expr(regex_str) {}
-  explicit RegexMatchImpl(std::regex expr) : re_expr(std::move(expr)) {}
 
   typedef bool result_type;
 
   result_type operator()(const std::string &str) const {
-    return std::regex_match(str, re_expr);
+    return boost::regex_match(str, re_expr);
   }
 
-  const std::regex re_expr;
+  const boost::regex re_expr;
 };
 
 struct MatchGroupImpl {

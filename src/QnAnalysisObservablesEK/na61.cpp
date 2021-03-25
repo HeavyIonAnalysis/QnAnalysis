@@ -183,8 +183,7 @@ int main() {
   });
 
   {
-    const std::regex
-        uQ_reco_expr("^/calc/uQ/(pion_neg|protons)_(pt|y)_set_(\\w+)_(PLAIN|RECENTERED|TWIST|RESCALED).*$");
+    const std::string uQ_reco_expr("^/calc/uQ/(pion_neg|protons)_(pt|y)_set_(\\w+)_(PLAIN|RECENTERED|TWIST|RESCALED).*$");
     gResourceManager.ForEach([&uQ_reco_expr](const StringKey &key, ResourceManager::Resource &r) {
       auto particle = KEY.MatchGroup(1, uQ_reco_expr)(r);
       auto axis = KEY.MatchGroup(2, uQ_reco_expr)(r);
@@ -199,7 +198,7 @@ int main() {
     }, KEY.Matches(uQ_reco_expr));
   }
   {
-    const std::regex u_mc_expr("^/calc/uQ/mc_(pion_neg|protons)_(pt|y)_PLAIN.*$");
+    const std::string u_mc_expr("^/calc/uQ/mc_(pion_neg|protons)_(pt|y)_PLAIN.*$");
     gResourceManager.ForEach([&u_mc_expr](const StringKey &key, ResourceManager::Resource &r) {
       auto particle = KEY.MatchGroup(1, u_mc_expr)(r);
       auto axis = KEY.MatchGroup(2, u_mc_expr)(r);
@@ -518,7 +517,7 @@ int main() {
       "/{{type}}/{{v1.src}}/{{v1.particle}}/AX_{{v1.axis}}/centrality_{{centrality.key}}/systematics/{{v1.component}}"};
   {
     /***************** Directed flow (MC) ******************/
-    const std::regex re_expr(R"(^/calc/uQ/(mc_\w+)_PLAIN\.psi_rp_PLAIN\.(x1x1|y1y1)$)");
+    const std::string re_expr(R"(^/calc/uQ/(mc_\w+)_PLAIN\.psi_rp_PLAIN\.(x1x1|y1y1)$)");
     gResourceManager.ForEach([re_expr, v1_mc_key_generator](const StringKey &key, ResourceManager::Resource &r) {
       std::string component = KEY.MatchGroup(2, re_expr)(r);
       std::string u_vector = KEY.MatchGroup(1, re_expr)(r);
@@ -730,7 +729,7 @@ int main() {
                   {"psd_mc", kBlack},
                   {"psd90_mc", kOrange},
                   {"3sub_standard", kRed},
-                  {"3sub_psd90", kGreen+2},
+                  {"3sub_psd90", kGreen + 2},
               };
 
               TMultiGraph mg;
