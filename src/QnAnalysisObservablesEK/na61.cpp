@@ -15,6 +15,7 @@
 #include <TDirectory.h>
 #include <TFile.h>
 #include <TKey.h>
+#include <TSystem.h>
 
 #include <QnAnalysisTools/QnAnalysisTools.hpp>
 
@@ -228,7 +229,7 @@ int main() {
   {
     /* Rebin y  */
     gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
-                               calc = calc.Rebin(Qn::AxisD("y_cm",  {-0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 2.0, 2.4 }));
+                               calc = calc.Rebin(Qn::AxisD("y_cm", {-0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 2.0, 2.4}));
                              },
                              META["u.axis"] == "y");
     /* Rebin pT  */
@@ -532,6 +533,18 @@ int main() {
       "v1.component"
   };
 
+  {
+    /// Inverse backward
+    const auto v1_backward_filter =
+        META["type"] == "v1" &&
+            META["v1.set"] == "backward";
+
+    gResourceManager.ForEach([](const StringKey &key, ResourceManager::Resource &res) {
+      auto calc_inv = (-1) * res.As<DTCalc>();
+      res.obj = calc_inv;
+    }, v1_backward_filter);
+
+  }
 
   /******************** v1 vs Centrality *********************/
   {
@@ -731,6 +744,53 @@ int main() {
   gResourceManager.ForEach([](const StringKey &, TGraphErrors &graph) {
     graph.GetYaxis()->SetRangeUser(0., 2.);
   }, META["type"] == "profile_ratio");
+
+
+  /* compare forward/backward */
+  {
+    const auto v1_forward_backward_filter =
+        META["type"] == "v1_centrality" &&
+            META["v1.src"] == "reco" &&
+//            META["v1.resolution.meta_key"] == "psd_mc" &&
+            (META["v1.set"] == "forward" || META["v1.set"] == "backward") &&
+            META["v1.ref"] == "combined" &&
+            META["v1.component"] == "combined";
+
+    auto save_dir = "v1_forward_backward";
+    gSystem->mkdir(save_dir);
+
+    gResourceManager.GroupBy(
+        ::Predicates::MetaFeatureSet({"v1.resolution.meta_key", "centrality.key"}),
+        [save_dir](auto feature, const std::vector<ResourceManager::ResourcePtr> &v1_list) {
+          assert(v1_list.size() == 2);
+          TMultiGraph mg;
+          const std::map<std::string, int> colors = {
+              {"backward", kRed},
+              {"forward", kBlack},
+          };
+          const std::map<std::string, int> markers = {
+              {"backward", kOpenCircle},
+              {"forward", kFullCircle},
+          };
+          for (const auto& v1_ptr : v1_list) {
+            auto v1_set = META["v1.set"](*v1_ptr);
+            auto graph = Qn::ToTGraph(v1_ptr->As<DTCalc>());
+            graph->SetMarkerColor(colors.at(v1_set));
+            graph->SetLineColor(colors.at(v1_set));
+            graph->SetMarkerStyle(markers.at(v1_set));
+            graph->SetTitle(v1_set.c_str());
+            mg.Add(graph);
+          }
+
+          TCanvas c;
+          mg.Draw("A lp");
+          mg.GetYaxis()->SetRangeUser(-0.05, 0.15);
+          auto legend = c.BuildLegend(0.15, 0.75, 0.45, 0.9);
+          legend->SetHeader(feature.c_str());
+          c.Print(Form("%s/%s.png", save_dir, feature.c_str()), "png");
+        }, v1_forward_backward_filter);
+
+  }
 
   /* Compare MC vs Data */
   {
