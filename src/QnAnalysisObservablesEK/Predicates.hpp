@@ -21,7 +21,7 @@ struct ResourceExprDomain : boost::proto::domain<boost::proto::generator<Resourc
 namespace Impl {
 
 struct RegexMatchImpl {
-  explicit RegexMatchImpl(const std::string &regex_str) : re_expr(regex_str) {}
+  explicit RegexMatchImpl(std::string regex_str) : re_expr(regex_str) {}
   explicit RegexMatchImpl(std::regex expr) : re_expr(std::move(expr)) {}
 
   typedef bool result_type;

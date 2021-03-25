@@ -486,7 +486,7 @@ pbpb_13agev_mc:
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-proton
     # 4 subevents method TPC references
-    - name: 4sub_ref_preliminary
+    - name: ref_4sub_set_preliminary
       tags: [ observable, reco ]
       _from: *tpc-base-detector
       axes: []
@@ -495,7 +495,7 @@ pbpb_13agev_mc:
       cuts-kinematics:
         RecParticles/y_cm: { range: [ 1.0, 1.4 ] }
         RecParticles/pT:   { range: [ 0.0, 2.0 ] }
-    - name: 4sub_ref_opt1
+    - name: ref_4sub_set_opt1
       tags: [observable, reco]
       _from: *tpc-base-detector
       axes: []
@@ -504,7 +504,7 @@ pbpb_13agev_mc:
       cuts-kinematics:
         RecParticles/y_cm: { range: [ 0.8, 1.8 ] }
         RecParticles/pT:   { range: [ 0.2, 1.0 ] }
-    - name: 4sub_ref_opt2
+    - name: ref_4sub_set_opt2
       tags: [observable, reco]
       _from: *tpc-base-detector
       axes: []
