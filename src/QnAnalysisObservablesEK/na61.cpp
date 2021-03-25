@@ -94,7 +94,13 @@ std::string PlotTitle(const ResourceManager::Resource &r) {
     return part_1.append(" ").append(part_2).append(" ").append(part_3);
   }
   return "";
-};
+}
+
+void SaveCanvas(TCanvas &c, const std::string &base_name) {
+  c.Print((base_name + ".png").c_str(), "png");
+  c.Print((base_name + ".pdf").c_str(), "pdf");
+  c.Print((base_name + ".C").c_str());
+}
 
 int main() {
 
@@ -229,14 +235,21 @@ int main() {
   {
     /* Rebin y  */
     gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
-                               calc = calc.Rebin(Qn::AxisD("y_cm", {-0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 2.0, 2.4}));
+                               calc = calc.Rebin(Qn::AxisD("y_cm",
+                                                           {-0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 2.0, 2.4}));
                              },
                              META["u.axis"] == "y");
     /* Rebin pT  */
     gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
-                               calc = calc.Rebin(Qn::AxisD("pT", {0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.4, 3.0}));
+                               calc = calc.Rebin(Qn::AxisD("pT",
+                                                           {0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.4, 3.0}));
                              },
                              META["u.axis"] == "pt");
+    /* Rebin centrality  */
+    gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
+      calc = calc.Rebin(Qn::AxisD("Centrality",
+                                  {0., 10., 25., 45., 80.}));
+    });
   }
   {
     /***************** RESOLUTION 3-sub ******************/
@@ -480,7 +493,9 @@ int main() {
                     META["resolution.method"] == "mc" &&
                     META["resolution.ref"] == reference &&
                     META["resolution.component"] == resolution_component);
-            assert(resolution_keys.size() == 1);
+            if (resolution_keys.size() != 1) {
+              return;
+            }
 
             Meta meta;
             meta.put("type", "c1");
@@ -657,27 +672,77 @@ int main() {
                            },
                            KEY.Matches("^/x2/QQ/.*$"));
 
-  /* export ALL resolution to TGraph */
-  gResourceManager.ForEach([](const StringKey &name, ResourceManager::Resource r) {
+  {
+    const auto resolution_filter = META["type"] == "resolution";
 
-    auto graph = Qn::ToTGraph(r.As<DTCalc>());
+    ::Predicates::MetaFeatureSet resolution_feature_list{
+        "resolution.meta_key",
+        "resolution.ref",
+        "resolution.component",
+    };
 
-    auto component = r.meta.get("resolution.component", "??");
-    auto reference = r.meta.get("resolution.ref", "??");
-    auto method = r.meta.get("resolution.method", "??");
+    std::string save_dir = "resolution";
+    gSystem->mkdir(save_dir.c_str());
+    gResourceManager.GroupBy(META["resolution.meta_key"], [&save_dir] (
+        auto feature,
+        const std::vector<ResourceManager::ResourcePtr>& resolutions_list) {
 
-    graph->SetTitle((Format("R_{1,%1%} (%2%) %3%")
-        % component
-        % reference
-        % method).str().c_str());
+      const std::map<std::string, int> colors = {
+          {"psd1", kRed+1},
+          {"psd2", kGreen+2},
+          {"psd3", kBlue}
+      };
+      const std::map<std::string, int> markers = {
+          {"X", kFullSquare},
+          {"Y", kOpenSquare},
+      };
 
-    graph->GetXaxis()->SetTitle("Centrality (%)");
+      TMultiGraph mg;
+      for (auto& r : resolutions_list) {
+        auto resolution_calc = r->template As<DTCalc>();
+        auto resolution_graph = Qn::ToTGraph(resolution_calc);
+        resolution_graph->SetLineColor(colors.at(META["resolution.ref_alias"](*r)));
+        resolution_graph->SetMarkerColor(colors.at(META["resolution.ref_alias"](*r)));
+        resolution_graph->SetMarkerStyle(markers.at(META["resolution.component"](*r)));
+        resolution_graph->SetTitle((Format("R_{1,%1%} (%2%)")
+          % META["resolution.component"](*r)
+          % META["resolution.ref_alias"](*r)).str().c_str());
+        mg.Add(resolution_graph,"pl");
+      }
 
-    graph->GetYaxis()->SetRangeUser(-0.1, 1.0);
-    graph->GetYaxis()->SetTitle("R_{1}");
+      TCanvas c;
+      c.SetCanvasSize(1280, 1024);
+      mg.Draw("A");
+      mg.GetYaxis()->SetRangeUser(0., .4);
+      mg.GetYaxis()->SetTitle("R_{1}");
+      mg.GetXaxis()->SetTitle("Centrality (%)");
+      auto legend = c.BuildLegend(0.15, 0.7, 0.55, 0.9);
+      legend->SetHeader(feature.c_str());
+      SaveCanvas(c, save_dir + "/" + feature);
+    }, resolution_filter);
 
-    AddResource("/profiles" + name, ResourceManager::Resource(*graph, r.meta));
-  }, META["type"] == "resolution");
+    /* export ALL resolution to TGraph */
+    gResourceManager.ForEach([](const StringKey &name, ResourceManager::Resource r) {
+
+      auto graph = Qn::ToTGraph(r.As<DTCalc>());
+
+      auto component = r.meta.get("resolution.component", "??");
+      auto reference = r.meta.get("resolution.ref", "??");
+      auto method = r.meta.get("resolution.method", "??");
+
+      graph->SetTitle((Format("R_{1,%1%} (%2%) %3%")
+          % component
+          % reference
+          % method).str().c_str());
+
+      graph->GetXaxis()->SetTitle("Centrality (%)");
+
+      graph->GetYaxis()->SetRangeUser(-0.1, 1.0);
+      graph->GetYaxis()->SetTitle("R_{1}");
+
+      AddResource("/profiles" + name, ResourceManager::Resource(*graph, r.meta));
+    }, resolution_filter);
+  }
 
   /* v1 profiles */
   // /profiles/v1/<particle>/<axis>/<centrality range>/
@@ -751,17 +816,17 @@ int main() {
     const auto v1_forward_backward_filter =
         META["type"] == "v1_centrality" &&
             META["v1.src"] == "reco" &&
-//            META["v1.resolution.meta_key"] == "psd_mc" &&
+            META["v1.resolution.meta_key"] == "psd_mc" &&
             (META["v1.set"] == "forward" || META["v1.set"] == "backward") &&
             META["v1.ref"] == "combined" &&
             META["v1.component"] == "combined";
 
-    auto save_dir = "v1_forward_backward";
-    gSystem->mkdir(save_dir);
+    const std::string save_dir = "v1_forward_backward";
+    gSystem->mkdir(save_dir.c_str());
 
     gResourceManager.GroupBy(
-        ::Predicates::MetaFeatureSet({"v1.resolution.meta_key", "centrality.key"}),
-        [save_dir](auto feature, const std::vector<ResourceManager::ResourcePtr> &v1_list) {
+        ::Predicates::MetaFeatureSet({"centrality.key"}),
+        [&save_dir](auto feature, const std::vector<ResourceManager::ResourcePtr> &v1_list) {
           assert(v1_list.size() == 2);
           TMultiGraph mg;
           const std::map<std::string, int> colors = {
@@ -772,7 +837,7 @@ int main() {
               {"backward", kOpenCircle},
               {"forward", kFullCircle},
           };
-          for (const auto& v1_ptr : v1_list) {
+          for (const auto &v1_ptr : v1_list) {
             auto v1_set = META["v1.set"](*v1_ptr);
             auto graph = Qn::ToTGraph(v1_ptr->As<DTCalc>());
             graph->SetMarkerColor(colors.at(v1_set));
@@ -783,11 +848,14 @@ int main() {
           }
 
           TCanvas c;
+          c.SetCanvasSize(1280, 1024);
           mg.Draw("A lp");
           mg.GetYaxis()->SetRangeUser(-0.05, 0.15);
+          mg.GetYaxis()->SetTitle("v_{1}");
+          mg.GetXaxis()->SetTitle("p_{T} GeV/c");
           auto legend = c.BuildLegend(0.15, 0.75, 0.45, 0.9);
-          legend->SetHeader(feature.c_str());
-          c.Print(Form("%s/%s.png", save_dir, feature.c_str()), "png");
+          legend->SetHeader(("Centrality: " + feature + "%").c_str());
+          SaveCanvas(c, save_dir + "/" + feature);
         }, v1_forward_backward_filter);
 
   }
@@ -795,7 +863,7 @@ int main() {
   /* Compare MC vs Data */
   {
     auto meta_key_gen = META["v1.particle"] + "__" + META["v1.axis"];
-    auto centrality_predicate = META["centrality.key"] == "15-25";
+    auto centrality_predicate = META["centrality.key"] == "10-25";
 
     gResourceManager
         .GroupBy(
@@ -920,7 +988,7 @@ int main() {
                         centrality_predicate &&
                         (
 //                            (META["v1.set"] == "standard") ||
-                        (META["v1.set"] == "primaries" && META["v1.resolution.meta_key"] == "psd_mc")
+                        (META["v1.set"] == "standard" && META["v1.resolution.meta_key"] == "psd_mc")
                     ) &&
                         (
                             META["v1.component"].Matches("^(x1x1|y1y1)$") && META["v1.ref"].Matches("psd[0-9]") ||
