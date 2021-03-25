@@ -468,6 +468,23 @@ pbpb_13agev_mc:
         - *ax-pt-corr-pion-neg
       cuts-quality: *rec-particle-cuts-quality-true-primaries
       cuts: *cuts-pion-neg
+    #   Fwd / backwd
+    - name: protons_pt_set_backward
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-pt
+        - { name: RecParticles/y_cm, bin-edges: [-0.6, 0.0] }
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts: *cuts-proton
+    - name: protons_pt_set_forward
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-pt
+        - { name: RecParticles/y_cm, bin-edges: [0.0, 0.6] }
+      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts: *cuts-proton
     #   MC true
     - name: mc_protons_pt
       tags: [ observable, mc ]
