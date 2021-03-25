@@ -677,19 +677,20 @@ int main() {
 
     ::Predicates::MetaFeatureSet resolution_feature_list{
         "resolution.meta_key",
-        "resolution.ref",
+        "resolution.ref_alias",
         "resolution.component",
     };
 
-    std::string save_dir = "resolution";
+    const std::string save_dir = "resolution";
     gSystem->mkdir(save_dir.c_str());
-    gResourceManager.GroupBy(META["resolution.meta_key"], [&save_dir] (
+
+    gResourceManager.GroupBy(META["resolution.meta_key"], [&save_dir](
         auto feature,
-        const std::vector<ResourceManager::ResourcePtr>& resolutions_list) {
+        const std::vector<ResourceManager::ResourcePtr> &resolutions_list) {
 
       const std::map<std::string, int> colors = {
-          {"psd1", kRed+1},
-          {"psd2", kGreen+2},
+          {"psd1", kRed + 1},
+          {"psd2", kGreen + 2},
           {"psd3", kBlue}
       };
       const std::map<std::string, int> markers = {
@@ -698,16 +699,16 @@ int main() {
       };
 
       TMultiGraph mg;
-      for (auto& r : resolutions_list) {
+      for (auto &r : resolutions_list) {
         auto resolution_calc = r->template As<DTCalc>();
         auto resolution_graph = Qn::ToTGraph(resolution_calc);
         resolution_graph->SetLineColor(colors.at(META["resolution.ref_alias"](*r)));
         resolution_graph->SetMarkerColor(colors.at(META["resolution.ref_alias"](*r)));
         resolution_graph->SetMarkerStyle(markers.at(META["resolution.component"](*r)));
         resolution_graph->SetTitle((Format("R_{1,%1%} (%2%)")
-          % META["resolution.component"](*r)
-          % META["resolution.ref_alias"](*r)).str().c_str());
-        mg.Add(resolution_graph,"pl");
+            % META["resolution.component"](*r)
+            % META["resolution.ref_alias"](*r)).str().c_str());
+        mg.Add(resolution_graph, "pl");
       }
 
       TCanvas c;
@@ -720,6 +721,39 @@ int main() {
       legend->SetHeader(feature.c_str());
       SaveCanvas(c, save_dir + "/" + feature);
     }, resolution_filter);
+
+    gResourceManager
+        .GroupBy(
+            resolution_feature_list - "resolution.meta_key",
+            [&save_dir](auto feature, const std::vector<ResourceManager::ResourcePtr> &resolution_ptrs) {
+              const std::map<std::string, int> colors = {
+                  {"psd_mc", kBlack},
+                  {"psd90_mc", kOrange},
+                  {"3sub_standard", kRed},
+                  {"3sub_psd90", kGreen+2},
+              };
+
+              TMultiGraph mg;
+              for (auto &r : resolution_ptrs) {
+                auto resolution_calc = r->template As<DTCalc>();
+                auto resolution_graph = Qn::ToTGraph(resolution_calc);
+                resolution_graph->SetLineColor(colors.at(META["resolution.meta_key"](*r)));
+                resolution_graph->SetMarkerColor(colors.at(META["resolution.meta_key"](*r)));
+                resolution_graph->SetTitle(META["resolution.meta_key"](*r).c_str());
+                mg.Add(resolution_graph, "lp");
+              }
+
+              TCanvas c;
+              c.SetCanvasSize(1280, 1024);
+              mg.Draw("A");
+              mg.GetYaxis()->SetRangeUser(0., .4);
+              mg.GetYaxis()->SetTitle("R_{1}");
+              mg.GetXaxis()->SetTitle("Centrality (%)");
+              auto legend = c.BuildLegend(0.15, 0.7, 0.55, 0.9);
+              legend->SetHeader(feature.c_str());
+              SaveCanvas(c, save_dir + "/" + "comp_" + feature);
+
+            }, resolution_filter);
 
     /* export ALL resolution to TGraph */
     gResourceManager.ForEach([](const StringKey &name, ResourceManager::Resource r) {
@@ -746,69 +780,43 @@ int main() {
 
   /* v1 profiles */
   // /profiles/v1/<particle>/<axis>/<centrality range>/
-  gResourceManager.ForEach([](VectorKey key, ResourceManager::Resource &resource) {
-                             const std::map<std::string, std::string> remap_axis_name = {
-                                 {"pT", "p_{T} (GeV/#it{c})"},
-                                 {"y_cm", "#it{y}_{CM}"},
-                             };
-                             const std::map<std::string, int> colors_map = {
-                                 {"psd1", kRed},
-                                 {"psd2", kGreen + 2},
-                                 {"psd3", kBlue},
-                                 {"combined", kBlack},
-                                 {"psi_rp", kBlack}
-                             };
-                             const std::map<std::pair<std::string, std::string>, int> markers_map = {
-                                 {{"psd1", "x1x1"}, kFullSquare},
-                                 {{"psd1", "y1y1"}, kOpenSquare},
-                                 {{"psd1", "combined"}, kFullStar},
-                                 {{"psd2", "x1x1"}, kFullCircle},
-                                 {{"psd2", "y1y1"}, kOpenCircle},
-                                 {{"psd2", "combined"}, kFullStar},
-                                 {{"psd3", "x1x1"}, kFullTriangleDown},
-                                 {{"psd3", "y1y1"}, kOpenTriangleDown},
-                                 {{"psd3", "combined"}, kFullStar},
-                                 {{"combined", "x1x1"}, kFullDiamond},
-                                 {{"combined", "y1y1"}, kOpenDiamond},
-                                 {{"combined", "combined"}, kOpenDiamond},
-                                 {{"psi_rp", "x1x1"}, kFullSquare},
-                                 {{"psi_rp", "y1y1"}, kOpenSquare},
-                                 {{"psi_rp", "combined"}, kFullStar}
-                             };
+  gResourceManager
+      .ForEach(
+          [](VectorKey key, ResourceManager::Resource &resource) {
+            auto cwd = gDirectory;
+            gDirectory = nullptr;
+            const std::map<std::string, std::string> remap_axis_name = {
+                {"pT", "p_{T} (GeV/#it{c})"},
+                {"y_cm", "#it{y}_{CM}"},
+            };
+            const std::map<std::string, int> colors_map = {
+                {"psd1", kRed},
+                {"psd2", kGreen + 2},
+                {"psd3", kBlue},
+                {"combined", kBlack},
+                {"psi_rp", kBlack}
+            };
 
-                             auto selected_graph = Qn::ToTGraph(resource.As<DTCalc>());
-                             if (!selected_graph) {
-                               return;
-                             }
-                             selected_graph->SetName(key.back().c_str());
-                             selected_graph->GetXaxis()->SetTitle(remap_axis_name.at(resource.As<DTCalc>().GetAxes()[0].Name()).c_str());
-//    selected_graph->SetLineColor(colors_map.at(META["v1.ref"](resource)));
-//    selected_graph->SetMarkerColor(colors_map.at(META["v1.ref"](resource)));
+            auto selected_graph = Qn::ToTGraph(resource.As<DTCalc>());
+            if (!selected_graph) {
+              return;
+            }
+            selected_graph->SetName(key.back().c_str());
+            selected_graph->GetXaxis()->SetTitle(remap_axis_name.at(resource.As<DTCalc>().GetAxes()[0].Name()).c_str());
+            VectorKey new_key(key.begin(), key.end());
+            new_key.insert(new_key.begin(), "profiles");
+            auto meta = resource.meta;
+            if (META["type"](resource) == "v1_centrality") {
+              meta.put("type", "profile_v1");
+            } else if (META["type"](resource) == "ratio_v1") {
+              meta.put("type", "profile_ratio");
+            }
+            AddResource(new_key, ResourceManager::Resource(*selected_graph, meta));
+            gDirectory = cwd;
+          },
+          META["type"] == "v1_centrality" ||
+              META["type"] == "c1_centrality");
 
-                             VectorKey new_key(key.begin(), key.end());
-                             new_key.insert(new_key.begin(), "profiles");
-                             auto meta = resource.meta;
-                             if (META["type"](resource) == "v1_centrality") {
-                               meta.put("type", "profile_v1");
-                             } else if (META["type"](resource) == "ratio_v1") {
-                               meta.put("type", "profile_ratio");
-                             }
-                             AddResource(new_key, ResourceManager::Resource(*selected_graph, meta));
-                           },
-                           META["type"] == "v1_centrality" ||
-                               META["type"] == "c1_centrality");
-
-  gResourceManager.ForEach([](const StringKey &, TGraphErrors &graph) {
-    graph.GetYaxis()->SetRangeUser(-0.1, 0.1);
-  }, META["type"] == "profile_v1" && META["v1.particle"] == "pion_neg");
-
-  gResourceManager.ForEach([](const StringKey &, TGraphErrors &graph) {
-    graph.GetYaxis()->SetRangeUser(-0.1, 0.3);
-  }, META["type"] == "profile_v1" && META["v1.particle"] == "proton");
-
-  gResourceManager.ForEach([](const StringKey &, TGraphErrors &graph) {
-    graph.GetYaxis()->SetRangeUser(0., 2.);
-  }, META["type"] == "profile_ratio");
 
 
   /* compare forward/backward */
