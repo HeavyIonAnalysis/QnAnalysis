@@ -1,5 +1,5 @@
 
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS regex)
 
 add_executable(QnAnalysisObservables na61.cpp)
 target_link_libraries(QnAnalysisObservables PUBLIC
