@@ -6,6 +6,23 @@ _layouts:
   - &layout-na61-psd3
     [ 28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43 ]
 
+reco_variables:
+  # Vtx Tracks (branch: RecParticles)
+  - &var-vtx-y-cm       RecParticles/y_cm
+  - &var-vtx-pt         RecParticles/pT
+  - &var-vtx-phi        RecParticles/phi
+  - &var-vtx-dcax       RecParticles/dcax
+  - &var-vtx-dcay       RecParticles/dcay
+  # Event variables
+  - &var-evt-centrality Centrality/Centrality_Epsd
+  - &var-evt-vtx-x      RecEventHeader/vtx_x
+  - &var-evt-vtx-y      RecEventHeader/vtx_y
+  - &var-evt-vtx-z      RecEventHeader/vtx_z
+  - &var-evt-e-psd      RecEventHeader/Epsd
+  - &var-evt-s1         RecEventHeader/s1
+  - &var-evt-s2         RecEventHeader/s2
+
+
 _commons:
   - &common-pt-bin-edges [ 0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.8, 2.4, 3.0 ]
   - &common-y-cm-bin-edges [ -0.6, -0.4, -0.2, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 2.0, 2.4 ]
@@ -31,9 +48,8 @@ _commons:
   - &common-correlation-centrality-bin-ranges [ 0., 5., 10., 15., 25., 35., 45., 60., 80., 100. ]
 
 _axes:
-  - &ax-centrality { name: Centrality/Centrality_Epsd, nb: 20, lo: 0, hi: 100 }
-  - &ax-pt-corr-protons { name: RecParticles/pT, bin-edges: *common-pt-correction-range-protons }
-  - &ax-pt-corr-pion-neg { name: RecParticles/pT, bin-edges: *common-pt-correction-range-pion-neg }
+  - &ax-pt-corr-protons { name: *var-vtx-pt, bin-edges: *common-pt-correction-range-protons }
+  - &ax-pt-corr-pion-neg { name: *var-vtx-pt, bin-edges: *common-pt-correction-range-pion-neg }
 
 
 setups-definitions:
@@ -44,35 +60,35 @@ setups-definitions:
     RecParticles/nhits_vtpc: { range: [ 10, 1000 ] }
     RecParticles/nhits_pot_total: { range: [ 1, 1000 ] }
     RecParticles/nhits_ratio: { range: [ 0.55, 1.1 ] }
-    RecParticles/dcax: { range: [ -2., 2. ] }
-    RecParticles/dcay: { range: [ -1., 1. ] }
+    *var-vtx-dcax: { range: [ -2., 2. ] }
+    *var-vtx-dcay: { range: [ -1., 1. ] }
   ########################################################
   # v1(pT) of PROTONS
   ########################################################
   # y-range for v1(pT) of protons
   - &cuts-rec-particles-kinematics-protons-pt-preliminary
-    RecParticles/y_cm: { range: [0., 1.2] }
+    *var-vtx-y-cm: { range: [0., 1.2] }
   # y-axis correction binning for v1(pT) of protons
   - &ax-y-cm-correction-protons-pt-preliminary
-    name: RecParticles/y_cm
+    name: *var-vtx-y-cm
     bin-edges: [0., 1.2]
   # pT-axis binning for v1(pT) of protons
   - &ax-pt-correction-protons-pt-preliminary
-    name: RecParticles/pT
+    name: *var-vtx-pt
     bin-edges: [0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0]
   ########################################################
   # v1(y) of PROTONS
   ########################################################
   # pT-range for v1(y) of protons
   - &cuts-rec-particles-kinematics-protons-y-preliminary
-    RecParticles/pT: { range: [0., 2.0] }
+    *var-vtx-pt: { range: [0., 2.0] }
   # pT correction axis for v1(y) of protons
   - &ax-pt-correction-protons-y-preliminary
-    name: RecParticles/pT
+    name: *var-vtx-pt
     bin-edges: [0.0, 2.0]
   # y-axis binning for v1(y) of protons
   - &ax-y-cm-correction-protons-y-preliminary
-    name: RecParticles/y_cm
+    name: *var-vtx-y-cm
     nb: 15
     lo: -0.6
     hi: 2.0
@@ -81,31 +97,35 @@ setups-definitions:
   ########################################################
   # y-range for v1(pT) of negative pions
   - &cuts-rec-particles-kinematics-pion-neg-pt-preliminary
-    RecParticles/y_cm: { range: [0., 1.2] }
+    *var-vtx-y-cm: { range: [0., 1.2] }
   # y-axis correction binning for v1(pT) of negative pions
   - &ax-y-cm-correction-pion-neg-pt-preliminary
-    name: RecParticles/y_cm
+    name: *var-vtx-y-cm
     bin-edges: [0., 1.2]
   # pT-axis binning for v1(pT) of negative pions
   - &ax-pt-correction-pion-neg-pt-preliminary
-    name: RecParticles/pT
+    name: *var-vtx-pt
     bin-edges: [0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0]
   ########################################################
   # v1(y) of the NEGATIVE PIONS
   ########################################################
   # pT-range for v1(y) of negative pions
   - &cuts-rec-particles-kinematics-pion-neg-y-preliminary
-    RecParticles/pT: { range: [0., 2.0] }
+    *var-vtx-pt: { range: [0., 2.0] }
   # pT correction axis for v1(y) of negative pions
   - &ax-pt-correction-pion-neg-y-preliminary
-    name: RecParticles/pT
+    name: *var-vtx-pt
     bin-edges: [0.0, 2.0]
   # y-axis binning for v1(y) of negative pions
   - &ax-y-cm-correction-pion-neg-y-preliminary
-    name: RecParticles/y_cm
+    name: *var-vtx-y-cm
     nb: 15
     lo: -0.6
     hi: 2.0
+  ##########################################################
+  # Correction step base
+  ##########################################################
+  - &ax-centrality-correction-preliminary { name: *var-evt-centrality, nb: 20, lo: 0, hi: 100 }
 
 
 
@@ -117,11 +137,11 @@ _qa:
     - { name: PsdModules/phi, nb: 100, lo: -4., hi: 4. }
     - { name: PsdModules/signal, nb: 100, lo: 0., hi: 100. }
   - &rec-particle-qa-kinematics
-    - &ax-phi-qa { name: RecParticles/phi, nb: 400, lo: -4., hi: 4. }
-    - &ax-pt-qa { name: RecParticles/pT, nb: 1000, lo: 0., hi: 2. }
+    - &ax-phi-qa { name: *var-vtx-phi, nb: 400, lo: -4., hi: 4. }
+    - &ax-pt-qa { name: *var-vtx-pt, nb: 1000, lo: 0., hi: 2. }
     - &ax-pz-qa { name: RecParticles/pz, nb: 1000, lo: 0., hi: 20. }
     - &ax-p-qa  { name: RecParticles/p, nb: 1000, lo: 0., hi: 20. }
-    - &ax-rapidity-qa { name: RecParticles/y_cm, nb: 1000, lo: -4., hi: 4. }
+    - &ax-rapidity-qa { name: *var-vtx-y-cm, nb: 1000, lo: -4., hi: 4. }
     - &ax-eta-qa { name: RecParticles/eta, nb: 1000, lo: -2., hi: 6. }
     - [ *ax-rapidity-qa, *ax-pt-qa ]
     - [ *ax-eta-qa, *ax-pt-qa ]
@@ -150,8 +170,8 @@ _qa:
     - { axes: [ *ax-phi-qa, *ax-pt-qa ], weight: RecParticles_w_eff_standard_cuts }
     - { axes: [ *ax-phi-qa, *ax-rapidity-qa ], weight: RecParticles_w_eff_standard_cuts }
   - &rec-particle-qa-quality
-    - &ax-dcax-qa { name: RecParticles/dcax, nb: 200, lo: -10, hi: 10 }
-    - &ax-dcay-qa { name: RecParticles/dcay, nb: 200, lo: -10, hi: 10 }
+    - &ax-dcax-qa { name: *var-vtx-dcax, nb: 200, lo: -10, hi: 10 }
+    - &ax-dcay-qa { name: *var-vtx-dcay, nb: 200, lo: -10, hi: 10 }
     - [ *ax-dcax-qa, *ax-dcay-qa ]
     - &ax-nhits-vtpc-qa { name: RecParticles/nhits_vtpc, nb: 300, lo: 0, hi: 300 }
     - &ax-nhits-total-qa { name: RecParticles/nhits_total, nb: 300, lo: 0, hi: 300 }
@@ -169,31 +189,31 @@ _qa:
 ########################################################################################
 pbpb_13agev_16_025:
   event-variables:
-    - Centrality/Centrality_Epsd
-    - RecEventHeader/vtx_x
-    - RecEventHeader/vtx_y
-    - RecEventHeader/vtx_z
-    - RecEventHeader/Epsd
-    - RecEventHeader/s1
-    - RecEventHeader/s2
+    - *var-evt-centrality
+    - *var-evt-vtx-x
+    - *var-evt-vtx-y
+    - *var-evt-vtx-z
+    - *var-evt-e-psd
+    - *var-evt-s1
+    - *var-evt-s2
   qa-vertex: &qa-vertex
-    - &ax-vtx-x-qa { name: RecEventHeader/vtx_x, nb: 1000, lo: -10., hi: 10 }
-    - &ax-vtx-y-qa { name: RecEventHeader/vtx_y, nb: 1000, lo: -10., hi: 10 }
+    - &ax-vtx-x-qa { name: *var-evt-vtx-x, nb: 1000, lo: -10., hi: 10 }
+    - &ax-vtx-y-qa { name: *var-evt-vtx-y, nb: 1000, lo: -10., hi: 10 }
     - [ *ax-vtx-x-qa, *ax-vtx-y-qa ]
-    - &ax-vtx-z-qa { name: RecEventHeader/vtx_z, nb: 1000, lo: -602., hi: -582. }
+    - &ax-vtx-z-qa { name: *var-evt-vtx-z, nb: 1000, lo: -602., hi: -582. }
   qa-centrality: &qa-centrality
-    - &ax-epsd-qa { name: RecEventHeader/Epsd, nb: 500, lo: 0, hi: 5000 }
-    - *ax-centrality
-    - [ *ax-epsd-qa, *ax-centrality ]
+    - &ax-epsd-qa { name: *var-evt-e-psd, nb: 500, lo: 0, hi: 5000 }
+    - *ax-centrality-correction-preliminary
+    - [ *ax-epsd-qa, *ax-centrality-correction-preliminary ]
     - [ *ax-vtx-z-qa, *ax-epsd-qa ]
-    - [ *ax-vtx-z-qa, *ax-centrality ]
+    - [ *ax-vtx-z-qa, *ax-centrality-correction-preliminary ]
   qa:
-    - &ax-s1-qa { name: RecEventHeader/s1, nb: 500, lo: 0, hi: 500 }
-    - &ax-s2-qa { name: RecEventHeader/s2, nb: 500, lo: 0, hi: 500 }
+    - &ax-s1-qa { name: *var-evt-s1, nb: 500, lo: 0, hi: 500 }
+    - &ax-s2-qa { name: *var-evt-s2, nb: 500, lo: 0, hi: 500 }
     - [ *ax-s1-qa, *ax-s2-qa ]
     - [ *ax-s1-qa, *ax-epsd-qa ]
     - [ *ax-s2-qa, *ax-epsd-qa ]
-  axes: [ *ax-centrality ]
+  axes: [ *ax-centrality-correction-preliminary ]
   q-vectors: &q-vectors-list
     # OBSERVABLES
     # STANDARD CUTS
@@ -201,7 +221,7 @@ pbpb_13agev_16_025:
       tags: [ observable ]
       _from: &tpc-base-detector
         type: track
-        phi: RecParticles/phi
+        phi: *var-vtx-phi
         weight: Ones
         norm: m
         corrections:
@@ -210,8 +230,8 @@ pbpb_13agev_16_025:
         qa-quality: *rec-particle-qa-quality
         qa-kinematics: *rec-particle-qa-kinematics
       axes:
-        - &ax-pt { name: RecParticles/pT, bin-edges: *common-pt-bin-edges }
-        - &ax-y-cm-corr-protons { name: RecParticles/y_cm, bin-edges: *common-y-cm-correction-range-protons }
+        - &ax-pt { name: *var-vtx-pt, bin-edges: *common-pt-bin-edges }
+        - &ax-y-cm-corr-protons { name: *var-vtx-y-cm, bin-edges: *common-y-cm-correction-range-protons }
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: &cuts-proton
         RecParticles/pid: { equals: 2212 }
@@ -219,7 +239,7 @@ pbpb_13agev_16_025:
       tags: [ observable ]
       _from: *tpc-base-detector
       axes:
-        - &ax-y-cm { name: RecParticles/y_cm, bin-edges: *common-y-cm-bin-edges }
+        - &ax-y-cm { name: *var-vtx-y-cm, bin-edges: *common-y-cm-bin-edges }
         - *ax-pt-corr-protons
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-proton
@@ -228,7 +248,7 @@ pbpb_13agev_16_025:
       _from: *tpc-base-detector
       axes:
         - *ax-pt
-        - &ax-y-cm-corr-pion-neg { name: RecParticles/y_cm, bin-edges: *common-y-cm-correction-range-pion-neg}
+        - &ax-y-cm-corr-pion-neg { name: *var-vtx-y-cm, bin-edges: *common-y-cm-correction-range-pion-neg}
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: &cuts-pion-neg
         RecParticles/pid: { equals: -211 }
@@ -245,7 +265,7 @@ pbpb_13agev_16_025:
       tags: [ observable ]
       _from: &tpc-base-detector-weighted
         type: track
-        phi: RecParticles/phi
+        phi: *var-vtx-phi
         weight: RecParticles/w_eff_standard_cuts
         norm: m
         corrections:
@@ -510,7 +530,7 @@ pbpb_13agev_mc:
       _from: *tpc-base-detector
       axes:
         - *ax-pt
-        - { name: RecParticles/y_cm, bin-edges: [-0.6, 0.0] }
+        - { name: *var-vtx-y-cm, bin-edges: [-0.6, 0.0] }
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-proton
     - name: protons_pt_set_forward
@@ -518,7 +538,7 @@ pbpb_13agev_mc:
       _from: *tpc-base-detector
       axes:
         - *ax-pt
-        - { name: RecParticles/y_cm, bin-edges: [0.0, 0.6] }
+        - { name: *var-vtx-y-cm, bin-edges: [0.0, 0.6] }
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-proton
     # 4 subevents method TPC references
@@ -529,8 +549,8 @@ pbpb_13agev_mc:
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-proton
       cuts-kinematics:
-        RecParticles/y_cm: { range: [ 1.0, 1.4 ] }
-        RecParticles/pT:   { range: [ 0.0, 2.0 ] }
+        *var-vtx-y-cm: { range: [ 1.0, 1.4 ] }
+        *var-vtx-pt:   { range: [ 0.0, 2.0 ] }
     - name: 4sub_ref_opt1
       tags: [observable, reco]
       _from: *tpc-base-detector
@@ -538,8 +558,8 @@ pbpb_13agev_mc:
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-pion-neg
       cuts-kinematics:
-        RecParticles/y_cm: { range: [ 0.8, 1.8 ] }
-        RecParticles/pT:   { range: [ 0.2, 1.0 ] }
+        *var-vtx-y-cm: { range: [ 0.8, 1.8 ] }
+        *var-vtx-pt:   { range: [ 0.2, 1.0 ] }
     - name: 4sub_ref_opt2
       tags: [observable, reco]
       _from: *tpc-base-detector
@@ -547,8 +567,8 @@ pbpb_13agev_mc:
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-proton
       cuts-kinematics:
-        RecParticles/y_cm: { range: [ 0.8, 1.2 ] }
-        RecParticles/pT:   { range: [ 0.4, 1.4 ] }
+        *var-vtx-y-cm: { range: [ 0.8, 1.2 ] }
+        *var-vtx-pt:   { range: [ 0.4, 1.4 ] }
     #   MC true
     - name: mc_protons_pt
       tags: [ observable, mc ]
