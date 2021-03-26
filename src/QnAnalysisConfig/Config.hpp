@@ -85,10 +85,15 @@ struct convert<Qn::Analysis::Base::AxisConfig> {
 template<>
 struct convert<Qn::Analysis::Base::CutConfig> {
 
-  static bool decode(const Node &node, Qn::Analysis::Base::CutConfig &cut_config) {
+
+  static bool decode_impl(const Node &node,
+                     Qn::Analysis::Base::CutConfig &cut_config,
+                     bool require_variable_field) {
     using namespace Qn::Analysis::Base;
     if (node.IsMap()) {
-      cut_config.variable = node["variable"].as<VariableConfig>(VariableConfig());
+      if (require_variable_field) {
+        cut_config.variable = node["variable"].as<VariableConfig>();
+      }
 
       if (node["equals"]) {
         cut_config.type = CutConfig::EQUAL;
@@ -116,7 +121,13 @@ struct convert<Qn::Analysis::Base::CutConfig> {
 
     return false;
   }
+
+  static bool decode(const Node &node,
+                          Qn::Analysis::Base::CutConfig &cut_config) {
+    return decode_impl(node, cut_config, true);
+  }
 };
+
 
 template<>
 struct convert<Qn::Analysis::Base::HistogramConfig> {
@@ -275,7 +286,11 @@ struct convert<Qn::Analysis::Base::QVectorConfig> {
             /* Shortcut: KEY = Variable, VALUE = Cut with empty target */
             for (auto &map_element : node_element.second) {
               auto cut_variable = map_element.first.as<VariableConfig>();
-              auto cut_config = map_element.second.as<CutConfig>();
+              CutConfig cut_config;
+              auto decode_result = YAML::convert<CutConfig>::decode_impl(map_element.second, cut_config, false);
+              if (!decode_result) {
+                return false;
+              }
               cut_config.variable = cut_variable;
               config.cuts.emplace_back(std::move(cut_config));
             }
