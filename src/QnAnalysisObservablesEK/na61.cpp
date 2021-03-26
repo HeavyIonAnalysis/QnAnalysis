@@ -856,6 +856,60 @@ int main() {
                 META["v1.ref"] == "combined");
   }
 
+  {
+    std::string base_dir = "v1_systematics/reference";
+
+    gResourceManager
+        .GroupBy(
+            v1_reco_centrality_feature_set - "v1.ref",
+            [&base_dir](auto feature, const std::vector<ResourceManager::ResourcePtr> &resources) {
+              const std::map<std::string,int> colors = {
+                  {"psd1", kRed},
+                  {"psd2", kGreen+2},
+                  {"psd3", kBlue},
+                  {"combined", kBlack},
+              };
+              const std::map<std::string, std::pair<double, double>> y_ranges{
+                  {"protons__pt", {-0.1, 0.25}},
+                  {"protons__y", {-0.05, 0.4}},
+                  {"pion_neg__pt", {-0.05, 0.1}},
+                  {"pion_neg__y", {-0.05, 0.05}},
+                  {"pion_pos__pt", {-0.05, 0.1}},
+                  {"pion_pos__y", {-0.1, 0.1}},
+              };
+              const ::Predicates::MetaTemplateGenerator save_dir_tmpl("{{v1.particle}}__{{v1.axis}}/"
+                                                                      "{{centrality.key}}");
+              const ::Predicates::MetaTemplateGenerator file_name_tmpl(
+                  "SET_{{v1.set}}__RES_{{v1.resolution.meta_key}}");
+
+              TMultiGraph mg;
+
+              for (auto &r : resources) {
+                auto &dt_calc = r->template As<DTCalc>();
+                auto graph = Qn::ToTGraph(dt_calc);
+                graph->SetLineColor(colors.at(META["v1.ref"](*r)));
+                graph->SetMarkerColor(colors.at(META["v1.ref"](*r)));
+                mg.Add(graph, META["v1.ref"](*r) == "combined"? "lpZ" : "pZ");
+              }
+
+              auto save_dir = base_dir + "/" + save_dir_tmpl(resources.front().operator*());
+              auto filename = file_name_tmpl(resources.front().operator*());
+
+              gSystem->mkdir(save_dir.c_str(), true);
+              TCanvas c;
+              c.SetCanvasSize(1280, 1024);
+              mg.Draw("A");
+              auto ranges = y_ranges.at(
+                  META["v1.particle"](*resources.front()) + "__" +
+                      META["v1.axis"](*resources.front()));
+              mg.GetYaxis()->SetRangeUser(ranges.first, ranges.second);
+              SaveCanvas(c, save_dir + "/" + filename);
+            },
+            META["type"] == "v1_centrality" &&
+                META["centrality.key"] == "15-25" &&
+                META["v1.component"] == "combined");
+  }
+
 
   /* compare forward/backward */
   {
