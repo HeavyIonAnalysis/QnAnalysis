@@ -43,36 +43,6 @@ _cuts:
     RecParticles/nhits_ratio: { range: [ 0.55, 1.1 ] }
     RecParticles/dcax: { range: [ -2., 2. ] }
     RecParticles/dcay: { range: [ -1., 1. ] }
-  - &rec-particle-cuts-quality-dca-tight
-    _from: *rec-particle-cuts-quality-standard
-    RecParticles/dcax: { range: [ -1, 1. ] }
-    RecParticles/dcay: { range: [ -0.5, 0.5 ] }
-  - &rec-particle-cuts-quality-dca-loose
-    _from: *rec-particle-cuts-quality-standard
-    RecParticles/dcax: { range: [ -3, 3. ] }
-    RecParticles/dcay: { range: [ -1.5, 1.5 ] }
-  - &rec-particle-cuts-quality-nhits-vtpc-loose
-    _from: *rec-particle-cuts-quality-standard
-    RecParticles/nhits_vtpc: { range: [ 5, 1000 ] }
-  - &rec-particle-cuts-quality-nhits-vtpc-tight
-    _from: *rec-particle-cuts-quality-standard
-    RecParticles/nhits_vtpc: { range: [ 15, 1000 ] }
-  - &rec-particle-cuts-quality-nhits-total-loose
-    _from: *rec-particle-cuts-quality-standard
-    RecParticles/nhits_total: { range: [ 20, 1000 ] }
-  - &rec-particle-cuts-quality-nhits-total-tight
-    _from: *rec-particle-cuts-quality-standard
-    RecParticles/nhits_total: { range: [ 40, 1000 ] }
-  - &rec-particle-cuts-quality-nhits-ratio-lowedge-tight
-    _from: *rec-particle-cuts-quality-standard
-    RecParticles/nhits_ratio: { range: [ 0.7, 1.1 ] }
-  - &rec-particle-cuts-quality-nhits-ratio-lowedge-loose
-    _from: *rec-particle-cuts-quality-standard
-    RecParticles/nhits_ratio: { range: [ 0.4, 1.1 ] }
-  - &rec-particle-cuts-quality-nhits-ratio-upedge-tight
-    _from: *rec-particle-cuts-quality-standard
-    RecParticles/nhits_ratio: { range: [ 0.55, 1.0 ] }
-
 
 
 
@@ -486,7 +456,7 @@ pbpb_13agev_mc:
       cuts-quality: *rec-particle-cuts-quality-standard
       cuts: *cuts-proton
     # 4 subevents method TPC references
-    - name: ref_4sub_set_preliminary
+    - name: 4sub_ref_preliminary
       tags: [ observable, reco ]
       _from: *tpc-base-detector
       axes: []
@@ -495,7 +465,7 @@ pbpb_13agev_mc:
       cuts-kinematics:
         RecParticles/y_cm: { range: [ 1.0, 1.4 ] }
         RecParticles/pT:   { range: [ 0.0, 2.0 ] }
-    - name: ref_4sub_set_opt1
+    - name: 4sub_ref_opt1
       tags: [observable, reco]
       _from: *tpc-base-detector
       axes: []
@@ -504,7 +474,7 @@ pbpb_13agev_mc:
       cuts-kinematics:
         RecParticles/y_cm: { range: [ 0.8, 1.8 ] }
         RecParticles/pT:   { range: [ 0.2, 1.0 ] }
-    - name: ref_4sub_set_opt2
+    - name: 4sub_ref_opt2
       tags: [observable, reco]
       _from: *tpc-base-detector
       axes: []
