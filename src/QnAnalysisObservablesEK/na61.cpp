@@ -185,7 +185,7 @@ int main() {
 
   {
     const std::string
-        uQ_reco_expr("^/calc/uQ/(pion_neg|protons)_(pt|y)_set_(\\w+)_(PLAIN|RECENTERED|TWIST|RESCALED).*$");
+        uQ_reco_expr("^/calc/uQ/(pion_neg|pion_pos|protons)_(pt|y)_set_(\\w+)_(PLAIN|RECENTERED|TWIST|RESCALED).*$");
     gResourceManager.ForEach([&uQ_reco_expr](const StringKey &key, ResourceManager::Resource &r) {
       auto particle = KEY.MatchGroup(1, uQ_reco_expr)(r);
       auto axis = KEY.MatchGroup(2, uQ_reco_expr)(r);
@@ -200,7 +200,7 @@ int main() {
     }, KEY.Matches(uQ_reco_expr));
   }
   {
-    const std::string u_mc_expr("^/calc/uQ/mc_(pion_neg|protons)_(pt|y)_PLAIN.*$");
+    const std::string u_mc_expr("^/calc/uQ/mc_(pion_neg|pion_pos|protons)_(pt|y)_PLAIN.*$");
     gResourceManager.ForEach([&u_mc_expr](const StringKey &key, ResourceManager::Resource &r) {
       auto particle = KEY.MatchGroup(1, u_mc_expr)(r);
       auto axis = KEY.MatchGroup(2, u_mc_expr)(r);
@@ -761,7 +761,6 @@ int main() {
 
   }
 
-
   /* v1 profiles */
   // /profiles/v1/<particle>/<axis>/<centrality range>/
   gResourceManager
@@ -801,6 +800,61 @@ int main() {
           META["type"] == "v1_centrality" ||
               META["type"] == "c1_centrality");
 
+
+  /*********** v1 systematics (component) ********************/
+  {
+    std::string base_dir = "v1_systematics/component";
+
+    gResourceManager
+        .GroupBy(
+            v1_reco_centrality_feature_set - "v1.component",
+            [&base_dir](auto feature, const std::vector<ResourceManager::ResourcePtr> &resources) {
+              const std::map<std::string,int> colors = {
+                  {"x1x1", kRed},
+                  {"y1y1", kBlue+1},
+                  {"combined", kBlack},
+              };
+              const std::map<std::string, std::pair<double, double>> y_ranges{
+                  {"protons__pt", {-0.1, 0.25}},
+                  {"protons__y", {-0.05, 0.4}},
+                  {"pion_neg__pt", {-0.05, 0.1}},
+                  {"pion_neg__y", {-0.05, 0.05}},
+                  {"pion_pos__pt", {-0.05, 0.1}},
+                  {"pion_pos__y", {-0.1, 0.1}},
+              };
+              const ::Predicates::MetaTemplateGenerator save_dir_tmpl("{{v1.particle}}__{{v1.axis}}/"
+                                                                      "{{centrality.key}}");
+              const ::Predicates::MetaTemplateGenerator file_name_tmpl(
+                  "SET_{{v1.set}}__RES_{{v1.resolution.meta_key}}");
+
+              TMultiGraph mg;
+
+              for (auto &r : resources) {
+                auto &dt_calc = r->template As<DTCalc>();
+                auto graph = Qn::ToTGraph(dt_calc);
+                graph->SetLineColor(colors.at(META["v1.component"](*r)));
+                graph->SetMarkerColor(colors.at(META["v1.component"](*r)));
+
+                mg.Add(graph, META["v1.component"](*r) == "combined"? "lpZ" : "pZ");
+              }
+
+              auto save_dir = base_dir + "/" + save_dir_tmpl(resources.front().operator*());
+              auto filename = file_name_tmpl(resources.front().operator*());
+
+              gSystem->mkdir(save_dir.c_str(), true);
+              TCanvas c;
+              c.SetCanvasSize(1280, 1024);
+              mg.Draw("A");
+              auto ranges = y_ranges.at(
+                  META["v1.particle"](*resources.front()) + "__" +
+                  META["v1.axis"](*resources.front()));
+              mg.GetYaxis()->SetRangeUser(ranges.first, ranges.second);
+              SaveCanvas(c, save_dir + "/" + filename);
+            },
+            META["type"] == "v1_centrality" &&
+                META["centrality.key"] == "15-25" &&
+                META["v1.ref"] == "combined");
+  }
 
 
   /* compare forward/backward */
