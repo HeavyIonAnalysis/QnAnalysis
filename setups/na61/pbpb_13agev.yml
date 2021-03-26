@@ -258,7 +258,36 @@ pbpb_13agev_16_025:
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts-kinematics: *cuts-kinematics-pion-neg-y-preliminary
       cuts-pid: *cuts-pion-neg
+    - name: pion_pos_pt_set_preliminary
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-pt-correction-pion-neg-pt-preliminary
+        - *ax-y-cm-correction-pion-neg-pt-preliminary
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts-kinematics: *cuts-kinematics-pion-neg-pt-preliminary
+      cuts-pid: &cuts-pion-pos
+        RecParticles/pid: { equals: 211 }
+    - name: pion_pos_y_set_preliminary
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-y-cm-correction-pion-neg-y-preliminary
+        - *ax-pt-correction-pion-neg-y-preliminary
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts-kinematics: *cuts-kinematics-pion-neg-y-preliminary
+      cuts-pid: *cuts-pion-pos
     # REFERENCE DETECTORS
+    # 4 subevents method TPC references
+    - name: 4sub_ref_preliminary
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes: [ ]
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts-pid: *cuts-proton
+      cuts-kinematics:
+        - { variable: *var-vtx-y-cm, range: [ 1.0, 1.4 ] }
+        - { variable: *var-vtx-pt,   range: [ 0.0, 2.0 ] }
     - name: psd1
       tags: [ reference ]
       _from: &reference-base-detector
