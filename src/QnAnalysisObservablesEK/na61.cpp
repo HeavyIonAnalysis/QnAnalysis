@@ -355,8 +355,8 @@ int main() {
 
     auto build_4sub_resolution = [](
         const std::string &meta_key,
-        const std::string& tpc_ref_base,
-        const std::vector<std::string>& psd_subs_base) {
+        const std::string &tpc_ref_base,
+        const std::vector<std::string> &psd_subs_base) {
       const std::vector<std::string> components = {"x1x1", "y1y1"};
       const std::string tpc_ref_cstep = "RESCALED";
       const std::string psd_subs_cstep = "RECENTERED";
@@ -374,7 +374,7 @@ int main() {
         auto subA_subC = gResourceManager.GetMatching(KEY == (Format("/calc/QQ/%1%_%2%.%3%_%4%.%5%") % subA
             % psd_subs_cstep % subC % psd_subs_cstep % component).str()).at(0);
 
-        auto apply_abs = [] (const std::string& key) {
+        auto apply_abs = [](const std::string &key) {
           auto &calc = gResourceManager.Get(key, ResourceManager::ResTag<DTCalc>());
           calc = Qn::Sqrt(Qn::Pow(calc, 2.));
         };
@@ -660,13 +660,17 @@ int main() {
 
 /****************** DRAWING *********************/
 
-/* export everything to TGraph */
-  gResourceManager.ForEach([](const StringKey &name, DTCalc calc) {
-                             auto graph = Qn::ToTGraph(calc);
-                             if (graph)
-                               AddResource("/profiles" + name, graph);
-                           },
-                           KEY.Matches("^/x2/QQ/.*$"));
+  // All to TGraph
+  gResourceManager
+      .ForEach([](const StringKey &name, DTCalc calc) {
+                 auto cwd = gDirectory;
+                 gDirectory = nullptr;
+                 auto graph = Qn::ToTGraph(calc);
+                 if (graph)
+                   AddResource("/profiles" + name, graph);
+                 gDirectory = cwd;
+               },
+               KEY.Matches("^/x2/QQ/.*$"));
 
   {
     const auto resolution_filter = META["type"] == "resolution";
@@ -729,7 +733,7 @@ int main() {
                   {"3sub_psd90", kGreen + 2},
                   {"4sub_preliminary", kBlue},
                   {"4sub_opt1", kMagenta},
-                  {"4sub_opt2", kCyan+1},
+                  {"4sub_opt2", kCyan + 1},
               };
 
               TMultiGraph mg;
@@ -755,28 +759,8 @@ int main() {
 
             }, resolution_filter);
 
-    /* export ALL resolution to TGraph */
-    gResourceManager.ForEach([](const StringKey &name, ResourceManager::Resource r) {
-
-      auto graph = Qn::ToTGraph(r.As<DTCalc>());
-
-      auto component = r.meta.get("resolution.component", "??");
-      auto reference = r.meta.get("resolution.ref", "??");
-      auto method = r.meta.get("resolution.method", "??");
-
-      graph->SetTitle((Format("R_{1,%1%} (%2%) %3%")
-          % component
-          % reference
-          % method).str().c_str());
-
-      graph->GetXaxis()->SetTitle("Centrality (%)");
-
-      graph->GetYaxis()->SetRangeUser(-0.1, 1.0);
-      graph->GetYaxis()->SetTitle("R_{1}");
-
-      AddResource("/profiles" + name, ResourceManager::Resource(*graph, r.meta));
-    }, resolution_filter);
   }
+
 
   /* v1 profiles */
   // /profiles/v1/<particle>/<axis>/<centrality range>/
