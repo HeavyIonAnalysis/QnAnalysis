@@ -136,6 +136,7 @@ int main() {
   gResourceManager.ForEach([](const StringKey &, DTCalc &dt) {
     const std::map<std::string, std::string> axis_name_map{
         {"RecEventHeaderProc_Centrality_Epsd", "Centrality"},
+        {"Centrality_Centrality_Epsd", "Centrality"},
         {"SimTracksProc_y_cm", "y_cm"},
         {"SimTracksProc_pT", "pT"},
         {"RecParticles_y_cm", "y_cm"},
@@ -233,23 +234,23 @@ int main() {
                              META["u.axis"] == "pt");
   }
   {
-    /* Rebin y  */
-    gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
-                               calc = calc.Rebin(Qn::AxisD("y_cm",
-                                                           {-0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 2.0, 2.4}));
-                             },
-                             META["u.axis"] == "y");
-    /* Rebin pT  */
-    gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
-                               calc = calc.Rebin(Qn::AxisD("pT",
-                                                           {0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.4, 3.0}));
-                             },
-                             META["u.axis"] == "pt");
-    /* Rebin centrality  */
-    gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
-      calc = calc.Rebin(Qn::AxisD("Centrality",
-                                  {0., 10., 25., 45., 80.}));
-    });
+//    /* Rebin y  */
+//    gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
+//                               calc = calc.Rebin(Qn::AxisD("y_cm",
+//                                                           {-0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 2.0, 2.4}));
+//                             },
+//                             META["u.axis"] == "y");
+//    /* Rebin pT  */
+//    gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
+//                               calc = calc.Rebin(Qn::AxisD("pT",
+//                                                           {0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.4, 3.0}));
+//                             },
+//                             META["u.axis"] == "pt");
+////    /* Rebin centrality  */
+//    gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
+//      calc = calc.Rebin(Qn::AxisD("Centrality",
+//                                  {0., 10., 25., 45., 80.}));
+//    });
   }
   {
     /***************** RESOLUTION 3-sub ******************/
@@ -299,9 +300,9 @@ int main() {
 
     build_3sub_resolution("3sub_standard",
                           {"psd1", "psd2", "psd3"});
-    build_3sub_resolution("3sub_psd90",
-                          {"psd1_90", "psd2_90", "psd3_90"},
-                          {{"psd1_90", "psd1"}, {"psd2_90", "psd2"}, {"psd3_90", "psd3"}});
+//    build_3sub_resolution("3sub_psd90",
+//                          {"psd1_90", "psd2_90", "psd3_90"},
+//                          {{"psd1_90", "psd1"}, {"psd2_90", "psd2"}, {"psd3_90", "psd3"}});
 
   }
 
@@ -343,8 +344,8 @@ int main() {
     };
 
     build_psd_mc_resolution("psd_mc", {"psd1", "psd2", "psd3"});
-    build_psd_mc_resolution("psd90_mc", {"psd1_90", "psd2_90", "psd3_90"},
-                            {{"psd1_90", "psd1"}, {"psd2_90", "psd2"}, {"psd3_90", "psd3"}});
+//    build_psd_mc_resolution("psd90_mc", {"psd1_90", "psd2_90", "psd3_90"},
+//                            {{"psd1_90", "psd1"}, {"psd2_90", "psd2"}, {"psd3_90", "psd3"}});
 
   }
 
@@ -739,16 +740,16 @@ int main() {
                 resolution_graph->SetMarkerColor(colors.at(META["resolution.meta_key"](*r)));
                 resolution_graph->SetLineWidth(2.);
                 resolution_graph->SetTitle(META["resolution.meta_key"](*r).c_str());
-                mg.Add(resolution_graph, "lp");
+                mg.Add(resolution_graph, "pZ");
               }
 
               TCanvas c;
               c.SetCanvasSize(1280, 1024);
               mg.Draw("A");
-              mg.GetYaxis()->SetRangeUser(0., .4);
+              mg.GetYaxis()->SetRangeUser(0., .3);
               mg.GetYaxis()->SetTitle("R_{1}");
               mg.GetXaxis()->SetTitle("Centrality (%)");
-              auto legend = c.BuildLegend(0.15, 0.7, 0.55, 0.9);
+              auto legend = c.BuildLegend(0.15, 0.2, 0.65, 0.35);
               legend->SetHeader(feature.c_str());
               SaveCanvas(c, save_dir + "/" + "comp_" + feature);
 
