@@ -134,6 +134,11 @@ struct ResourceQueryExpr {
 
   result_type operator()(const ResourceManager::Resource &r) const;
 
+  inline
+  result_type operator() (const ResourceManager::ResourcePtr &resource_ptr) const {
+    return operator()(*resource_ptr);
+  }
+
   template<typename Regex>
   auto Matches(Regex &&re_expr) const {
     namespace proto = boost::proto;
@@ -189,27 +194,13 @@ std::string JoinStrings(const std::vector<std::string> &strings, std::string del
 } // namespace Impl
 
 
-template<typename ... Features>
-struct StaticFeatureSet {
-
-  typedef std::string result_type;
-
-  StaticFeatureSet(Features...features) : feature_set(std::make_tuple(features...)) {}
-
-  result_type operator()(const ResourceManager::Resource &r) const {
-    return std::apply([&r](auto ... feature) { return Impl::JoinStrings({feature(r)...}); }, feature_set);
-  }
-
-  std::tuple<Features...> feature_set;
-};
-
 struct MetaFeatureSet {
 
   typedef std::string result_type;
 
   MetaFeatureSet(std::initializer_list<std::string> feature_paths) :
       meta_feature_paths_(feature_paths.begin(), feature_paths.end()) {}
-  MetaFeatureSet(const std::vector<std::string> &meta_features) :
+  explicit MetaFeatureSet(const std::vector<std::string> &meta_features) :
       meta_feature_paths_(meta_features) {}
 
   result_type operator()(const ResourceManager::Resource &r) const {
@@ -269,6 +260,11 @@ struct MetaTemplateGenerator {
       offset += meta_value.length() - replace_length;
     }
     return result;
+  }
+
+  inline
+  result_type operator() (const ResourceManager::ResourcePtr& resource_ptr) const {
+    return operator()(*resource_ptr);
   }
 
   std::string template_str;

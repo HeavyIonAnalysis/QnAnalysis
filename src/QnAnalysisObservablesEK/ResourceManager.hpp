@@ -134,7 +134,7 @@ class ResourceManager : public Details::Singleton<ResourceManager> {
   struct ResTag {};
 
   struct AlwaysTrue {
-    bool operator()(const NameTag &) {
+    bool operator()(const Resource &) {
       return true;
     }
   };
@@ -225,10 +225,9 @@ class ResourceManager : public Details::Singleton<ResourceManager> {
 
   template<typename Predicate>
   bool TestPredicate(Predicate &&predicate, const std::string &key) {
-    using PredicateTraits = Details::FunctionTraits<decltype(std::function{predicate})>;
-    static_assert(PredicateTraits::N_ARGS == 1 && std::is_same_v<typename PredicateTraits::ReturnType, bool>);
-    using ArgType = std::decay_t<typename PredicateTraits::template ArgType<0>>;
-    return predicate(Get(key, ResTag<ArgType>()));
+    const auto &resource = Get(key, ResTag<Resource>());
+    static_assert(std::is_same_v<decltype(predicate(resource)), bool>);
+    return predicate(resource);
   }
 
   template<typename Predicate = AlwaysTrue>
@@ -264,48 +263,38 @@ class ResourceManager : public Details::Singleton<ResourceManager> {
 
   template<typename MapFunction, typename OIter, typename Predicate = AlwaysTrue>
   void SelectImpl(MapFunction &&fct, OIter &&o, Predicate &&predicate = AlwaysTrue()) {
-    using Traits = Details::FunctionTraits<decltype(std::function{fct})>;
-
     auto resources_copy = resources_;
     for (auto &element : resources_copy) {
       if (TestPredicate(std::forward<Predicate>(predicate), element.first)) {
-        try {
-          static_assert(Traits::N_ARGS == 1);
-          using ArgType = std::decay_t<typename Traits::template ArgType<0>>;
-          *o = fct(Get(element.first, ResTag<ArgType>()));
-        } catch (std::bad_any_cast &e) {
-          Warning(__func__, "Bad cast for '%s'. Skipping...", element.first.c_str());
-        }
+          *o = fct(Get(element.first, ResTag<Resource>()));
       } /// predicate
     } /// resources
   }
 
   template<typename MapFunction, typename Predicate = AlwaysTrue>
-  auto SelectUniq(MapFunction &&fct, Predicate &&predicate = AlwaysTrue()) {
-    using Traits = Details::FunctionTraits<decltype(std::function{fct})>;
-    std::set<std::decay_t<typename Traits::ReturnType>> results_set;
-    SelectImpl(std::forward<MapFunction>(fct),
-           std::inserter(results_set, std::begin(results_set)),
+  auto SelectUniq(MapFunction &&feature_function, Predicate &&predicate = AlwaysTrue()) {
+    using FeatureType = std::decay_t<decltype(feature_function(std::declval<const Resource&>()))>;
+    std::set<FeatureType> features_set;
+    SelectImpl(std::forward<MapFunction>(feature_function),
+           std::inserter(features_set, std::begin(features_set)),
            std::forward<Predicate>(predicate));
-    std::vector<typename decltype(results_set)::value_type> result;
-    result.reserve(results_set.size());
-    std::copy(std::begin(results_set), std::end(results_set), std::back_inserter(result));
-    return result;
+    /* copy to the vector */
+    std::vector<FeatureType> features_vector;
+    features_vector.reserve(features_set.size());
+    std::copy(std::begin(features_set), std::end(features_set), std::back_inserter(features_vector));
+    return features_vector;
   }
 
   template<typename FeatureExtractor, typename ApplyFunct, typename Predicate = AlwaysTrue>
-  auto GroupBy(FeatureExtractor && feature_extractor_function, ApplyFunct && funct, Predicate && predicate = AlwaysTrue()) {
-    using FeatureExtractorTraits = Details::FunctionTraits<decltype(std::function{feature_extractor_function})>;
-    using FeatureType = std::decay_t<typename FeatureExtractorTraits::ReturnType>;
-    static_assert(FeatureExtractorTraits::N_ARGS == 1);
-    using FeatureExtractorArg = std::decay_t<typename FeatureExtractorTraits::template ArgType<0>>;
+  auto GroupBy(FeatureExtractor && feature_fct, ApplyFunct && funct, Predicate && predicate = AlwaysTrue()) {
+    using FeatureType = std::decay_t<decltype(feature_fct(std::declval<const ResourceManager::Resource&>()))>;
 
     std::unordered_map<FeatureType,std::vector<ResourcePtr>> feature_groups;
     /* collecting features */
     auto resources_copy = resources_;
     for (auto &element : resources_copy) {
       if (TestPredicate(std::forward<Predicate>(predicate), element.first)) {
-        auto feature = feature_extractor_function(Get(element.first, ResTag<FeatureExtractorArg>()));
+        auto feature = feature_fct(Get(element.first, ResTag<Resource>()));
 
         auto && [emplace_it, emplace_ok] =
             feature_groups.template emplace(std::move(feature), std::vector<ResourcePtr>({element.second}));

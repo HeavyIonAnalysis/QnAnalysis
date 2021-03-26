@@ -706,8 +706,8 @@ int main() {
         resolution_graph->SetMarkerColor(colors.at(META["resolution.ref_alias"](*r)));
         resolution_graph->SetMarkerStyle(markers.at(META["resolution.component"](*r)));
         resolution_graph->SetTitle((Format("R_{1,%1%} (%2%)")
-            % META["resolution.component"](*r)
-            % META["resolution.ref_alias"](*r)).str().c_str());
+            % META["resolution.component"](r)
+            % META["resolution.ref_alias"](r)).str().c_str());
         mg.Add(resolution_graph, "pl");
       }
 
@@ -743,7 +743,7 @@ int main() {
                 resolution_graph->SetLineColor(colors.at(META["resolution.meta_key"](*r)));
                 resolution_graph->SetMarkerColor(colors.at(META["resolution.meta_key"](*r)));
                 resolution_graph->SetLineWidth(2.);
-                resolution_graph->SetTitle(META["resolution.meta_key"](*r).c_str());
+                resolution_graph->SetTitle(META["resolution.meta_key"](r).c_str());
                 mg.Add(resolution_graph, "pZ");
               }
 
@@ -838,8 +838,8 @@ int main() {
                 mg.Add(graph, META["v1.component"](*r) == "combined"? "lpZ" : "pZ");
               }
 
-              auto save_dir = base_dir + "/" + save_dir_tmpl(resources.front().operator*());
-              auto filename = file_name_tmpl(resources.front().operator*());
+              auto save_dir = base_dir + "/" + save_dir_tmpl(resources.front());
+              auto filename = file_name_tmpl(resources.front());
 
               gSystem->mkdir(save_dir.c_str(), true);
               TCanvas c;
