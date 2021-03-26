@@ -224,9 +224,7 @@ pbpb_13agev_16_025:
         qa-quality: *rec-particle-qa-quality
         qa-kinematics: *rec-particle-qa-kinematics
       axes:
-#        - &ax-pt { name: *var-vtx-pt, bin-edges: *common-pt-bin-edges }
         - *ax-pt-correction-protons-pt-preliminary
-#        - &ax-y-cm-corr-protons { name: *var-vtx-y-cm, bin-edges: *common-y-cm-correction-range-protons }
         - *ax-y-cm-correction-protons-pt-preliminary
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts-kinematics: *cuts-kinematics-protons-pt-preliminary
@@ -236,7 +234,6 @@ pbpb_13agev_16_025:
       tags: [ observable ]
       _from: *tpc-base-detector
       axes:
-#        - &ax-y-cm { name: *var-vtx-y-cm, bin-edges: *common-y-cm-bin-edges }
         - *ax-y-cm-correction-protons-y-preliminary
         - *ax-pt-correction-protons-y-preliminary
       cuts-quality: *cuts-rec-particles-quality-preliminary
@@ -246,7 +243,6 @@ pbpb_13agev_16_025:
       tags: [ observable ]
       _from: *tpc-base-detector
       axes:
-#        - &ax-y-cm-corr-pion-neg { name: *var-vtx-y-cm, bin-edges: *common-y-cm-correction-range-pion-neg }
         - *ax-pt-correction-pion-neg-pt-preliminary
         - *ax-y-cm-correction-pion-neg-pt-preliminary
       cuts-quality: *cuts-rec-particles-quality-preliminary
@@ -257,8 +253,6 @@ pbpb_13agev_16_025:
       tags: [ observable ]
       _from: *tpc-base-detector
       axes:
-#        - *ax-y-cm
-#        - *ax-pt-corr-pion-neg
         - *ax-y-cm-correction-pion-neg-y-preliminary
         - *ax-pt-correction-pion-neg-y-preliminary
       cuts-quality: *cuts-rec-particles-quality-preliminary
