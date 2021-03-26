@@ -35,14 +35,80 @@ _axes:
   - &ax-pt-corr-protons { name: RecParticles/pT, bin-edges: *common-pt-correction-range-protons }
   - &ax-pt-corr-pion-neg { name: RecParticles/pT, bin-edges: *common-pt-correction-range-pion-neg }
 
-_cuts:
-  - &rec-particle-cuts-quality-standard
+
+setups-definitions:
+  # Preliminary 2019 (aka "preliminary")
+  # Quality cuts for vertex tracks preliminary
+  - &cuts-rec-particles-quality-preliminary
     RecParticles/nhits_total: { range: [ 30, 1000 ] }
     RecParticles/nhits_vtpc: { range: [ 10, 1000 ] }
     RecParticles/nhits_pot_total: { range: [ 1, 1000 ] }
     RecParticles/nhits_ratio: { range: [ 0.55, 1.1 ] }
     RecParticles/dcax: { range: [ -2., 2. ] }
     RecParticles/dcay: { range: [ -1., 1. ] }
+  ########################################################
+  # v1(pT) of PROTONS
+  ########################################################
+  # y-range for v1(pT) of protons
+  - &cuts-rec-particles-kinematics-protons-pt-preliminary
+    RecParticles/y_cm: { range: [0., 1.2] }
+  # y-axis correction binning for v1(pT) of protons
+  - &ax-y-cm-correction-protons-pt-preliminary
+    name: RecParticles/y_cm
+    bin-edges: [0., 1.2]
+  # pT-axis binning for v1(pT) of protons
+  - &ax-pt-correction-protons-pt-preliminary
+    name: RecParticles/pT
+    bin-edges: [0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0]
+  ########################################################
+  # v1(y) of PROTONS
+  ########################################################
+  # pT-range for v1(y) of protons
+  - &cuts-rec-particles-kinematics-protons-y-preliminary
+    RecParticles/pT: { range: [0., 2.0] }
+  # pT correction axis for v1(y) of protons
+  - &ax-pt-correction-protons-y-preliminary
+    name: RecParticles/pT
+    bin-edges: [0.0, 2.0]
+  # y-axis binning for v1(y) of protons
+  - &ax-y-cm-correction-protons-y-preliminary
+    name: RecParticles/y_cm
+    nb: 15
+    lo: -0.6
+    hi: 2.0
+  ########################################################
+  # v1(pT) of the NEGATIVE PIONS
+  ########################################################
+  # y-range for v1(pT) of negative pions
+  - &cuts-rec-particles-kinematics-pion-neg-pt-preliminary
+    RecParticles/y_cm: { range: [0., 1.2] }
+  # y-axis correction binning for v1(pT) of negative pions
+  - &ax-y-cm-correction-pion-neg-pt-preliminary
+    name: RecParticles/y_cm
+    bin-edges: [0., 1.2]
+  # pT-axis binning for v1(pT) of negative pions
+  - &ax-pt-correction-pion-neg-pt-preliminary
+    name: RecParticles/pT
+    bin-edges: [0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0]
+  ########################################################
+  # v1(y) of the NEGATIVE PIONS
+  ########################################################
+  # pT-range for v1(y) of negative pions
+  - &cuts-rec-particles-kinematics-pion-neg-y-preliminary
+    RecParticles/pT: { range: [0., 2.0] }
+  # pT correction axis for v1(y) of negative pions
+  - &ax-pt-correction-pion-neg-y-preliminary
+    name: RecParticles/pT
+    bin-edges: [0.0, 2.0]
+  # y-axis binning for v1(y) of negative pions
+  - &ax-y-cm-correction-pion-neg-y-preliminary
+    name: RecParticles/y_cm
+    nb: 15
+    lo: -0.6
+    hi: 2.0
+
+
+
 
 
 
@@ -146,7 +212,7 @@ pbpb_13agev_16_025:
       axes:
         - &ax-pt { name: RecParticles/pT, bin-edges: *common-pt-bin-edges }
         - &ax-y-cm-corr-protons { name: RecParticles/y_cm, bin-edges: *common-y-cm-correction-range-protons }
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: &cuts-proton
         RecParticles/pid: { equals: 2212 }
     - name: protons_y_standard
@@ -155,7 +221,7 @@ pbpb_13agev_16_025:
       axes:
         - &ax-y-cm { name: RecParticles/y_cm, bin-edges: *common-y-cm-bin-edges }
         - *ax-pt-corr-protons
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-proton
     - name: pion_neg_pt_standard
       tags: [ observable ]
@@ -163,7 +229,7 @@ pbpb_13agev_16_025:
       axes:
         - *ax-pt
         - &ax-y-cm-corr-pion-neg { name: RecParticles/y_cm, bin-edges: *common-y-cm-correction-range-pion-neg}
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: &cuts-pion-neg
         RecParticles/pid: { equals: -211 }
     - name: pion_neg_y_standard
@@ -172,7 +238,7 @@ pbpb_13agev_16_025:
       axes:
         - *ax-y-cm
         - *ax-pt-corr-pion-neg
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-pion-neg
     # STANDARD CUTS (WEIGHTED)
     - name: protons_pt_standard_weighted
@@ -191,7 +257,7 @@ pbpb_13agev_16_025:
       axes:
         - *ax-pt
         - *ax-y-cm-corr-protons
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: &cuts-proton
         RecParticles/pid: { equals: 2212 }
     - name: protons_y_standard_weighted
@@ -200,7 +266,7 @@ pbpb_13agev_16_025:
       axes:
         - *ax-y-cm
         - *ax-pt-corr-protons
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-proton
     - name: pion_neg_pt_standard_weighted
       tags: [ observable ]
@@ -208,7 +274,7 @@ pbpb_13agev_16_025:
       axes:
         - *ax-pt
         - *ax-pt-corr-pion-neg
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: &cuts-pion-neg
         RecParticles/pid: { equals: -211 }
     - name: pion_neg_y_standard_weighted
@@ -217,7 +283,7 @@ pbpb_13agev_16_025:
       axes:
         - *ax-y-cm
         - *ax-pt-corr-pion-neg
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-pion-neg
     # REFERENCE DETECTORS
     - name: psd1
@@ -327,7 +393,7 @@ pbpb_13agev_mc:
       axes:
         - *ax-pt
         - *ax-y-cm-corr-protons
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: &cuts-proton
         RecParticles/pid: { equals: 2212 }
     - name: protons_y_set_standard
@@ -336,7 +402,7 @@ pbpb_13agev_mc:
       axes:
         - *ax-y-cm
         - *ax-pt-corr-protons
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-proton
     - name: pion_neg_pt_set_standard
       tags: [ observable, reco ]
@@ -344,7 +410,7 @@ pbpb_13agev_mc:
       axes:
         - *ax-pt
         - *ax-y-cm-corr-pion-neg
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: &cuts-pion-neg
         RecParticles/pid: { equals: -211 }
     - name: pion_neg_y_set_standard
@@ -353,7 +419,7 @@ pbpb_13agev_mc:
       axes:
         - *ax-y-cm
         - *ax-pt-corr-pion-neg
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-pion-neg
     # weighted
     - name: protons_pt_set_weighted
@@ -363,7 +429,7 @@ pbpb_13agev_mc:
       axes:
         - *ax-pt
         - *ax-y-cm-corr-protons
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: &cuts-proton
         RecParticles/pid: { equals: 2212 }
       qa-weighted: *rec-particle-qa-kinematics-weighted
@@ -374,7 +440,7 @@ pbpb_13agev_mc:
       axes:
         - *ax-y-cm
         - *ax-pt-corr-protons
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-proton
       qa-weighted: *rec-particle-qa-kinematics-weighted
     - name: pion_neg_pt_set_weighted
@@ -384,7 +450,7 @@ pbpb_13agev_mc:
       axes:
         - *ax-pt
         - *ax-y-cm-corr-pion-neg
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: &cuts-pion-neg
         RecParticles/pid: { equals: -211 }
       qa-weighted: *rec-particle-qa-kinematics-weighted
@@ -395,7 +461,7 @@ pbpb_13agev_mc:
       axes:
         - *ax-y-cm
         - *ax-pt-corr-pion-neg
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-pion-neg
       qa-weighted: *rec-particle-qa-kinematics-weighted
     #   Rec particles (TRUE PRIMARIES)
@@ -445,7 +511,7 @@ pbpb_13agev_mc:
       axes:
         - *ax-pt
         - { name: RecParticles/y_cm, bin-edges: [-0.6, 0.0] }
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-proton
     - name: protons_pt_set_forward
       tags: [ observable, reco ]
@@ -453,14 +519,14 @@ pbpb_13agev_mc:
       axes:
         - *ax-pt
         - { name: RecParticles/y_cm, bin-edges: [0.0, 0.6] }
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-proton
     # 4 subevents method TPC references
     - name: 4sub_ref_preliminary
       tags: [ observable, reco ]
       _from: *tpc-base-detector
       axes: []
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-proton
       cuts-kinematics:
         RecParticles/y_cm: { range: [ 1.0, 1.4 ] }
@@ -469,7 +535,7 @@ pbpb_13agev_mc:
       tags: [observable, reco]
       _from: *tpc-base-detector
       axes: []
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-pion-neg
       cuts-kinematics:
         RecParticles/y_cm: { range: [ 0.8, 1.8 ] }
@@ -478,7 +544,7 @@ pbpb_13agev_mc:
       tags: [observable, reco]
       _from: *tpc-base-detector
       axes: []
-      cuts-quality: *rec-particle-cuts-quality-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-proton
       cuts-kinematics:
         RecParticles/y_cm: { range: [ 0.8, 1.2 ] }
