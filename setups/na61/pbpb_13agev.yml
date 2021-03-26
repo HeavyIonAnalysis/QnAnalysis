@@ -288,6 +288,25 @@ pbpb_13agev_16_025:
       cuts-kinematics:
         - { variable: *var-vtx-y-cm, range: [ 1.0, 1.4 ] }
         - { variable: *var-vtx-pt,   range: [ 0.0, 2.0 ] }
+    - name: 4sub_ref_opt1
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes: [ ]
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: *cuts-pion-neg
+      cuts-kinematics:
+        - { variable: *var-vtx-y-cm, range: [ 0.8, 1.8 ] }
+        - { variable: *var-vtx-pt,  range: [ 0.2, 1.0 ] }
+    - name: 4sub_ref_opt2
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes: [ ]
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: *cuts-proton
+      cuts-kinematics:
+        - { variable: *var-vtx-y-cm, range: [ 0.8, 1.2 ] }
+        - { variable: *var-vtx-pt,   range: [ 0.4, 1.4 ] }
+    # PSD references
     - name: psd1
       tags: [ reference ]
       _from: &reference-base-detector
