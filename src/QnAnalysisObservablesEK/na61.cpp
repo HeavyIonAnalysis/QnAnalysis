@@ -889,6 +889,7 @@ int main() {
                 auto graph = Qn::ToTGraph(dt_calc);
                 graph->SetLineColor(colors.at(META["v1.ref"](*r)));
                 graph->SetMarkerColor(colors.at(META["v1.ref"](*r)));
+                graph->SetTitle(META["v1.ref"](*r).c_str());
                 mg.Add(graph, META["v1.ref"](*r) == "combined"? "lpZ" : "pZ");
               }
 
@@ -903,6 +904,7 @@ int main() {
                   META["v1.particle"](*resources.front()) + "__" +
                       META["v1.axis"](*resources.front()));
               mg.GetYaxis()->SetRangeUser(ranges.first, ranges.second);
+              auto legend = c.BuildLegend();
               SaveCanvas(c, save_dir + "/" + filename);
             },
             META["type"] == "v1_centrality" &&
