@@ -142,10 +142,9 @@ setups-definitions:
   - &cuts-kinematics-protons-pt-standard
     - { variable: *var-vtx-y-cm, range: [ 0.0, 1.0 ] }
   # y-axis correction binning for v1(pT) of protons
-  # TODO binning
   - &ax-y-cm-correction-protons-pt-standard
     name: *var-vtx-y-cm
-    bin-edges: [ 0.0, 1.0 ]
+    bin-edges: [ 0.000, 0.300, 0.600, 1.000 ]
   # pT-axis binning for v1(pT) of protons
   - &ax-pt-correction-protons-pt-standard
     name: *var-vtx-pt
@@ -157,10 +156,9 @@ setups-definitions:
   - &cuts-kinematics-protons-y-standard
     - { variable: *var-vtx-pt, range: [ 0.400, 1.200 ] }
   # pT correction axis for v1(y) of protons
-  # TODO binning
   - &ax-pt-correction-protons-y-standard
     name: *var-vtx-pt
-    bin-edges: [ 0.400, 1.200 ]
+    bin-edges: [ 0.400, 0.800, 1.200 ]
   # y-axis binning for v1(y) of protons
   - &ax-y-cm-correction-protons-y-standard
     name: *var-vtx-y-cm
@@ -172,10 +170,9 @@ setups-definitions:
   - &cuts-kinematics-pion-neg-pt-standard
     - { variable: *var-vtx-y-cm, range: [ 0.000 , 1.000 ] }
   # y-axis correction binning for v1(pT) of negative pions
-  # TODO binning
   - &ax-y-cm-correction-pion-neg-pt-standard
     name: *var-vtx-y-cm
-    bin-edges: [ 0.000, 1.000 ]
+    bin-edges: [ 0.000, 0.200, 0.400, 0.600, 0.800, 1.000 ]
   # pT-axis binning for v1(pT) of negative pions
   - &ax-pt-correction-pion-neg-pt-standard
     name: *var-vtx-pt
@@ -187,10 +184,9 @@ setups-definitions:
   - &cuts-kinematics-pion-neg-y-standard
     - { variable: *var-vtx-pt, range: [ 0.050, 1.000 ] }
   # pT correction axis for v1(y) of negative pions
-  # TODO binning
   - &ax-pt-correction-pion-neg-y-standard
     name: *var-vtx-pt
-    bin-edges: [ 0.050, 1.000 ]
+    bin-edges: [ 0.050, 0.200, 0.500, 1.000 ]
   # y-axis binning for v1(y) of negative pions
   - &ax-y-cm-correction-pion-neg-y-standard
     name: *var-vtx-y-cm
@@ -274,7 +270,7 @@ pbpb_13agev_16_025:
   axes: [ *ax-centrality-correction-preliminary ]
   q-vectors: &q-vectors-list
     # OBSERVABLES
-    # PRELIMINARY
+    # v1(pT) for protons (PRELIMINARY SET)
     - name: protons_pt_set_preliminary
       tags: [ observable ]
       _from: &tpc-base-detector
@@ -294,19 +290,20 @@ pbpb_13agev_16_025:
       cuts-kinematics: *cuts-kinematics-protons-pt-preliminary
       cuts-pid: &cuts-proton
         RecParticles/pid: { equals: 2212 }
-    - name: protons_pt_set_test_binning
+    # v1(pT) for protons (STANDARD SET)
+    - name: protons_pt_set_standard
       tags: [ observable ]
       _from: *tpc-base-detector
+      # overriding weight
+      weight: RecParticles/w_eff_standard_cuts
       axes:
-        - &ax-pt-test-non-uniform-binning { name: *var-vtx-pt, bin-edges: [ 0, 0.091, 0.216, 0.276, 0.326, 0.371, 0.414, 0.456, 0.498, 0.54, 0.583, 0.627, 0.673, 0.722, 0.775, 0.834, 0.901, 0.981, 1.085, 1.241, 1.667, 2.] }
-        - *ax-y-cm-correction-protons-pt-preliminary
-      cuts-quality: *cuts-rec-particles-quality-preliminary
-      cuts-kinematics: *cuts-kinematics-protons-pt-preliminary
-      cuts-pid: &cuts-proton
-        RecParticles/pid: { equals: 2212 }
-      qa-kinematics:
-        - *ax-pt-test-non-uniform-binning
-        - [ *ax-y-cm-correction-protons-pt-preliminary, *ax-pt-test-non-uniform-binning ]
+        - *ax-pt-correction-protons-pt-standard
+        - *ax-y-cm-correction-protons-pt-standard
+      cuts-quality: *cuts-rec-particles-quality-standard
+      cuts-kinematics: *cuts-kinematics-protons-pt-standard
+      cuts-pid: *cuts-proton
+      qa-weight: *rec-particle-qa-kinematics-weighted
+    # v1(y) for protons (PRELIMINARY SET)
     - name: protons_y_set_preliminary
       tags: [ observable ]
       _from: *tpc-base-detector
@@ -316,6 +313,20 @@ pbpb_13agev_16_025:
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts-kinematics: *cuts-kinematics-protons-y-preliminary
       cuts-pid: *cuts-proton
+    # v1(y) for protons (PRELIMINARY SET)
+    - name: protons_y_set_standard
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      # overriding weight
+      weight: RecParticles/w_eff_standard_cuts
+      axes:
+        - *ax-y-cm-correction-protons-y-standard
+        - *ax-pt-correction-protons-y-standard
+      cuts-quality: *cuts-rec-particles-quality-standard
+      cuts-kinematics: *cuts-kinematics-protons-y-standard
+      cuts-pid: *cuts-proton
+      qa-weight: *rec-particle-qa-kinematics-weighted
+    # v1(pT) for pi- (PRELIMINARY SET)
     - name: pion_neg_pt_set_preliminary
       tags: [ observable ]
       _from: *tpc-base-detector
@@ -326,6 +337,20 @@ pbpb_13agev_16_025:
       cuts-kinematics: *cuts-kinematics-pion-neg-pt-preliminary
       cuts-pid: &cuts-pion-neg
         RecParticles/pid: { equals: -211 }
+    # v1(pT) for pi- (STANDARD SET)
+    - name: pion_neg_pt_set_standard
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      # overriding weight
+      weight: RecParticles/w_eff_standard_cuts
+      axes:
+        - *ax-pt-correction-pion-neg-pt-standard
+        - *ax-y-cm-correction-pion-neg-pt-standard
+      cuts-quality: *cuts-rec-particles-quality-standard
+      cuts-kinematics: *cuts-kinematics-pion-neg-pt-standard
+      cuts-pid: *cuts-pion-neg
+      qa-weight: *rec-particle-qa-kinematics-weighted
+    # v1(y) for pi- (PRELIMINARY SET)
     - name: pion_neg_y_set_preliminary
       tags: [ observable ]
       _from: *tpc-base-detector
@@ -335,6 +360,20 @@ pbpb_13agev_16_025:
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts-kinematics: *cuts-kinematics-pion-neg-y-preliminary
       cuts-pid: *cuts-pion-neg
+    # v1(y) for pi- (STANDARD SET)
+    - name: pion_neg_y_set_standard
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      # overriding weight
+      weight: RecParticles/w_eff_standard_cuts
+      axes:
+        - *ax-y-cm-correction-pion-neg-y-standard
+        - *ax-pt-correction-pion-neg-y-standard
+      cuts-quality: *cuts-rec-particles-quality-standard
+      cuts-kinematics: *cuts-kinematics-pion-neg-y-standard
+      cuts-pid: *cuts-pion-neg
+      qa-weight: *rec-particle-qa-kinematics-weighted
+    # v1(pT) for pi+ (PRELIMINARY SET)
     - name: pion_pos_pt_set_preliminary
       tags: [ observable ]
       _from: *tpc-base-detector
@@ -345,6 +384,20 @@ pbpb_13agev_16_025:
       cuts-kinematics: *cuts-kinematics-pion-neg-pt-preliminary
       cuts-pid: &cuts-pion-pos
         RecParticles/pid: { equals: 211 }
+    # v1(pT) for pi+ (standard SET)
+    - name: pion_pos_pt_set_standard
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      # overriding weight
+      weight: RecParticles/w_eff_standard_cuts
+      axes:
+        - *ax-pt-correction-pion-neg-pt-standard
+        - *ax-y-cm-correction-pion-neg-pt-standard
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts-kinematics: *cuts-kinematics-pion-neg-pt-preliminary
+      cuts-pid: *cuts-pion-pos
+      qa-weight: *rec-particle-qa-kinematics-weighted
+    # v1(y) for pi+ (PRELIMINARY SET)
     - name: pion_pos_y_set_preliminary
       tags: [ observable ]
       _from: *tpc-base-detector
@@ -354,6 +407,19 @@ pbpb_13agev_16_025:
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts-kinematics: *cuts-kinematics-pion-neg-y-preliminary
       cuts-pid: *cuts-pion-pos
+    # v1(y) for pi+ (standard SET)
+    - name: pion_pos_y_set_standard
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      # overriding weight
+      weight: RecParticles/w_eff_standard_cuts
+      axes:
+        - *ax-y-cm-correction-pion-neg-y-standard
+        - *ax-pt-correction-pion-neg-y-standard
+      cuts-quality: *cuts-rec-particles-quality-standard
+      cuts-kinematics: *cuts-kinematics-pion-neg-y-standard
+      cuts-pid: *cuts-pion-pos
+      qa-weight: *rec-particle-qa-kinematics-weighted
     # REFERENCE DETECTORS
     # 4 subevents method TPC references
     - name: 4sub_ref_preliminary
