@@ -119,6 +119,8 @@ int main() {
   using DTColl = Qn::DataContainerStatCollect;
   using Meta = ResourceManager::MetaType;
 
+  using Tmpltor = ::Predicates::MetaTemplateGenerator;
+
 
 
   TFile f("correlation.root", "READ");
@@ -247,10 +249,10 @@ int main() {
 //                             },
 //                             META["u.axis"] == "pt");
 ////    /* Rebin centrality  */
-//    gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
-//      calc = calc.Rebin(Qn::AxisD("Centrality",
-//                                  {0., 10., 25., 45., 80.}));
-//    });
+    gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
+      calc = calc.Rebin(Qn::AxisD("Centrality",
+                                  {0., 10., 25., 45., 80.}));
+    });
   }
   {
     /***************** RESOLUTION 3-sub ******************/
@@ -382,8 +384,7 @@ int main() {
         apply_abs(tpc_ref_subB);
         apply_abs(tpc_ref_subC);
 
-        ::Predicates::MetaTemplateGenerator resolution_key_generator(
-            "/resolution/{{resolution.meta_key}}/RES_{{resolution.ref}}_{{resolution.component}}");
+        Tmpltor resolution_key_generator("/resolution/{{resolution.meta_key}}/RES_{{resolution.ref}}_{{resolution.component}}");
 
         Meta meta_r_rtpc;
         meta_r_rtpc.put("type", "resolution_4sub_aux");
@@ -416,10 +417,10 @@ int main() {
 
   }
 
-  const ::Predicates::MetaTemplateGenerator v1_reco_key_generator(
+  const Tmpltor v1_reco_key_generator(
       "/{{type}}/{{v1.src}}/{{v1.particle}}/AX_{{v1.axis}}/systematics/"
       "SET_{{v1.set}}/RES_{{v1.resolution.meta_key}}/REF_{{v1.ref}}/{{v1.component}}");
-  const ::Predicates::MetaTemplateGenerator v1_reco_centrality_key_generator(
+  const Tmpltor v1_reco_centrality_key_generator(
       "/{{type}}/{{v1.src}}/{{v1.particle}}/AX_{{v1.axis}}/centrality_{{centrality.key}}/systematics/"
       "SET_{{v1.set}}/RES_{{v1.resolution.meta_key}}/REF_{{v1.ref}}/{{v1.component}}");
 
@@ -508,9 +509,9 @@ int main() {
 
   }
 
-  const ::Predicates::MetaTemplateGenerator v1_mc_key_generator{
+  const Tmpltor v1_mc_key_generator{
       "/{{type}}/{{v1.src}}/{{v1.particle}}/AX_{{v1.axis}}/systematics/{{v1.component}}"};
-  const ::Predicates::MetaTemplateGenerator v1_mc_centrality_key_generator{
+  const Tmpltor v1_mc_centrality_key_generator{
       "/{{type}}/{{v1.src}}/{{v1.particle}}/AX_{{v1.axis}}/centrality_{{centrality.key}}/systematics/{{v1.component}}"};
   {
     /***************** Directed flow (MC) ******************/
@@ -809,33 +810,53 @@ int main() {
         .GroupBy(
             v1_reco_centrality_feature_set - "v1.component",
             [&base_dir](auto feature, const std::vector<ResourceManager::ResourcePtr> &resources) {
-              const std::map<std::string,int> colors = {
+              const std::map<std::string, int> colors = {
                   {"x1x1", kRed},
-                  {"y1y1", kBlue+1},
+                  {"y1y1", kBlue + 1},
                   {"combined", kBlack},
               };
               const std::map<std::string, std::pair<double, double>> y_ranges{
                   {"protons__pt", {-0.1, 0.25}},
                   {"protons__y", {-0.05, 0.4}},
-                  {"pion_neg__pt", {-0.05, 0.1}},
-                  {"pion_neg__y", {-0.05, 0.05}},
+                  {"pion_neg__pt", {-0.15, 0.15}},
+                  {"pion_neg__y", {-0.15, 0.15}},
                   {"pion_pos__pt", {-0.05, 0.1}},
                   {"pion_pos__y", {-0.1, 0.1}},
               };
-              const ::Predicates::MetaTemplateGenerator save_dir_tmpl("{{v1.particle}}__{{v1.axis}}/"
-                                                                      "{{centrality.key}}");
-              const ::Predicates::MetaTemplateGenerator file_name_tmpl(
-                  "SET_{{v1.set}}__RES_{{v1.resolution.meta_key}}");
+              const Tmpltor save_dir_tmpl("{{v1.particle}}__{{v1.axis}}/"
+                                                                      "{{centrality.key}}/{{v1.set}}");
+              const Tmpltor file_name_tmpl(
+                  "RES_{{v1.resolution.meta_key}}");
 
               TMultiGraph mg;
-
               for (auto &r : resources) {
                 auto &dt_calc = r->template As<DTCalc>();
                 auto graph = Qn::ToTGraph(dt_calc);
                 graph->SetLineColor(colors.at(META["v1.component"](*r)));
                 graph->SetMarkerColor(colors.at(META["v1.component"](*r)));
+                graph->GetXaxis()->SetTitle(dt_calc.GetAxes()[0].Name().c_str());
+                graph->SetTitle(META["v1.component"](r).c_str());
 
-                mg.Add(graph, META["v1.component"](*r) == "combined"? "lpZ" : "pZ");
+                mg.Add(graph, META["v1.component"](*r) == "combined" ? "lpZ" : "pZ");
+              } // resources
+
+              /*********** reference from MC **********/
+              auto mc_ref_keys = gResourceManager.template GetMatching(
+                  META["type"] == "v1_centrality" &&
+                      META["centrality.no"] == META["centrality.no"](resources.front()) &&
+                      META["v1.src"] == "mc" &&
+                      META["v1.particle"] == META["v1.particle"](resources.front()) &&
+                      META["v1.axis"] == META["v1.axis"](resources.front()) &&
+                      META["v1.component"] == "combined");
+              if (!mc_ref_keys.empty()) {
+                auto mc_ref = gResourceManager.template Get(mc_ref_keys.front(),
+                                                            ResourceManager::ResTag<ResourceManager::Resource>());
+                auto mc_ref_graph = Qn::ToTGraph(mc_ref.template As<DTCalc>());
+                mc_ref_graph->SetLineStyle(kDashed);
+                mc_ref_graph->SetLineColor(kBlack);
+                mc_ref_graph->SetTitle("MC");
+                mc_ref_graph->SetMarkerStyle(kOpenSquare);
+                mg.Add(mc_ref_graph, "lpZ");
               }
 
               auto save_dir = base_dir + "/" + save_dir_tmpl(resources.front());
@@ -847,12 +868,41 @@ int main() {
               mg.Draw("A");
               auto ranges = y_ranges.at(
                   META["v1.particle"](*resources.front()) + "__" +
-                  META["v1.axis"](*resources.front()));
+                      META["v1.axis"](*resources.front()));
               mg.GetYaxis()->SetRangeUser(ranges.first, ranges.second);
+              mg.GetXaxis()->SetTitle(resources.front()->template As<DTCalc>().GetAxes()[0].Name().c_str());
+              c.BuildLegend();
               SaveCanvas(c, save_dir + "/" + filename);
+
+
+              /************* ratios *************/
+              auto ref_it = std::find_if(resources.begin(), resources.end(),
+                                         META["v1.component"] == "combined");
+
+              if (ref_it != resources.end()) {
+                auto ref_v1 = (*ref_it)->template As<DTCalc>();
+
+                TMultiGraph ratio_mg;
+                for (const auto &r : resources) {
+                  auto ratio = r->template As<DTCalc>() / ref_v1;
+                  auto ratio_graph = Qn::ToTGraph(ratio);
+                  ratio_graph->SetLineColor(colors.at(META["v1.component"](r)));
+                  ratio_graph->SetMarkerColor(colors.at(META["v1.component"](r)));
+                  ratio_graph->SetLineWidth(2.);
+                  ratio_graph->SetTitle(META["v1.component"](r).c_str());
+                  ratio_mg.Add(ratio_graph, META["v1.component"](*r) == "combined" ? "lpZ" : "pZ");
+                }
+                c.Clear();
+                ratio_mg.Draw("A");
+                ratio_mg.GetYaxis()->SetRangeUser(0., 2.);
+                ratio_mg.GetXaxis()->SetTitle(resources.front()->template As<DTCalc>().GetAxes()[0].Name().c_str());
+                c.BuildLegend();
+                SaveCanvas(c, save_dir + "/" + "ratio_" + filename);
+              } // ref exists
+
             },
             META["type"] == "v1_centrality" &&
-                META["centrality.key"] == "15-25" &&
+                META["centrality.no"] == "1" &&
                 META["v1.ref"] == "combined");
   }
 
@@ -863,38 +913,58 @@ int main() {
         .GroupBy(
             v1_reco_centrality_feature_set - "v1.ref",
             [&base_dir](auto feature, const std::vector<ResourceManager::ResourcePtr> &resources) {
-              const std::map<std::string,int> colors = {
+              const std::map<std::string, int> colors = {
                   {"psd1", kRed},
-                  {"psd2", kGreen+2},
+                  {"psd2", kGreen + 2},
                   {"psd3", kBlue},
                   {"combined", kBlack},
               };
               const std::map<std::string, std::pair<double, double>> y_ranges{
                   {"protons__pt", {-0.1, 0.25}},
                   {"protons__y", {-0.05, 0.4}},
-                  {"pion_neg__pt", {-0.05, 0.1}},
-                  {"pion_neg__y", {-0.05, 0.05}},
+                  {"pion_neg__pt", {-0.15, 0.15}},
+                  {"pion_neg__y", {-0.15, 0.15}},
                   {"pion_pos__pt", {-0.05, 0.1}},
                   {"pion_pos__y", {-0.1, 0.1}},
               };
-              const ::Predicates::MetaTemplateGenerator save_dir_tmpl("{{v1.particle}}__{{v1.axis}}/"
-                                                                      "{{centrality.key}}");
-              const ::Predicates::MetaTemplateGenerator file_name_tmpl(
-                  "SET_{{v1.set}}__RES_{{v1.resolution.meta_key}}");
+              const Tmpltor save_dir_tmpl("{{v1.particle}}__{{v1.axis}}/"
+                                                                      "{{centrality.key}}/{{v1.set}}");
+              const Tmpltor file_name_tmpl(
+                  "RES_{{v1.resolution.meta_key}}");
 
               TMultiGraph mg;
 
               for (auto &r : resources) {
                 auto &dt_calc = r->template As<DTCalc>();
                 auto graph = Qn::ToTGraph(dt_calc);
-                graph->SetLineColor(colors.at(META["v1.ref"](*r)));
-                graph->SetMarkerColor(colors.at(META["v1.ref"](*r)));
-                graph->SetTitle(META["v1.ref"](*r).c_str());
-                mg.Add(graph, META["v1.ref"](*r) == "combined"? "lpZ" : "pZ");
+                graph->SetLineColor(colors.at(META["v1.ref"](r)));
+                graph->SetMarkerColor(colors.at(META["v1.ref"](r)));
+                graph->SetTitle(META["v1.ref"](r).c_str());
+                graph->GetXaxis()->SetTitle(dt_calc.GetAxes()[0].Name().c_str());
+                mg.Add(graph, META["v1.ref"](r) == "combined" ? "lpZ" : "pZ");
               }
 
               auto save_dir = base_dir + "/" + save_dir_tmpl(resources.front().operator*());
               auto filename = file_name_tmpl(resources.front().operator*());
+
+              /*********** reference from MC **********/
+              auto mc_ref_keys = gResourceManager.template GetMatching(
+                  META["type"] == "v1_centrality" &&
+                      META["centrality.no"] == META["centrality.no"](resources.front()) &&
+                      META["v1.src"] == "mc" &&
+                      META["v1.particle"] == META["v1.particle"](resources.front()) &&
+                      META["v1.axis"] == META["v1.axis"](resources.front()) &&
+                      META["v1.component"] == "combined");
+              if (!mc_ref_keys.empty()) {
+                auto mc_ref = gResourceManager.template Get(mc_ref_keys.front(),
+                                                            ResourceManager::ResTag<ResourceManager::Resource>());
+                auto mc_ref_graph = Qn::ToTGraph(mc_ref.template As<DTCalc>());
+                mc_ref_graph->SetLineStyle(kDashed);
+                mc_ref_graph->SetLineColor(kBlack);
+                mc_ref_graph->SetTitle("MC");
+                mc_ref_graph->SetMarkerStyle(kOpenSquare);
+                mg.Add(mc_ref_graph, "lpZ");
+              }
 
               gSystem->mkdir(save_dir.c_str(), true);
               TCanvas c;
@@ -906,9 +976,36 @@ int main() {
               mg.GetYaxis()->SetRangeUser(ranges.first, ranges.second);
               auto legend = c.BuildLegend();
               SaveCanvas(c, save_dir + "/" + filename);
+
+              auto ref_it = std::find_if(resources.begin(), resources.end(),
+                                         META["v1.ref"] == "combined");
+              if (ref_it != resources.end()) {
+                auto ref_v1 = (*ref_it)->template As<DTCalc>();
+
+                TMultiGraph ratio_mg;
+                for (auto &r : resources) {
+                  auto ratio = r->template As<DTCalc>() / ref_v1;
+                  auto ratio_graph = Qn::ToTGraph(ratio);
+                  ratio_graph->SetLineColor(colors.at(META["v1.ref"](*r)));
+                  ratio_graph->SetMarkerColor(colors.at(META["v1.ref"](*r)));
+                  ratio_graph->SetTitle(META["v1.ref"](*r).c_str());
+                  ratio_graph->GetXaxis()->SetTitle(ratio.GetAxes()[0].Name().c_str());
+                  ratio_graph->SetLineWidth(2.0);
+                  ratio_mg.Add(ratio_graph, META["v1.ref"](*r) == "combined" ? "lpZ" : "pZ");
+                }
+
+                c.Clear();
+                ratio_mg.Draw("A");
+                ratio_mg.GetYaxis()->SetRangeUser(0.0, 2.0);
+                auto legend = c.BuildLegend();
+                Tmpltor header_tmpl{"RES: {{v1.resolution.meta_key}}"};
+                legend->SetHeader(header_tmpl(resources.front()).c_str());
+                SaveCanvas(c, save_dir + "/" + "ratio_" + filename);
+              } // reference exists
             },
             META["type"] == "v1_centrality" &&
-                META["centrality.key"] == "15-25" &&
+                META["centrality.no"] == "1" &&
+                META["v1.src"] == "reco" &&
                 META["v1.component"] == "combined");
   }
 
