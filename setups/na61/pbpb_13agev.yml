@@ -126,11 +126,75 @@ setups-definitions:
   # Correction step base
   ##########################################################
   - &ax-centrality-correction-preliminary { name: *var-evt-centrality, nb: 20, lo: 0, hi: 100 }
-
-
-
-
-
+  # Preliminary 2021 (aka "standard")
+  # Quality cuts for vertex tracks standard
+  - &cuts-rec-particles-quality-standard
+    - { variable: RecParticles/nhits_total,      range: [ 30, 1000 ] }
+    - { variable: RecParticles/nhits_vtpc,       range: [ 10, 1000 ] }
+    - { variable: RecParticles/nhits_pot_total,  range: [ 1, 1000 ] }
+    - { variable: RecParticles/nhits_ratio,      range: [ 0.55, 1.1 ] }
+    - { variable: *var-vtx-dcax,                 range: [ -2., 2. ] }
+    - { variable: *var-vtx-dcay,                 range: [ -1., 1. ] }
+  ########################################################
+  # v1(pT) of PROTONS
+  ########################################################
+  # y-range for v1(pT) of protons
+  - &cuts-kinematics-protons-pt-standard
+    - { variable: *var-vtx-y-cm, range: [ 0.0, 1.0 ] }
+  # y-axis correction binning for v1(pT) of protons
+  # TODO binning
+  - &ax-y-cm-correction-protons-pt-standard
+    name: *var-vtx-y-cm
+    bin-edges: [ 0.0, 1.0 ]
+  # pT-axis binning for v1(pT) of protons
+  - &ax-pt-correction-protons-pt-standard
+    name: *var-vtx-pt
+    bin-edges: [ 0.000, 0.091, 0.216, 0.276, 0.326, 0.371, 0.414, 0.456, 0.498, 0.54, 0.583, 0.627, 0.673, 0.722, 0.775, 0.834, 0.901, 0.981, 1.085, 1.241, 1.667, 2.000 ]
+  ########################################################
+  # v1(y) of PROTONS
+  ########################################################
+  # pT-range for v1(y) of protons
+  - &cuts-kinematics-protons-y-standard
+    - { variable: *var-vtx-pt, range: [ 0.400, 1.200 ] }
+  # pT correction axis for v1(y) of protons
+  # TODO binning
+  - &ax-pt-correction-protons-y-standard
+    name: *var-vtx-pt
+    bin-edges: [ 0.400, 1.200 ]
+  # y-axis binning for v1(y) of protons
+  - &ax-y-cm-correction-protons-y-standard
+    name: *var-vtx-y-cm
+    bin-edges: [-0.006,	-0.016,	0.08,	0.168,	0.252,	0.332,	0.408,	0.484,	0.564,	0.648,	0.732,	0.816,	0.908,	1.004,	1.104,	1.212,	1.324,	1.444,	1.596,	2.256, 2.500 ]
+  ########################################################
+  # v1(pT) of the NEGATIVE PIONS
+  ########################################################
+  # y-range for v1(pT) of negative pions
+  - &cuts-kinematics-pion-neg-pt-standard
+    - { variable: *var-vtx-y-cm, range: [ 0.000 , 1.000 ] }
+  # y-axis correction binning for v1(pT) of negative pions
+  # TODO binning
+  - &ax-y-cm-correction-pion-neg-pt-standard
+    name: *var-vtx-y-cm
+    bin-edges: [ 0.000, 1.000 ]
+  # pT-axis binning for v1(pT) of negative pions
+  - &ax-pt-correction-pion-neg-pt-standard
+    name: *var-vtx-pt
+    bin-edges: [0.029,	0.073,	0.098,	0.118,	0.136,	0.154,	0.172,	0.19,	0.209,	0.23,	0.253,	0.279,	0.308,	0.341,	0.38,	0.427,	0.487,	0.569,	0.699,	1.389, 1.700]
+  ########################################################
+  # v1(y) of the NEGATIVE PIONS
+  ########################################################
+  # pT-range for v1(y) of negative pions
+  - &cuts-kinematics-pion-neg-y-standard
+    - { variable: *var-vtx-pt, range: [ 0.050, 1.000 ] }
+  # pT correction axis for v1(y) of negative pions
+  # TODO binning
+  - &ax-pt-correction-pion-neg-y-standard
+    name: *var-vtx-pt
+    bin-edges: [ 0.050, 1.000 ]
+  # y-axis binning for v1(y) of negative pions
+  - &ax-y-cm-correction-pion-neg-y-standard
+    name: *var-vtx-y-cm
+    bin-edges: [-0.060,	-0.096,	0.02,	0.112,	0.196,	0.272,	0.344,	0.42,	0.496,	0.568,	0.644,	0.724,	0.804,	0.888,	0.984,	1.092,	1.212,	1.368,	1.596,	2.456, 3.000]
 
 _qa:
   - &psd-qa
