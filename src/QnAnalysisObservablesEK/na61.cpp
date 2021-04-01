@@ -867,15 +867,20 @@ int main() {
               const Tmpltor file_name_tmpl(
                   "RES_{{v1.resolution.meta_key}}");
 
+              auto customize_graph = [&colors](
+                  const ResourceManager::ResourcePtr &r,
+                  TGraph *graph) {
+                graph->SetLineColor(colors.at(META["v1.component"](*r)));
+                graph->SetMarkerColor(colors.at(META["v1.component"](*r)));
+                graph->GetXaxis()->SetTitle(r->template As<DTCalc>().GetAxes()[0].Name().c_str());
+                graph->SetTitle(META["v1.component"](r).c_str());
+              };
+
               TMultiGraph mg;
               for (auto &r : resources) {
                 auto &dt_calc = r->template As<DTCalc>();
                 auto graph = Qn::ToTGraph(dt_calc);
-                graph->SetLineColor(colors.at(META["v1.component"](*r)));
-                graph->SetMarkerColor(colors.at(META["v1.component"](*r)));
-                graph->GetXaxis()->SetTitle(dt_calc.GetAxes()[0].Name().c_str());
-                graph->SetTitle(META["v1.component"](r).c_str());
-
+                customize_graph(r, graph);
                 mg.Add(graph, META["v1.component"](*r) == "combined" ? "lpZ" : "pZ");
               } // resources
 
@@ -928,10 +933,8 @@ int main() {
                 for (const auto &r : resources) {
                   auto ratio = r->template As<DTCalc>() / ref_v1;
                   auto ratio_graph = Qn::ToTGraph(ratio);
-                  ratio_graph->SetLineColor(colors.at(META["v1.component"](r)));
-                  ratio_graph->SetMarkerColor(colors.at(META["v1.component"](r)));
+                  customize_graph(r, ratio_graph);
                   ratio_graph->SetLineWidth(2.);
-                  ratio_graph->SetTitle(META["v1.component"](r).c_str());
                   ratio_mg.Add(ratio_graph, META["v1.component"](*r) == "combined" ? "lpZ" : "pZ");
                 }
                 c.Clear();
@@ -948,11 +951,8 @@ int main() {
                   auto ref_graph = Qn::ToTGraph(ref_v1);
                   auto case_graph = Qn::ToTGraph(r->template As<DTCalc>());
                   auto signi_graph = CalcSignificance(case_graph, ref_graph);
-                  signi_graph->SetLineColor(colors.at(META["v1.component"](r)));
-                  signi_graph->SetMarkerColor(colors.at(META["v1.component"](r)));
-                  signi_graph->SetFillColor(colors.at(META["v1.component"](r)));
+                  customize_graph(r, signi_graph);
                   signi_graph->SetLineWidth(2.);
-                  signi_graph->SetTitle(META["v1.component"](r).c_str());
                   signi_mg.Add(signi_graph, META["v1.component"](*r) == "combined" ? "l" : "lp");
                 }
                 f_multigraphs.WriteTObject(&signi_mg, ("signi_" + filename).c_str(), "Overwrite");
@@ -1082,6 +1082,51 @@ int main() {
                 META["centrality.no"] == "1" &&
                 META["v1.src"] == "reco" &&
                 META["v1.component"] == "combined");
+  }
+
+  {
+    std::string base_dir = "v1_systematics/resolution_method";
+
+    gResourceManager
+        .GroupBy(
+            v1_reco_centrality_feature_set - "v1.resolution.meta_key",
+            [&base_dir](auto feature, const std::vector<ResourceManager::ResourcePtr> &resources) {
+              const std::map<std::string, int> colors = {
+                  {"psd_mc", kBlack},
+                  {"psd90_mc", kOrange + 1},
+                  {"3sub_standard", kRed},
+                  {"3sub_psd90", kGreen + 2},
+                  {"4sub_preliminary", kBlue},
+                  {"4sub_opt1", kMagenta},
+                  {"4sub_opt2", kCyan + 1},
+              };
+
+              const Tmpltor save_dir_tmpl("{{v1.particle}}__{{v1.axis}}/"
+                                          "{{centrality.key}}/{{v1.set}}");
+              auto save_dir = base_dir + "/" + save_dir_tmpl(resources.front());
+
+              gSystem->mkdir(save_dir.c_str(), true);
+              TFile f_multigraphs((save_dir + "/multigraphs.root").c_str(), "update");
+
+              TMultiGraph mg;
+              for (auto &r : resources) {
+                auto calc = r->template As<DTCalc>();
+                auto graph = Qn::ToTGraph(calc);
+                graph->SetTitle(META["v1.resolution.meta_key"](r).c_str());
+                graph->SetLineColor(colors.at(META["v1.resolution.meta_key"](r)));
+                graph->SetMarkerColor(colors.at(META["v1.resolution.meta_key"](r)));
+                graph->SetLineWidth(2.);
+                mg.Add(graph, "lpZ");
+              }
+
+              f_multigraphs.WriteTObject(&mg, "mg", "Overwrite");
+            },
+            META["type"] == "v1_centrality" &&
+                META["centrality.no"] == "1" &&
+                META["v1.src"] == "reco" &&
+                META["v1.component"] == "combined" &&
+                META["v1.ref"] == "combined"
+        );
   }
 
 
