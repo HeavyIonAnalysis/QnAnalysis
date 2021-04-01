@@ -103,6 +103,23 @@ void SaveCanvas(TCanvas &c, const std::string &base_name) {
 //  c.Print((base_name + ".C").c_str());
 }
 
+TGraph *CalcSignificance(const TGraphErrors *case_graph, const TGraphErrors *ref_graph) {
+  assert(case_graph->GetN() == ref_graph->GetN());
+  auto signi_graph = new TGraph(ref_graph->GetN());
+  for (int i = 0; i < ref_graph->GetN(); ++i) {
+    auto ref_value = ref_graph->GetPointY(i);
+    auto ref_err = ref_graph->GetErrorY(i);
+    auto case_value = case_graph->GetPointY(i);
+    auto case_err = case_graph->GetErrorY(i);
+    auto significance = (case_value - ref_value) / TMath::Sqrt(case_err * case_err + ref_err * ref_err);
+    if (std::isnan(significance) || std::isinf(significance)) {
+      significance = 0.;
+    }
+    signi_graph->SetPoint(i, ref_graph->GetPointX(i), significance);
+  }
+  return signi_graph;
+}
+
 int main() {
 
   using std::get;
@@ -385,7 +402,8 @@ int main() {
         apply_abs(tpc_ref_subB);
         apply_abs(tpc_ref_subC);
 
-        Tmpltor resolution_key_generator("/resolution/{{resolution.meta_key}}/RES_{{resolution.ref}}_{{resolution.component}}");
+        Tmpltor resolution_key_generator
+            ("/resolution/{{resolution.meta_key}}/RES_{{resolution.ref}}_{{resolution.component}}");
 
         Meta meta_r_rtpc;
         meta_r_rtpc.put("type", "resolution_4sub_aux");
@@ -721,11 +739,10 @@ int main() {
                                          "RES_{{resolution.ref_alias}}_{{resolution.component}}")(r);
           auto meta = r->meta;
           meta.put("type", "profile_resolution");
-          auto obj = (TGraphErrors*) resolution_graph->Clone("");
+          auto obj = (TGraphErrors *) resolution_graph->Clone("");
           AddResource(res_profile_key, ResourceManager::Resource(*obj, meta));
           gDirectory = cwd;
         }
-
 
       }
 
@@ -846,7 +863,7 @@ int main() {
                   {"pion_pos__y", {-0.1, 0.1}},
               };
               const Tmpltor save_dir_tmpl("{{v1.particle}}__{{v1.axis}}/"
-                                                                      "{{centrality.key}}/{{v1.set}}");
+                                          "{{centrality.key}}/{{v1.set}}");
               const Tmpltor file_name_tmpl(
                   "RES_{{v1.resolution.meta_key}}");
 
@@ -900,7 +917,7 @@ int main() {
               f_multigraphs.WriteTObject(&mg, filename.c_str(), "Overwrite");
 
 
-              /************* ratios *************/
+              /************* ratios & significance plot *************/
               auto ref_it = std::find_if(resources.begin(), resources.end(),
                                          META["v1.component"] == "combined");
 
@@ -924,6 +941,21 @@ int main() {
                 c.BuildLegend();
                 SaveCanvas(c, save_dir + "/" + "ratio_" + filename);
                 f_multigraphs.WriteTObject(&ratio_mg, ("ratio_" + filename).c_str(), "Overwrite");
+
+                TMultiGraph signi_mg;
+                for (const auto &r: resources) {
+                  /* calculate significance */
+                  auto ref_graph = Qn::ToTGraph(ref_v1);
+                  auto case_graph = Qn::ToTGraph(r->template As<DTCalc>());
+                  auto signi_graph = CalcSignificance(case_graph, ref_graph);
+                  signi_graph->SetLineColor(colors.at(META["v1.component"](r)));
+                  signi_graph->SetMarkerColor(colors.at(META["v1.component"](r)));
+                  signi_graph->SetFillColor(colors.at(META["v1.component"](r)));
+                  signi_graph->SetLineWidth(2.);
+                  signi_graph->SetTitle(META["v1.component"](r).c_str());
+                  signi_mg.Add(signi_graph, META["v1.component"](*r) == "combined" ? "l" : "lp");
+                }
+                f_multigraphs.WriteTObject(&signi_mg, ("signi_" + filename).c_str(), "Overwrite");
               } // ref exists
 
             },
@@ -954,7 +986,7 @@ int main() {
                   {"pion_pos__y", {-0.1, 0.1}},
               };
               const Tmpltor save_dir_tmpl("{{v1.particle}}__{{v1.axis}}/"
-                                                                      "{{centrality.key}}/{{v1.set}}");
+                                          "{{centrality.key}}/{{v1.set}}");
               const Tmpltor file_name_tmpl(
                   "RES_{{v1.resolution.meta_key}}");
 
@@ -1003,8 +1035,9 @@ int main() {
               auto legend = c.BuildLegend();
               SaveCanvas(c, save_dir + "/" + filename);
               TFile f_multigraphs((save_dir + "/multigraphs.root").c_str(), "update");
-              f_multigraphs.WriteTObject(&mg, ("ratio_" + filename).c_str(), "Overwrite");
+              f_multigraphs.WriteTObject(&mg, filename.c_str(), "Overwrite");
 
+              /************* ratios & significance plot *************/
               auto ref_it = std::find_if(resources.begin(), resources.end(),
                                          META["v1.ref"] == "combined");
               if (ref_it != resources.end()) {
@@ -1029,7 +1062,20 @@ int main() {
                 Tmpltor header_tmpl{"RES: {{v1.resolution.meta_key}}"};
                 legend->SetHeader(header_tmpl(resources.front()).c_str());
                 SaveCanvas(c, save_dir + "/" + "ratio_" + filename);
-                f_multigraphs.WriteTObject(&mg, ("ratio_" + filename).c_str(), "Overwrite");
+                f_multigraphs.WriteTObject(&ratio_mg, ("ratio_" + filename).c_str(), "Overwrite");
+
+                TMultiGraph signi_mg;
+                for (auto &r : resources) {
+                  auto ref_graph = Qn::ToTGraph(ref_v1);
+                  auto case_graph = Qn::ToTGraph(r->template As<DTCalc>());
+                  auto signi_graph = CalcSignificance(case_graph, ref_graph);
+                  signi_graph->SetLineColor(colors.at(META["v1.ref"](r)));
+                  signi_graph->SetMarkerColor(colors.at(META["v1.ref"](r)));
+                  signi_graph->SetLineWidth(2.);
+                  signi_graph->SetTitle(META["v1.ref"](r).c_str());
+                  signi_mg.Add(signi_graph, META["v1.ref"](*r) == "combined" ? "l" : "lp");
+                }
+                f_multigraphs.WriteTObject(&signi_mg, ("signi_" + filename).c_str(), "Overwrite");
               } // reference exists
             },
             META["type"] == "v1_centrality" &&
