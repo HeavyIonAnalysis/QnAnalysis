@@ -61,7 +61,8 @@ void LoadROOTFile(const std::string &file_name, const std::string &manager_prefi
 }
 
 inline
-std::string PlotTitle(const ResourceManager::Resource &r) {
+std::string
+PlotTitle(const ResourceManager::Resource &r) {
   using Predicates::Resource::META;
   using ::Tools::Format;
 
@@ -248,7 +249,7 @@ int main() {
 //                                                           {0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.4, 3.0}));
 //                             },
 //                             META["u.axis"] == "pt");
-////    /* Rebin centrality  */
+//    /* Rebin centrality  */
     gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
       calc = calc.Rebin(Qn::AxisD("Centrality",
                                   {0., 10., 25., 45., 80.}));
@@ -710,6 +711,22 @@ int main() {
             % META["resolution.component"](r)
             % META["resolution.ref_alias"](r)).str().c_str());
         mg.Add(resolution_graph, "pl");
+
+        {
+          auto cwd = gDirectory;
+          gDirectory = nullptr;
+          /// place resolution to the resource manager
+          auto res_profile_key = Tmpltor("/profiles/resolution/"
+                                         "{{resolution.meta_key}}/"
+                                         "RES_{{resolution.ref_alias}}_{{resolution.component}}")(r);
+          auto meta = r->meta;
+          meta.put("type", "profile_resolution");
+          auto obj = (TGraphErrors*) resolution_graph->Clone("");
+          AddResource(res_profile_key, ResourceManager::Resource(*obj, meta));
+          gDirectory = cwd;
+        }
+
+
       }
 
       TCanvas c;
