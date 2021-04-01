@@ -98,9 +98,9 @@ PlotTitle(const ResourceManager::Resource &r) {
 }
 
 void SaveCanvas(TCanvas &c, const std::string &base_name) {
-  c.Print((base_name + ".png").c_str(), "png");
-  c.Print((base_name + ".pdf").c_str(), "pdf");
-  c.Print((base_name + ".C").c_str());
+//  c.Print((base_name + ".png").c_str(), "png");
+//  c.Print((base_name + ".pdf").c_str(), "pdf");
+//  c.Print((base_name + ".C").c_str());
 }
 
 int main() {
@@ -738,6 +738,9 @@ int main() {
       auto legend = c.BuildLegend(0.15, 0.7, 0.55, 0.9);
       legend->SetHeader(feature.c_str());
       SaveCanvas(c, save_dir + "/" + feature);
+
+      TFile f((save_dir + "/multigraphs.root").c_str(), "update");
+      f.WriteTObject(&mg, ("mg_" + feature).c_str(), "Overwrite");
     }, resolution_filter);
 
     gResourceManager
@@ -775,6 +778,8 @@ int main() {
               legend->SetHeader(feature.c_str());
               SaveCanvas(c, save_dir + "/" + "comp_" + feature);
 
+              TFile f_multigraphs((save_dir + "/" + "multigraphs.root").c_str(), "update");
+              f_multigraphs.WriteTObject(&mg, ("comp__" + feature).c_str(), "Overwrite");
             }, resolution_filter);
 
   }
@@ -891,6 +896,9 @@ int main() {
               c.BuildLegend();
               SaveCanvas(c, save_dir + "/" + filename);
 
+              TFile f_multigraphs((save_dir + "/multigraphs.root").c_str(), "update");
+              f_multigraphs.WriteTObject(&mg, filename.c_str(), "Overwrite");
+
 
               /************* ratios *************/
               auto ref_it = std::find_if(resources.begin(), resources.end(),
@@ -915,6 +923,7 @@ int main() {
                 ratio_mg.GetXaxis()->SetTitle(resources.front()->template As<DTCalc>().GetAxes()[0].Name().c_str());
                 c.BuildLegend();
                 SaveCanvas(c, save_dir + "/" + "ratio_" + filename);
+                f_multigraphs.WriteTObject(&ratio_mg, ("ratio_" + filename).c_str(), "Overwrite");
               } // ref exists
 
             },
@@ -993,6 +1002,8 @@ int main() {
               mg.GetYaxis()->SetRangeUser(ranges.first, ranges.second);
               auto legend = c.BuildLegend();
               SaveCanvas(c, save_dir + "/" + filename);
+              TFile f_multigraphs((save_dir + "/multigraphs.root").c_str(), "update");
+              f_multigraphs.WriteTObject(&mg, ("ratio_" + filename).c_str(), "Overwrite");
 
               auto ref_it = std::find_if(resources.begin(), resources.end(),
                                          META["v1.ref"] == "combined");
@@ -1018,6 +1029,7 @@ int main() {
                 Tmpltor header_tmpl{"RES: {{v1.resolution.meta_key}}"};
                 legend->SetHeader(header_tmpl(resources.front()).c_str());
                 SaveCanvas(c, save_dir + "/" + "ratio_" + filename);
+                f_multigraphs.WriteTObject(&mg, ("ratio_" + filename).c_str(), "Overwrite");
               } // reference exists
             },
             META["type"] == "v1_centrality" &&
