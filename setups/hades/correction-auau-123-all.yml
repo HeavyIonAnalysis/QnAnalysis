@@ -70,7 +70,7 @@ hades_analysis:
         - *axis_protons_pT
         - *axis_protons_rapidity
       cuts:
-        mdc_vtx_tracks_extra_rapidity/chi2: {range: [0.0, 100.0]}
+        mdc_vtx_tracks_extra/chi2: {range: [0.0, 100.0]}
       qa:
         - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_protons_pT
