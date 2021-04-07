@@ -1,8 +1,6 @@
 _detectors: &detectors
   - name: protons
     tags: [ un_vector ]
-  - name: pions
-    tags: [ un_vector ]
   - name: W1
     tags: [ qn_vector ]
   - name: W2
