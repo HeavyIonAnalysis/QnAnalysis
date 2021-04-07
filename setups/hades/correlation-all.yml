@@ -43,53 +43,53 @@ _tasks:
         weight: ones
     n-samples: 100
     weights-type: observable
-    folder: "/uQ/SP"
+    folder: "/SP/uQ"
     axes: [ *centrality ]
-  - args:
-      - query: { tags: { any-in: [ un_vector ] } }
-        query-list: *detectors
-        components: *sp_components
-        correction-steps: [ rescaled ]
-        weight: sumw
-      - query: { tags: { any-in: [ rnd_vector ] } }
-        query-list: *detectors
-        components: *sp_components
-        correction-steps: [ rescaled ]
-        weight: ones
-    n-samples: 100
-    weights-type: observable
-    folder: "/uQ/SP"
-    axes: [ *centrality ]
-  - args:
-      - query: { tags: { any-in: [ un_vector ] } }
-        query-list: *detectors
-        components: *sp_components
-        correction-steps: [ rescaled ]
-        weight: sumw
-      - query: { tags: { any-in: [ qn_vector ] } }
-        query-list: *detectors
-        components: *ep_components # <un.x1*Qn.x1/|Qn|>
-        correction-steps: [ rescaled ]
-        weight: ones
-    n-samples: 100
-    weights-type: observable
-    folder: "/uQ/EP"
-    axes: [ *centrality ]
-  - args:
-      - query: { tags: { any-in: [ un_vector ] } }
-        query-list: *detectors
-        components: *sp_components
-        correction-steps: [ rescaled ]
-        weight: sumw
-      - query: { tags: { any-in: [ rnd_vector ] } }
-        query-list: *detectors
-        components: *ep_components # <un.x1*Qn.x1/|Qn|>
-        correction-steps: [ rescaled ]
-        weight: ones
-    n-samples: 100
-    weights-type: observable
-    folder: "/uQ/EP"
-    axes: [ *centrality ]
+#  - args:
+#      - query: { tags: { any-in: [ un_vector ] } }
+#        query-list: *detectors
+#        components: *sp_components
+#        correction-steps: [ rescaled ]
+#        weight: sumw
+#      - query: { tags: { any-in: [ rnd_vector ] } }
+#        query-list: *detectors
+#        components: *sp_components
+#        correction-steps: [ rescaled ]
+#        weight: ones
+#    n-samples: 100
+#    weights-type: observable
+#    folder: "/uQ/SP"
+#    axes: [ *centrality ]
+#  - args:
+#      - query: { tags: { any-in: [ un_vector ] } }
+#        query-list: *detectors
+#        components: *sp_components
+#        correction-steps: [ rescaled ]
+#        weight: sumw
+#      - query: { tags: { any-in: [ qn_vector ] } }
+#        query-list: *detectors
+#        components: *ep_components # <un.x1*Qn.x1/|Qn|>
+#        correction-steps: [ rescaled ]
+#        weight: ones
+#    n-samples: 100
+#    weights-type: observable
+#    folder: "/uQ/EP"
+#    axes: [ *centrality ]
+#  - args:
+#      - query: { tags: { any-in: [ un_vector ] } }
+#        query-list: *detectors
+#        components: *sp_components
+#        correction-steps: [ rescaled ]
+#        weight: sumw
+#      - query: { tags: { any-in: [ rnd_vector ] } }
+#        query-list: *detectors
+#        components: *ep_components # <un.x1*Qn.x1/|Qn|>
+#        correction-steps: [ rescaled ]
+#        weight: ones
+#    n-samples: 100
+#    weights-type: observable
+#    folder: "/uQ/EP"
+#    axes: [ *centrality ]
   # Reference x Reference
   - args:
       - query: { tags: { any-in: [ qn_vector ] } }
@@ -102,44 +102,44 @@ _tasks:
         correction-steps: [ rescaled ]
     n-samples: 100
     weights-type: reference
-    folder: "/QQ/SP"
+    folder: "/SP/QQ"
     axes: [ *centrality ]
-  - args:
-      - query: { tags: { any-in: [ rnd_vector ] } }
-        query-list: *detectors
-        components: *sp_components
-        correction-steps: [ rescaled ]
-      - query: { tags: { any-in: [ rnd_vector ] } }
-        query-list: *detectors
-        components: *sp_components
-        correction-steps: [ rescaled ]
-    n-samples: 100
-    weights-type: reference
-    folder: "/QQ/SP"
-    axes: [ *centrality ]
-  - args:
-      - query: { tags: { any-in: [ qn_vector ] } }
-        query-list: *detectors
-        components: *ep_components
-        correction-steps: [ rescaled ]
-      - query: { tags: { any-in: [ qn_vector ] } }
-        query-list: *detectors
-        components: *ep_components
-        correction-steps: [ rescaled ]
-    n-samples: 100
-    weights-type: reference
-    folder: "/QQ/EP"
-    axes: [ *centrality ]
-  - args:
-      - query: { tags: { any-in: [ rnd_vector ] } }
-        query-list: *detectors
-        components: *ep_components
-        correction-steps: [ rescaled ]
-      - query: { tags: { any-in: [ rnd_vector ] } }
-        query-list: *detectors
-        components: *ep_components
-        correction-steps: [ rescaled ]
-    n-samples: 100
-    weights-type: reference
-    folder: "/QQ/EP"
-    axes: [ *centrality ]
+#  - args:
+#      - query: { tags: { any-in: [ rnd_vector ] } }
+#        query-list: *detectors
+#        components: *sp_components
+#        correction-steps: [ rescaled ]
+#      - query: { tags: { any-in: [ rnd_vector ] } }
+#        query-list: *detectors
+#        components: *sp_components
+#        correction-steps: [ rescaled ]
+#    n-samples: 100
+#    weights-type: reference
+#    folder: "/QQ/SP"
+#    axes: [ *centrality ]
+#  - args:
+#      - query: { tags: { any-in: [ qn_vector ] } }
+#        query-list: *detectors
+#        components: *ep_components
+#        correction-steps: [ rescaled ]
+#      - query: { tags: { any-in: [ qn_vector ] } }
+#        query-list: *detectors
+#        components: *ep_components
+#        correction-steps: [ rescaled ]
+#    n-samples: 100
+#    weights-type: reference
+#    folder: "/QQ/EP"
+#    axes: [ *centrality ]
+#  - args:
+#      - query: { tags: { any-in: [ rnd_vector ] } }
+#        query-list: *detectors
+#        components: *ep_components
+#        correction-steps: [ rescaled ]
+#      - query: { tags: { any-in: [ rnd_vector ] } }
+#        query-list: *detectors
+#        components: *ep_components
+#        correction-steps: [ rescaled ]
+#    n-samples: 100
+#    weights-type: reference
+#    folder: "/QQ/EP"
+#    axes: [ *centrality ]
