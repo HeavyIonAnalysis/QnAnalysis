@@ -30,7 +30,7 @@ hades_analysis:
       phi:  sim_particles_extra/phi
       weight: Ones
       cuts:
-        sim_particles_extra/is_chrged: {equals: 1}
+        sim_particles_extra/is_charged: {equals: 1}
       axes:
         - *axis_gen_protons_pT
         - *axis_gen_protons_rapidity
