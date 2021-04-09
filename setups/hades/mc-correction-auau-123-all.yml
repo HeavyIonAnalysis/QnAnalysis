@@ -29,6 +29,8 @@ hades_analysis:
       type: track
       phi:  sim_particles_extra/phi
       weight: Ones
+      cuts:
+        sim_particles_extra/is_chrged: {equals: 1}
       axes:
         - *axis_gen_protons_pT
         - *axis_gen_protons_rapidity
@@ -43,6 +45,8 @@ hades_analysis:
       type: track
       phi:  sim_particles_extra/phi
       weight: Ones
+      cuts:
+        sim_particles_extra/is_chrged: {equals: 1}
       axes:
         - *axis_gen_pions_pT
         - *axis_gen_pions_rapidity
