@@ -61,7 +61,7 @@ hades_analysis:
     - name: protons
       type: track
       phi:  mdc_vtx_tracks_extra/phi
-      weight: Ones
+      weight: mdc_vtx_tracks_extra/efficiency
       norm: m
       corrections:
         - recentering
