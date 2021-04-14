@@ -53,7 +53,7 @@ void QnCorrectionTask::PreInit() {
   var_manager_ = at_vm_task;
 }
 
-void QnCorrectionTask::Init(std::map<std::string, void *> &) {
+void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
   out_file_ = std::shared_ptr<TFile>(TFile::Open("correction_out.root", "recreate"));
   if (!(out_file_ && out_file_->IsOpen())) {
     throw std::runtime_error("Unable to open output file for writing");
@@ -177,7 +177,7 @@ void QnCorrectionTask::InitVariables() {
 /**
 * Main method. Executed every event
 */
-void QnCorrectionTask::Exec() {
+void QnCorrectionTask::UserExec() {
   manager_.Reset();
   double *container = manager_.GetVariableContainer();
 
@@ -309,7 +309,7 @@ void QnCorrectionTask::AddQAHisto() {
   }
 }
 
-void QnCorrectionTask::Finish() {
+void QnCorrectionTask::UserFinish() {
   manager_.Finalize();
 
   out_file_->cd();

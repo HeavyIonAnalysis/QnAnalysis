@@ -36,10 +36,13 @@ class QnCorrectionTask : public UserFillTask {
     qa_histos_.emplace_back(qvec_name, axis);
   }
   boost::program_options::options_description GetBoostOptions() override;
+ protected:
+  bool UseATI2() const override { return false; }
+ public:
   void PreInit() override;
-  void Init(std::map<std::string, void*>&) override;
-  void Exec() override;
-  void Finish() override;
+  void UserInit(std::map<std::string, void*>&) override;
+  void UserExec() override;
+  void UserFinish() override;
 
   void SetPointerToVarManager(AnalysisTree::VarManager* ptr) { var_manager_ = ptr; }
 
