@@ -37,7 +37,7 @@ class QnCorrectionTask : public UserFillTask {
   }
   boost::program_options::options_description GetBoostOptions() override;
  protected:
-  bool UseATI2() const override { return false; }
+  bool UseATI2() const override { return true; }
  public:
   void PreInit() override;
   void UserInit(std::map<std::string, void*>&) override;
@@ -68,6 +68,10 @@ class QnCorrectionTask : public UserFillTask {
   AnalysisTree::VarManager* var_manager_{nullptr};
   std::vector<std::tuple<std::string, std::vector<AxisD>>> qa_histos_;
   std::map<int, int> is_filled_{};
+
+  /* parent structure for all track variables */
+  struct Variables;
+  Variables *variables_{nullptr};
 
   TASK_DEF(QnCorrectionTask, 2)
 };

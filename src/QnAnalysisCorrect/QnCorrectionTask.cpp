@@ -19,6 +19,53 @@ TASK_IMPL(QnCorrectionTask)
 using std::string;
 using std::vector;
 
+
+struct QnVariable {
+  double *container_ptr{nullptr};
+  int var_id{-1};
+  int size{0};
+};
+
+struct EventVariables {
+  std::vector<std::pair<ATI2::Variable, QnVariable*>> map_pairs;
+};
+
+struct TrackVariables {
+  ATI2::Branch *branch_ptr{nullptr};
+  QnVariable *filled{nullptr};
+  std::vector<std::pair<ATI2::Variable, QnVariable*>> map_pairs;
+};
+
+struct ChannelVariables {
+
+};
+
+struct QnCorrectionTask::Variables {
+  explicit Variables(CorrectionManager &manager) : qn_manager_(manager) {}
+
+  EventVariables event_variables;
+  /* map key corresponds to input branches */
+  std::map<std::string, TrackVariables> track_variables;
+  /* map key corresponds to Q-vector name */
+  std::map<std::string, ChannelVariables> channel_variables;
+
+  QnVariable *NewQnVariable(const std::string &name, int size) {
+    assert(qn_variables_.find(name) == qn_variables_.end());
+    auto var_id = n_qn_variables;
+    qn_manager_.AddVariable(name, var_id, size);
+    auto qn_variable = std::make_unique<QnVariable>();
+    qn_variable->var_id = var_id;
+    qn_variable->size = size;
+    n_qn_variables += size;
+    qn_variables_.emplace(name, std::move(qn_variable));
+    return qn_variables_[name].get();
+  }
+
+  int n_qn_variables = 0;
+  Qn::CorrectionManager &qn_manager_;
+  std::map<std::string, std::unique_ptr<QnVariable>> qn_variables_;
+};
+
 void QnCorrectionTask::PreInit() {
   auto at_vm_task = ATVarManagerTask::Instance();
   if (!at_vm_task->IsEnabled()) {
@@ -122,6 +169,69 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
 }
 
 void QnCorrectionTask::InitVariables() {
+  variables_ = new Variables(manager_);
+
+  auto MakeATI2Variable = [this] (const AnalysisTree::Variable& v) {
+    assert(v.GetFields().size() == 1);
+    auto branch_name = v.GetFields()[0].GetBranchName();
+    auto field_name = v.GetFields()[0].GetName();
+    return this->GetInBranch(branch_name)->GetFieldVar(field_name);
+  };
+
+  for (const auto &event_variable : GetConfig()->event_vars_) {
+    auto ati2_variable = MakeATI2Variable(event_variable);
+    auto branch = ati2_variable.GetParentBranch();
+    assert(branch->GetBranchType() == EVENT_HEADER);
+
+    auto &event_variables = variables_->event_variables;
+    auto same_src_variable = [&ati2_variable] (decltype(event_variables.map_pairs)::value_type & p) {
+      return ati2_variable.GetParentBranch() == p.first.GetParentBranch() && ati2_variable.GetName() == p.first.GetName();
+    };
+    if (!std::any_of(event_variables.map_pairs.begin(), event_variables.map_pairs.end(), same_src_variable)) {
+      auto qn_variable_name = ati2_variable.GetParentBranch()->GetBranchName() + "__" + ati2_variable.GetFieldName();
+      event_variables.map_pairs.emplace_back(std::make_pair(ati2_variable, variables_->NewQnVariable(qn_variable_name, 1)));
+    }
+  }
+
+  for (const auto &track_q_vector : GetConfig()->track_qvectors_) {
+    const auto &phi_var = track_q_vector->GetPhiVar();
+    /* this branch is assumed "main" for the specific Q-vector */
+    const auto &primary_branch_name = phi_var.GetBranchName();
+    auto primary_branch = GetInBranch(primary_branch_name);
+    assert(primary_branch->GetBranchType() == PARTICLES ||
+        primary_branch->GetBranchType() == TRACKS ||
+        primary_branch->GetBranchType() == HITS);
+
+    for (auto &variable : track_q_vector->GetListOfVariables()) {
+      const auto &variable_branch_name = variable.GetBranchName();
+      auto variable_branch = GetInBranch(variable_branch_name);
+      /* this is our expectations about variables in track Q-vector */
+      assert(primary_branch == variable_branch || variable_branch->GetBranchType() == EVENT_HEADER);
+
+      if (variable_branch == primary_branch) {
+        auto ati2_variable = MakeATI2Variable(variable);
+        auto emplace_result = variables_->track_variables.emplace(variable_branch_name, TrackVariables());
+        auto emplace_ok = emplace_result.second;
+        auto &track_variables = emplace_result.first->second;
+        if (emplace_ok) {
+          track_variables.branch_ptr = variable_branch;
+          track_variables.filled = variables_->NewQnVariable(variable_branch_name + "_Filled", 1);
+        }
+        auto same_src_variable = [&ati2_variable] (decltype(track_variables.map_pairs)::value_type & p) {
+          return ati2_variable.GetParentBranch() == p.first.GetParentBranch() && ati2_variable.GetName() == p.first.GetName();
+        };
+        if (!std::any_of(track_variables.map_pairs.begin(), track_variables.map_pairs.end(), same_src_variable)) {
+          auto qn_variable_name = ati2_variable.GetParentBranch()->GetBranchName() + "__" + ati2_variable.GetFieldName();
+          track_variables.map_pairs.emplace_back(std::make_pair(ati2_variable, variables_->NewQnVariable(qn_variable_name, 1)));
+        }
+      }
+      else if (variable_branch->GetBranchType() == EVENT_HEADER) {
+        /* TODO Lookup event header variable */
+      }
+
+    }
+  }
+
   // Add all needed variables
   short ivar{0}, ibranch{0};
 
