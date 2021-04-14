@@ -313,7 +313,7 @@ pbpb_13agev_16_025:
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts-kinematics: *cuts-kinematics-protons-y-preliminary
       cuts-pid: *cuts-proton
-    # v1(y) for protons (PRELIMINARY SET)
+    # v1(y) for protons (STANDARD SET)
     - name: protons_y_set_standard
       tags: [ observable ]
       _from: *tpc-base-detector
