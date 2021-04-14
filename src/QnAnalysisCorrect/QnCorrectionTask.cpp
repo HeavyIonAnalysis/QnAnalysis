@@ -37,7 +37,9 @@ struct TrackVariables {
 };
 
 struct ChannelVariables {
-
+  ATI2::Branch *branch{nullptr};
+  std::vector<int> module_ids;
+  std::vector<std::pair<ATI2::Variable, QnVariable*>> map_pairs;
 };
 
 struct QnCorrectionTask::Variables {
@@ -59,6 +61,12 @@ struct QnCorrectionTask::Variables {
     n_qn_variables += size;
     qn_variables_.emplace(name, std::move(qn_variable));
     return qn_variables_[name].get();
+  }
+
+  void UpdatePointers() {
+    for (auto &qn_variable : qn_variables_) {
+      qn_variable.second->container_ptr = qn_manager_.GetVariableContainer();
+    }
   }
 
   int n_qn_variables = 0;
@@ -165,6 +173,7 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
 
   //Initialization of framework
   manager_.InitializeOnNode();
+  variables_->UpdatePointers();
   manager_.SetCurrentRunName("test");
 }
 
@@ -191,6 +200,25 @@ void QnCorrectionTask::InitVariables() {
       auto qn_variable_name = ati2_variable.GetParentBranch()->GetBranchName() + "__" + ati2_variable.GetFieldName();
       event_variables.map_pairs.emplace_back(std::make_pair(ati2_variable, variables_->NewQnVariable(qn_variable_name, 1)));
     }
+  }
+
+  for (const auto &channel_q_vector : GetConfig()->channel_qvectors_) {
+    const auto &q_vector_name = channel_q_vector->GetName();
+    auto emplace_result = variables_->channel_variables.emplace(q_vector_name, ChannelVariables());
+    assert(emplace_result.second);
+    auto &channel_variables = emplace_result.first->second;
+
+    const auto& weight_var = channel_q_vector->GetWeightVar();
+    auto ati_weight_var = MakeATI2Variable(weight_var);
+    assert(ati_weight_var.GetParentBranch()->GetBranchType() == MODULES);
+
+    auto primary_branch_name = ati_weight_var.GetParentBranch()->GetBranchName();
+    channel_variables.branch = ati_weight_var.GetParentBranch();
+    channel_variables.module_ids = channel_q_vector->GetModuleIds();
+    auto qn_weight_var = variables_->NewQnVariable(q_vector_name + "__" + ati_weight_var.GetFieldName(),
+                                                   int(channel_variables.module_ids.size()));
+    channel_variables.map_pairs.emplace_back(std::make_pair(ati_weight_var, qn_weight_var));
+
   }
 
   for (const auto &track_q_vector : GetConfig()->track_qvectors_) {
@@ -231,6 +259,7 @@ void QnCorrectionTask::InitVariables() {
 
     }
   }
+
 
   // Add all needed variables
   short ivar{0}, ibranch{0};
