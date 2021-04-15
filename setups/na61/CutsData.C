@@ -20,6 +20,7 @@ int CutsData() {
       double m_good = args[1];
                                     return e_psd < 3300 - m_good*(3300./200.);
     });
+    SimpleCut mgood_gt_0(Variable("Centrality","Mgood"), 1, 1e6);
 
     SimpleCut wfa_s1(Variable("RecEventHeader","wfa_s1"), 4000.f, 1e9);
     SimpleCut wfa_t4(Variable("RecEventHeader","wfa_t4"), 4000.f, 1e9);
@@ -41,6 +42,7 @@ int CutsData() {
                 vtx_y,
                 vtx_z,
                 vtx_z_magic,
+                mgood_gt_0,
                 e_psd,
                 e_psd_event_overlap,
                 wfa_s1,
@@ -52,9 +54,10 @@ int CutsData() {
                 vtx_x,
                 vtx_y,
                 vtx_z,
-//                vtx_z_magic,
+                vtx_z_magic,
                 e_psd,
                 e_psd_event_overlap,
+                mgood_gt_0,
                 wfa_s1,
 //                wfa_t4,
                 t2ort4,
