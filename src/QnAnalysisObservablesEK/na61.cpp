@@ -267,10 +267,10 @@ int main() {
 //                             },
 //                             META["u.axis"] == "pt");
 //    /* Rebin centrality  */
-    gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
-      calc = calc.Rebin(Qn::AxisD("Centrality",
-                                  {0., 10., 25., 45., 80.}));
-    });
+//    gResourceManager.ForEach([](const StringKey &name, DTCalc &calc) {
+//      calc = calc.Rebin(Qn::AxisD("Centrality",
+//                                  {0., 10., 25., 45., 80.}));
+//    });
   }
   {
     /***************** RESOLUTION 3-sub ******************/
