@@ -71,6 +71,8 @@ hades_analysis:
         - *axis_protons_rapidity
       cuts:
         mdc_vtx_tracks_extra/chi2: {range: [0.0, 100.0]}
+      charge-cuts:
+        mdc_vtx_tracks_extra/is_positive: {equals: 1}
       qa:
         - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_protons_pT
