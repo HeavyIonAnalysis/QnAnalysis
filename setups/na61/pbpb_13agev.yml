@@ -434,7 +434,7 @@ pbpb_13agev_16_025:
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts-pid: *cuts-proton
       cuts-kinematics:
-        - { variable: *var-vtx-y-cm, range: [ 1.0, 1.4 ] }
+        - { variable: *var-vtx-y-cm, range: [ 1.0, 1.2, 1.4 ] }
         - { variable: *var-vtx-pt,   range: [ 0.0, 2.0 ] }
     - name: 4sub_ref_opt1
       tags: [ observable, reco ]
