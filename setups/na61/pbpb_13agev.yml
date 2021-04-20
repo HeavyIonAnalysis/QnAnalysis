@@ -13,6 +13,7 @@ reco_variables:
   - &var-vtx-phi        RecParticles/phi
   - &var-vtx-dcax       RecParticles/dcax
   - &var-vtx-dcay       RecParticles/dcay
+  - &var-vtx-chi2-ndf       RecParticles/chi2_ndf
   # Event variables
   - &var-evt-centrality Centrality/Centrality_Epsd
   - &var-evt-vtx-x      RecEventHeader/vtx_x
@@ -62,6 +63,7 @@ setups-definitions:
     - { variable: RecParticles/nhits_ratio,      range: [ 0.55, 1.1 ] }
     - { variable: *var-vtx-dcax,                 range: [ -2., 2. ] }
     - { variable: *var-vtx-dcay,                 range: [ -1., 1. ] }
+    - { variable: *var-vtx-chi2-ndf,                 range: [ 0., 10. ] }
   ########################################################
   # v1(pT) of PROTONS
   ########################################################
@@ -91,7 +93,7 @@ setups-definitions:
     name: *var-vtx-y-cm
     nb: 15
     lo: -0.6
-    hi: 2.0
+    hi: 2.4
   ########################################################
   # v1(pT) of the NEGATIVE PIONS
   ########################################################
@@ -121,7 +123,7 @@ setups-definitions:
     name: *var-vtx-y-cm
     nb: 15
     lo: -0.6
-    hi: 2.0
+    hi: 2.4
   ##########################################################
   # Correction step base
   ##########################################################
@@ -233,6 +235,9 @@ _qa:
     - &ax-dcax-qa { name: *var-vtx-dcax, nb: 200, lo: -10, hi: 10 }
     - &ax-dcay-qa { name: *var-vtx-dcay, nb: 200, lo: -10, hi: 10 }
     - [ *ax-dcax-qa, *ax-dcay-qa ]
+    - &ax-chi2-qa { name: *var-vtx-chi2-ndf, nb: 200, lo: 0, hi: 100 }
+    - [ *ax-pt-qa, *ax-chi2-qa ]
+    - [ *ax-rapidity-qa, *ax-chi2-qa ]
     - &ax-nhits-vtpc-qa { name: RecParticles/nhits_vtpc, nb: 300, lo: 0, hi: 300 }
     - &ax-nhits-total-qa { name: RecParticles/nhits_total, nb: 300, lo: 0, hi: 300 }
     - &ax-nhits-pot-total-qa { name: RecParticles/nhits_pot_total, nb: 300, lo: 0, hi: 300 }
