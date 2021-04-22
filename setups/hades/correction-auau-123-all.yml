@@ -2,7 +2,7 @@ _layouts:
 
 _axes:
   - &axis_protons_pT
-    name: mdc_vtx_tracks_extra/pT
+    name: mdc_vtx_tracks_extra/protons_pT
     bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
   - &axis_pions_pT
     name: mdc_vtx_tracks_extra/pT
