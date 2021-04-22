@@ -61,7 +61,8 @@ hades_analysis:
     - name: protons
       type: track
       phi:  mdc_vtx_tracks_extra/phi
-      weight: mdc_vtx_tracks_extra/efficiency
+#      weight: mdc_vtx_tracks_extra/efficiency
+      weight: Ones
       norm: m
       corrections:
         - recentering
@@ -71,7 +72,7 @@ hades_analysis:
         - *axis_protons_rapidity
       cuts:
         mdc_vtx_tracks_extra/chi2: {range: [0.0, 100.0]}
-        mdc_vtx_tracks_extra/is_in_protons_acceptance: {equals: 1}
+#        mdc_vtx_tracks_extra/is_in_protons_acceptance: {equals: 1}
 #      charge-cuts:
 #        mdc_vtx_tracks_extra/is_positive: {equals: 1}
       qa:
