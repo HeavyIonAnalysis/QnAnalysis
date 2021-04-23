@@ -13,7 +13,7 @@ _axes:
     lo: -0.75
     hi: 0.75
   - &axis_protons_eta
-    name: mdc_vtx_tracks_rapidity/eta
+    name: mdc_vtx_tracks_extra/eta
     nb: 11
     lo: 0.0
     hi: 2.2
