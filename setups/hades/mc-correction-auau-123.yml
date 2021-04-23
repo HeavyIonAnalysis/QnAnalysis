@@ -12,11 +12,21 @@ _axes:
     nb: 15
     lo: -0.75
     hi: 0.75
+  - &axis_protons_eta
+    name: mdc_vtx_tracks_rapidity/eta
+    nb: 11
+    lo: 0.0
+    hi: 2.2
   - &axis_gen_protons_rapidity
     name: sim_particles_extra/ycm
     nb: 15
     lo: -0.75
     hi: 0.75
+  - &axis_gen_protons_eta
+    name: sim_particles_extra/eta
+    nb: 11
+    lo: 0.0
+    hi: 2.2
 _cuts:
   - &pid_protons_cut
     mdc_vtx_tracks_extra/pid: { equals: 2212 }
@@ -59,8 +69,9 @@ hades_analysis:
         - recentering
         - twist-and-rescale
       axes:
-        - *axis_protons_pT
-        - *axis_protons_rapidity
+#        - *axis_protons_pT
+#        - *axis_protons_rapidity
+        - *axis_protons_eta
       cuts-pid:
         *pid_protons_cut
       cuts-quality:
@@ -111,8 +122,9 @@ hades_analysis:
       weight: Ones
       norm: m
       axes:
-        - *axis_gen_protons_pT
-        - *axis_gen_protons_rapidity
+#        - *axis_gen_protons_pT
+#        - *axis_gen_protons_rapidity
+        - *axis_gen_protons_eta
       cuts-pid:
         *gen_prim_protons_cut
       cuts-efficiency:

@@ -17,6 +17,11 @@ _axes:
     nb: 15
     lo: -0.75
     hi: 0.75
+  - &axis_gen_protons_eta
+    name: sim_particles_extra/eta
+    nb: 11
+    lo: 0.0
+    hi: 2.2
 
 hades_analysis:
   event-variables:
@@ -33,8 +38,9 @@ hades_analysis:
         sim_particles_extra/is_charged: {equals: 1}
 #        sim_particles_extra/is_in_protons_acceptance: {equals: 1}
       axes:
-        - *axis_gen_protons_pT
-        - *axis_gen_protons_rapidity
+#        - *axis_gen_protons_pT
+#        - *axis_gen_protons_rapidity
+        - *axis_gen_protons_eta
       qa:
         - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_gen_protons_pT
