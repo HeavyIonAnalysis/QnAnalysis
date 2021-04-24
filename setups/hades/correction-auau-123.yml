@@ -76,10 +76,10 @@ hades_analysis:
       type: track
       phi:  mdc_vtx_tracks_rapidity/phi
       weight: mdc_vtx_tracks_rapidity/efficiency
-      norm: none
-#      corrections:
-#        - recentering
-#        - twist-and-rescale
+      norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
       axes:
         - *axis_protons_pT
         - *axis_protons_rapidity
@@ -93,69 +93,6 @@ hades_analysis:
         - *axis_protons_pT
         - *axis_protons_rapidity
         - [*axis_protons_rapidity, *axis_protons_pT]
-    #############################################################
-    - name: protons_uniform
-      type: track
-      phi:  mdc_vtx_tracks_rapidity/phi
-      weight: mdc_vtx_tracks_rapidity/efficiency
-      norm: none
-#      corrections:
-#        - recentering
-#        - twist-and-rescale
-      axes:
-        - *axis_pT_uniform
-        - *axis_protons_rapidity
-      cuts-pid:
-        *protons_cuts
-      cuts-quality:
-        *good_particle_cuts
-      qa:
-        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
-        - *axis_pT_uniform
-        - *axis_protons_rapidity
-        - [*axis_protons_rapidity, *axis_pT_uniform]
-    #############################################################
-#    - name: pi_plus
-#      type: track
-#      phi:  mdc_vtx_tracks_rapidity/phi
-#      weight: Ones
-#      norm: m
-#      corrections:
-#        - recentering
-#        - twist-and-rescale
-#      axes:
-#        - *axis_pions_pT
-#        - *axis_pions_rapidity
-#      cuts-pid:
-#        *pion_plus_cuts
-#      cuts-quality:
-#        *good_particle_cuts
-#      qa:
-#        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
-#        - *axis_pions_pT
-#        - *axis_pions_rapidity
-#        - [*axis_pions_rapidity, *axis_pions_pT]
-#    #############################################################
-#    - name: pi_minus
-#      type: track
-#      phi:  mdc_vtx_tracks_rapidity/phi
-#      weight: Ones
-#      norm: m
-#      corrections:
-#        - recentering
-#        - twist-and-rescale
-#      axes:
-#        - *axis_pions_pT
-#        - *axis_pions_rapidity
-#      cuts-pid:
-#        *pion_minus_cuts
-#      cuts-quality:
-#        *good_particle_cuts
-#      qa:
-#        - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
-#        - *axis_pions_pT
-#        - *axis_pions_rapidity
-#        - [*axis_pions_rapidity, *axis_pions_pT]
     #############################################################
     - name: Mf
       type: track
@@ -190,28 +127,6 @@ hades_analysis:
         *protons_cuts
       qa:
         - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
-    #############################################################
-#    - name: R1
-#      type: track
-#      phi:  forward_wall_hits/phi
-#      weight: forward_wall_hits/signal
-#      norm: m
-#      corrections:
-#        - recentering
-#        - twist-and-rescale
-#      cuts:
-#        *r1_cuts
-#    #############################################################
-#    - name: R2
-#      type: track
-#      phi:  forward_wall_hits/phi
-#      weight: forward_wall_hits/signal
-#      norm: m
-#      corrections:
-#        - recentering
-#        - twist-and-rescale
-#      cuts:
-#        *r2_cuts
     #############################################################
     - name: W1
       type: track
