@@ -133,7 +133,7 @@ setups-definitions:
   # Quality cuts for vertex tracks standard
   - &cuts-rec-particles-quality-standard
     - { variable: RecParticles/nhits_total,      range: [ 30, 1000 ] }
-    - { variable: RecParticles/nhits_vtpc,       range: [ 10, 1000 ] }
+    - { variable: RecParticles/nhits_vtpc,       range: [ 15, 1000 ] }
     - { variable: RecParticles/nhits_pot_total,  range: [ 1, 1000 ] }
     - { variable: RecParticles/nhits_ratio,      range: [ 0.55, 1.1 ] }
     - { variable: *var-vtx-dcax,                 range: [ -2., 2. ] }
