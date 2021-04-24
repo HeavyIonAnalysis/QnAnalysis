@@ -127,7 +127,8 @@ setups-definitions:
   ##########################################################
   # Correction step base
   ##########################################################
-  - &ax-centrality-correction-preliminary { name: *var-evt-centrality, nb: 20, lo: 0, hi: 100 }
+  - &ax-centrality-correction-preliminary { name: *var-evt-centrality, bin-edges: [0., 5., 10., 15., 25., 35., 45., 60., 80., 100.] }
+  - &ax-centrality-correction-standard { name: *var-evt-centrality, nb: 20, lo: 0., hi: 100. }
   # Preliminary 2021 (aka "standard")
   # Quality cuts for vertex tracks standard
   - &cuts-rec-particles-quality-standard
