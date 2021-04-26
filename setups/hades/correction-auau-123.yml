@@ -19,7 +19,7 @@ _axes:
     hi: 0.75
   - &axis_protons_eta
     name: mdc_vtx_tracks_rapidity/eta
-    nb: 11
+    nb: 44
     lo: 0.0
     hi: 2.2
   - &axis_pions_rapidity
@@ -77,9 +77,9 @@ hades_analysis:
       phi:  mdc_vtx_tracks_rapidity/phi
       weight: mdc_vtx_tracks_rapidity/efficiency
       norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
       axes:
         - *axis_protons_pT
         - *axis_protons_rapidity

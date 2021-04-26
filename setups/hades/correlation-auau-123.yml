@@ -30,7 +30,7 @@ _tasks_args:
     query: { tags: { any-in: [ un_vector ] } }
     query-list: *detectors
     components: *sp_components
-    correction-steps: [ rescaled ]
+    correction-steps: [ plain ]
     weight: sumw
   - &ta_qn_sp
     query: { tags: { any-in: [ qn_vector ] } }

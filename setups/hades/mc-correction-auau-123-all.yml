@@ -19,7 +19,7 @@ _axes:
     hi: 0.75
   - &axis_gen_protons_eta
     name: sim_particles_extra/eta
-    nb: 11
+    nb: 44
     lo: 0.0
     hi: 2.2
 
