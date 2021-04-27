@@ -15,7 +15,7 @@ _detectors: &detectors
 _axes:
   - &centrality
     name: event_header_selected_tof_rpc_hits_centrality
-    nb: 12
+    nb: 6
     lo: 0
     hi: 60
 

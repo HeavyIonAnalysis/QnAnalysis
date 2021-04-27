@@ -14,7 +14,7 @@ _axes:
     bin-edges: [0, 0.0825, 0.1075, 0.1275, 0.1525, 0.1775, 0.2075, 0.2475, 0.3075, 0.4725, 1.0]
   - &axis_protons_rapidity
     name: mdc_vtx_tracks_rapidity/ycm
-    nb: 15
+    nb: 5
     lo: -0.75
     hi: 0.75
   - &axis_protons_eta
@@ -69,7 +69,7 @@ hades_analysis:
   event-variables:
     - event_header/selected_tof_rpc_hits_centrality
   axes:
-    - { name: event_header/selected_tof_rpc_hits_centrality, nb: 12, lo: 0.0, hi: 60 }
+    - { name: event_header/selected_tof_rpc_hits_centrality, nb: 6, lo: 0.0, hi: 60 }
   q-vectors:
     #############################################################
     - name: protons
