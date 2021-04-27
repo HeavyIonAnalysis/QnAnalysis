@@ -7,6 +7,11 @@ int CutsData() {
     SimpleCut vtx_x(Variable("RecEventHeader","vtx_x"), -0.740, 0.131);
     SimpleCut vtx_y(Variable("RecEventHeader","vtx_y"), -0.664, 0.022);
     SimpleCut vtx_z(Variable("RecEventHeader","vtx_z"), -594., -590.);
+
+    SimpleCut vtx_x_pbpb30_3sigma(Variable("RecEventHeader","vtx_x"), -0.168, 0.684);
+    SimpleCut vtx_y_pbpb30_3sigma(Variable("RecEventHeader","vtx_y"), -0.467, 0.073);
+    SimpleCut vtx_z_pbpb30_preliminary(Variable("RecEventHeader","vtx_z"), -592., -591.);
+    SimpleCut fitted_vtx(Variable("RecEventHeader","fitted_vtx"), 0.9, 1.1);
     SimpleCut vtx_z_magic({"RecEventHeader/vtx_z"}, [](std::vector<double>& args) -> bool { 
             double vtx_z = args[0];
             double vtx_z0 = -591.9;
@@ -41,6 +46,7 @@ int CutsData() {
                 vtx_x,
                 vtx_y,
                 vtx_z,
+                fitted_vtx,
                 vtx_z_magic,
                 mgood_gt_0,
                 e_psd,
@@ -54,6 +60,7 @@ int CutsData() {
                 vtx_x,
                 vtx_y,
                 vtx_z,
+                fitted_vtx,
                 vtx_z_magic,
                 e_psd,
                 e_psd_event_overlap,
@@ -65,10 +72,10 @@ int CutsData() {
                 }));
 
      RegisterCuts("na61/pbpb/30agev/16_025/t4/preliminary/event", Cuts("RecEventHeader", {
-//                vtx_x,
-//                vtx_y,
-                vtx_z,
-//                vtx_z_magic,
+                vtx_x_pbpb30_3sigma,
+                vtx_y_pbpb30_3sigma,
+                vtx_z_pbpb30_preliminary,
+                fitted_vtx,
                 e_psd,
 //                e_psd_event_overlap,
                 mgood_gt_0,
