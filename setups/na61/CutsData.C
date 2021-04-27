@@ -64,5 +64,18 @@ int CutsData() {
                 s1, s2, s1_s2
                 }));
 
+     RegisterCuts("na61/pbpb/30agev/16_025/t4/preliminary/event", Cuts("RecEventHeader", {
+//                vtx_x,
+//                vtx_y,
+                vtx_z,
+//                vtx_z_magic,
+                e_psd,
+//                e_psd_event_overlap,
+                mgood_gt_0,
+                wfa_s1,
+//                wfa_t4,
+                t4,
+//                s1, s2, s1_s2
+                }));
     return 0;
 }
