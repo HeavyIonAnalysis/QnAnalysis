@@ -36,11 +36,11 @@ hades_analysis:
       weight: Ones
       cuts:
         sim_particles_extra/is_charged: {equals: 1}
-#        sim_particles_extra/is_in_protons_acceptance: {equals: 1}
+        sim_particles_extra/is_in_protons_acceptance: {equals: 1}
       axes:
-#        - *axis_gen_protons_pT
-#        - *axis_gen_protons_rapidity
-        - *axis_gen_protons_eta
+        - *axis_gen_protons_pT
+        - *axis_gen_protons_rapidity
+#        - *axis_gen_protons_eta
       qa:
         - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_gen_protons_pT
