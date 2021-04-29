@@ -332,6 +332,18 @@ pbpb_13agev_16_025:
       cuts-kinematics: *cuts-kinematics-protons-y-standard
       cuts-pid: *cuts-proton
       qa-weight: *rec-particle-qa-kinematics-weighted
+    # v1(pT, y) for protons (STANDARD SET)
+    - name: protons_2d_set_standard
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      # overriding weight
+      weight: RecParticles/w_eff_standard_cuts
+      axes:
+        - {name: *var-vtx-pt, bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0 ]}
+        - {name: *var-vtx-y-cm, nb: 15, lo: -0.6, hi: 2.4}
+      cuts-quality: *cuts-rec-particles-quality-standard
+      cuts-pid: *cuts-proton
+      qa-weight: *rec-particle-qa-kinematics-weighted
     # v1(pT) for pi- (PRELIMINARY SET)
     - name: pion_neg_pt_set_preliminary
       tags: [ observable ]
@@ -379,6 +391,18 @@ pbpb_13agev_16_025:
       cuts-kinematics: *cuts-kinematics-pion-neg-y-standard
       cuts-pid: *cuts-pion-neg
       qa-weight: *rec-particle-qa-kinematics-weighted
+    # v1(pT, y) for pi- (STANDARD SET)
+    - name: pion_neg_2d_set_standard
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      # overriding weight
+      weight: RecParticles/w_eff_standard_cuts
+      axes:
+        - {name: *var-vtx-pt, bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0 ]}
+        - {name: *var-vtx-y-cm, nb: 15, lo: -0.6, hi: 2.4}
+      cuts-quality: *cuts-rec-particles-quality-standard
+      cuts-pid: *cuts-pion-neg
+      qa-weight: *rec-particle-qa-kinematics-weighted
     # v1(pT) for pi+ (PRELIMINARY SET)
     - name: pion_pos_pt_set_preliminary
       tags: [ observable ]
@@ -424,6 +448,18 @@ pbpb_13agev_16_025:
         - *ax-pt-correction-pion-neg-y-standard
       cuts-quality: *cuts-rec-particles-quality-standard
       cuts-kinematics: *cuts-kinematics-pion-neg-y-standard
+      cuts-pid: *cuts-pion-pos
+      qa-weight: *rec-particle-qa-kinematics-weighted
+    # v1(pT, y) for pi+ (STANDARD SET)
+    - name: pion_pos_2d_set_standard
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      # overriding weight
+      weight: RecParticles/w_eff_standard_cuts
+      axes:
+        - {name: *var-vtx-pt, bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0 ]}
+        - {name: *var-vtx-y-cm, nb: 15, lo: -0.6, hi: 2.4}
+      cuts-quality: *cuts-rec-particles-quality-standard
       cuts-pid: *cuts-pion-pos
       qa-weight: *rec-particle-qa-kinematics-weighted
     # REFERENCE DETECTORS
