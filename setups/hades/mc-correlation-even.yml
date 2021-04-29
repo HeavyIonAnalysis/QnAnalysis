@@ -1,0 +1,50 @@
+_detectors: &detectors
+  - name: pid_protons
+    tags: [ un_vector ]
+  - name: gen_prim_protons
+    tags: [ gen_un_vector ]
+  - name: psi_rp
+    tags: [ psi_vector ]
+
+_axes:
+  - &centrality
+    name: event_header_selected_tof_rpc_hits_centrality
+    nb: 12
+    lo: 0
+    hi: 60
+
+_components:
+  - &sp_components
+    [ x1,y1 ]
+
+_tasks_args:
+  - &ta_reco
+    query: { tags: { any-in: [ un_vector ] } }
+    query-list: *detectors
+    components: *sp_components
+    correction-steps: [ rescaled ]
+    weight: sumw
+  - &ta_sim
+    query: { tags: { any-in: [ gen_un_vector ] } }
+    query-list: *detectors
+    components: *sp_components
+    correction-steps: [ plain ]
+    weight: sumw
+  - &ta_psi
+    query: { tags: { any-in: [ psi_vector ] } }
+    query-list: *detectors
+    components: *sp_components
+    correction-steps: [ plain ]
+    weight: ones
+
+_tasks:
+  - args: [*ta_reco, *ta_psi]
+    n-samples: 100
+    weights-type: observable
+    folder: "/uQ/reco"
+    axes: [ *centrality ]
+  - args: [*ta_sim, *ta_psi]
+    n-samples: 100
+    weights-type: observable
+    folder: "/uQ/gen"
+    axes: [ *centrality ]

@@ -1,0 +1,82 @@
+_layouts:
+
+_axes:
+  - &axis_protons_pT
+    name: mdc_vtx_tracks_extra/pT
+    bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
+  - &axis_gen_protons_pT
+    name: sim_particles_extra/pT
+    bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
+  - &axis_protons_rapidity
+    name: mdc_vtx_tracks_extra/abs_ycm
+    nb: 7
+    lo: 0.05
+    hi: 0.75
+  - &axis_gen_protons_rapidity
+    name: sim_particles_extra/abs_ycm
+    nb: 7
+    lo: 0.05
+    hi: 0.75
+
+_cuts:
+  - &pid_protons_cut
+    mdc_vtx_tracks_extra/pid: { equals: 2212 }
+  - &gen_prim_protons_cut
+    sim_particles_extra/pid: { equals: 2212 }
+    sim_particles_extra/is_primary: { equals: 1 }
+  - &good_track_cuts
+    mdc_vtx_tracks_extra/dca_xy: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks_extra/dca_z: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks_extra/chi2: {range: [0.0, 100.0]}
+
+hades_analysis:
+  event-variables:
+    - event_header/selected_tof_rpc_hits_centrality
+  axes:
+    - { name: event_header/selected_tof_rpc_hits_centrality, nb: 12, lo: 0.0, hi: 60 }
+  q-vectors:
+    ###########################################################################
+    - name: pid_protons
+      type: track
+      phi:  mdc_vtx_tracks_extra/phi
+      weight: mdc_vtx_tracks_extra/efficiency
+      norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *axis_protons_pT
+        - *axis_protons_rapidity
+      cuts-pid:
+        *pid_protons_cut
+      cuts-quality:
+        *good_track_cuts
+      qa:
+        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_protons_pT
+        - *axis_protons_rapidity
+        - [*axis_protons_rapidity, *axis_protons_pT]
+  #############################################################
+    - name: gen_prim_protons
+      type: track
+      phi:  sim_particles_extra/phi
+      weight: Ones
+      norm: m
+      axes:
+        - *axis_gen_protons_pT
+        - *axis_gen_protons_rapidity
+      cuts-pid:
+        *gen_prim_protons_cut
+      cuts-efficiency:
+        sim_particles_extra/is_in_high_efficiency: { equals: 1 }
+      qa:
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_protons_pT
+        - *axis_gen_protons_rapidity
+        - [*axis_gen_protons_rapidity, *axis_gen_protons_pT]
+  ###########################################################################
+    - name: psi_rp
+      type: psi
+      phi: sim_header/reaction_plane
+      weight: Ones
+      norm: mag
