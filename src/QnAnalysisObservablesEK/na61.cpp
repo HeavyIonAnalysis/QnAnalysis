@@ -16,6 +16,7 @@
 #include <TFile.h>
 #include <TKey.h>
 #include <TSystem.h>
+#include <TGraph2DErrors.h>
 
 #include <QnAnalysisTools/QnAnalysisTools.hpp>
 
@@ -25,6 +26,40 @@
 #include <boost/lexical_cast.hpp>
 #include <TCanvas.h>
 #include <TLegend.h>
+#include <TFitResult.h>
+
+namespace Qn {
+
+inline
+TGraph2DErrors *ToTGraph2D(const Qn::DataContainerStatCalculate &data, double min_sumw = 1e3) {
+  if (data.GetAxes().size() != 2) {
+    std::cout << "Data container different from 2 dimension. " << std::endl;
+    return nullptr;
+  }
+
+  auto graph_2d = new TGraph2DErrors;
+  int ibin = 0;
+  for (const auto &bin : data) {
+    if (bin.SumWeights() < min_sumw){
+      ibin++;
+      continue;
+    }
+    auto z = bin.Mean();
+    auto ez = bin.StandardErrorOfMean();
+    auto get_bin_center = [&data, &ibin](int axis) {
+      auto multi_index = data.GetIndex(ibin);
+      auto xhi = data.GetAxes()[axis].GetUpperBinEdge(multi_index[axis]);
+      auto xlo = data.GetAxes()[axis].GetLowerBinEdge(multi_index[axis]);
+      return 0.5 * (xlo + xhi);
+    };
+    graph_2d->SetPoint(graph_2d->GetN(), get_bin_center(0), get_bin_center(1), z);
+    graph_2d->SetPointError(graph_2d->GetN() - 1 , 0., 0., ez);
+    ibin++;
+  }
+  return graph_2d;
+}
+
+}
 
 namespace Details {
 
@@ -205,7 +240,7 @@ int main() {
 
   {
     const std::string
-        uQ_reco_expr("^/calc/uQ/(pion_neg|pion_pos|protons)_(pt|y)_set_(\\w+)_(PLAIN|RECENTERED|TWIST|RESCALED).*$");
+        uQ_reco_expr("^/calc/uQ/(pion_neg|pion_pos|protons)_(pt|2d|y)_set_(\\w+)_(PLAIN|RECENTERED|TWIST|RESCALED).*$");
     gResourceManager.ForEach([&uQ_reco_expr](const StringKey &key, ResourceManager::Resource &r) {
       auto particle = KEY.MatchGroup(1, uQ_reco_expr)(r);
       auto axis = KEY.MatchGroup(2, uQ_reco_expr)(r);
@@ -220,7 +255,7 @@ int main() {
     }, KEY.Matches(uQ_reco_expr));
   }
   {
-    const std::string u_mc_expr("^/calc/uQ/mc_(pion_neg|pion_pos|protons)_(pt|y)_PLAIN.*$");
+    const std::string u_mc_expr("^/calc/uQ/mc_(pion_neg|pion_pos|protons)_(pt|2d|y)_PLAIN.*$");
     gResourceManager.ForEach([&u_mc_expr](const StringKey &key, ResourceManager::Resource &r) {
       auto particle = KEY.MatchGroup(1, u_mc_expr)(r);
       auto axis = KEY.MatchGroup(2, u_mc_expr)(r);
@@ -397,6 +432,9 @@ int main() {
         auto apply_abs = [](const std::string &key) {
           auto &calc = gResourceManager.Get(key, ResourceManager::ResTag<DTCalc>());
           calc = Qn::Sqrt(Qn::Pow(calc, 2.));
+          for (auto &bin : calc) {
+            bin.SetWeightType(Qn::StatCalculate::WeightType::REFERENCE);
+          }
         };
         apply_abs(tpc_ref_subA);
         apply_abs(tpc_ref_subB);
@@ -820,12 +858,33 @@ int main() {
                 {"psi_rp", kBlack}
             };
 
-            auto selected_graph = Qn::ToTGraph(resource.As<DTCalc>());
-            if (!selected_graph) {
-              return;
+            ResourceManager::Resource profile_resource;
+
+            auto data = resource.As<DTCalc>();
+
+            if (data.GetAxes().size() == 1) {
+              auto selected_graph = Qn::ToTGraph(data);
+              if (selected_graph) {
+                selected_graph->SetName(key.back().c_str());
+                selected_graph->GetXaxis()->SetTitle(remap_axis_name.at(resource.As<DTCalc>().GetAxes()[0].Name()).c_str());
+                profile_resource.obj = *selected_graph;
+              } else {
+                return;
+              }
+            } else if (data.GetAxes().size() == 2) {
+              auto selected_graph = Qn::ToTGraph2D(data);
+              if (selected_graph) {
+                selected_graph->SetName(key.back().c_str());
+                selected_graph->GetXaxis()->SetTitle(remap_axis_name.at(resource.As<DTCalc>().GetAxes()[0].Name()).c_str());
+                selected_graph->GetYaxis()->SetTitle(remap_axis_name.at(resource.As<DTCalc>().GetAxes()[1].Name()).c_str());
+                selected_graph->SetMaximum(0.4);
+                selected_graph->SetMinimum(-0.4);
+                profile_resource.obj = *selected_graph;
+              } else {
+                return;
+              }
+
             }
-            selected_graph->SetName(key.back().c_str());
-            selected_graph->GetXaxis()->SetTitle(remap_axis_name.at(resource.As<DTCalc>().GetAxes()[0].Name()).c_str());
             VectorKey new_key(key.begin(), key.end());
             new_key.insert(new_key.begin(), "profiles");
             auto meta = resource.meta;
@@ -834,7 +893,8 @@ int main() {
             } else if (META["type"](resource) == "ratio_v1") {
               meta.put("type", "profile_ratio");
             }
-            AddResource(new_key, ResourceManager::Resource(*selected_graph, meta));
+            profile_resource.meta = meta;
+            AddResource(new_key, profile_resource);
             gDirectory = cwd;
           },
           META["type"] == "v1_centrality" ||
@@ -960,7 +1020,8 @@ int main() {
 
             },
             META["type"] == "v1_centrality" &&
-                META["centrality.no"] == "1" &&
+            (META["v1.axis"] == "y" || META["v1.axis"] == "pt") &&
+//                META["centrality.no"] == "2" &&
                 META["v1.ref"] == "combined");
   }
 
@@ -1079,7 +1140,8 @@ int main() {
               } // reference exists
             },
             META["type"] == "v1_centrality" &&
-                META["centrality.no"] == "1" &&
+                (META["v1.axis"] == "y" || META["v1.axis"] == "pt") &&
+//                META["centrality.no"] == "2" &&
                 META["v1.src"] == "reco" &&
                 META["v1.component"] == "combined");
   }
@@ -1122,7 +1184,8 @@ int main() {
               f_multigraphs.WriteTObject(&mg, "mg", "Overwrite");
             },
             META["type"] == "v1_centrality" &&
-                META["centrality.no"] == "1" &&
+                (META["v1.axis"] == "y" || META["v1.axis"] == "pt") &&
+//                META["centrality.no"] == "2" &&
                 META["v1.src"] == "reco" &&
                 META["v1.component"] == "combined" &&
                 META["v1.ref"] == "combined"
@@ -1178,6 +1241,77 @@ int main() {
         }, v1_forward_backward_filter);
 
   }
+
+  {
+    float y_fit_lo = -0.6;
+    float y_fit_hi = 0.6;
+    std::string base_dir = "dv1_dy";
+    /* dv1/dy */
+//    TFile dv1dy_file("dv1dy.root", "recreate");
+    gResourceManager
+        .GroupBy(v1_reco_centrality_feature_set - "centrality.key",
+                 [y_fit_lo, y_fit_hi](auto feature, const std::vector<ResourceManager::ResourcePtr> &resources) {
+                   auto cwd = gDirectory;
+                   gDirectory = nullptr;
+                   auto slope_graph = new TGraphErrors;
+                   slope_graph->SetName(("slope__" + feature).c_str());
+                   auto offset_graph = new TGraphErrors;
+                   offset_graph->SetName(("offset__" + feature).c_str());
+
+                   int i_point = 0;
+                   int n_set_points = 0;
+                   for (auto &res_centrality : resources) {
+                     auto centrality_lo = res_centrality->meta.template get<float>("centrality.lo");
+                     auto centrality_hi = res_centrality->meta.template get<float>("centrality.hi");
+                     auto centrality_mid = 0.5 * (centrality_lo + centrality_hi);
+                     auto v1_y_graph = Qn::ToTGraph(res_centrality->template As<DTCalc>());
+                     // "S" for "The result of the fit is returned in the TFitResultPtr (see below Access to the Fit Result) "
+                     // "Q" for quiet mode
+                     // "F" for "If fitting a polN, use the minuit fitter"
+                     // "N" for "Do not store the graphics function, do not draw"
+                     auto fit_result = v1_y_graph->Fit("pol1", "SQFNW", "", y_fit_lo, y_fit_hi);
+                     if (fit_result.Get() && fit_result->IsValid()) {
+                       auto offset = fit_result->Value(0);
+                       auto offset_erro = fit_result->Value(0);
+                       auto slope = fit_result->Value(1);
+                       auto slope_erro = fit_result->Error(1);
+                       slope_graph->SetPoint(i_point, centrality_mid, slope);
+                       slope_graph->SetPointError(i_point, 0.0, slope_erro);
+                       offset_graph->SetPoint(i_point, centrality_mid, offset);
+                       offset_graph->SetPointError(i_point, 0.0, offset_erro);
+                       n_set_points++;
+                     }
+                     i_point++;
+                     delete v1_y_graph;
+                   }
+
+                   if (n_set_points > 0) {
+//                     slope_graph->Sort();
+//                     offset_graph->Sort();
+
+                     ResourceManager::Resource resource_slope(*slope_graph, {});
+                     resource_slope.meta.put("type", "v1_slope");
+                     resource_slope.meta.put_child("v1_slope", resources.front()->meta.get_child("v1"));
+                     auto v1_slope_name = Tmpltor(
+                         "/profiles/{{type}}/{{v1_slope.src}}/{{v1_slope.particle}}"
+                         "/systematics/SET_{{v1_slope.set}}/RES_{{v1_slope.resolution.meta_key}}/REF_{{v1_slope.ref}}/{{v1_slope.component}}")
+                         (resource_slope);
+                     AddResource(v1_slope_name, resource_slope);
+                   }
+
+//                   dv1dy_file.cd();
+//                   slope_graph.Write();
+//                   offset_graph.Write();
+
+                   gDirectory = cwd;
+                 },
+                 META["type"] == "v1_centrality" &&
+                     META["v1.axis"] == "y"
+//                     META["v1.component"] == "combined" &&
+//                     META["v1.ref"] == "combined"
+        );
+  }
+
 
   /* Compare MC vs Data */
   {
@@ -1332,11 +1466,13 @@ int main() {
                 META["v1.component"] == "combined");
   }
 
+
   /***************** SAVING OUTPUT *****************/
   {
     using ::Tools::ToRoot;
     gResourceManager.ForEach(ToRoot<Qn::DataContainerStatCalculate>("correlation_proc.root"));
     gResourceManager.ForEach(ToRoot<TGraphErrors>("prof.root"));
+    gResourceManager.ForEach(ToRoot<TGraph2DErrors>("prof.root", "UPDATE"));
     gResourceManager.ForEach(ToRoot<TGraphAsymmErrors>("prof.root", "UPDATE"));
   }
   return 0;

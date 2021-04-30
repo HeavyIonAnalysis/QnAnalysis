@@ -93,7 +93,8 @@ class ResourceManager : public Details::Singleton<ResourceManager> {
   struct Resource {
     Resource() = default;
     Resource(std::string n, std::any &&o, const MetaType &m) : name(std::move(n)), obj(o), meta(m) {}
-    Resource(std::any Obj, const MetaType &Meta) : obj(std::move(Obj)), meta(Meta) {}
+    template <typename T>
+    Resource(T&& typed_obj, const MetaType &Meta) : obj(typed_obj), meta(Meta) {}
 
     std::string name;
     std::any obj;
@@ -162,9 +163,9 @@ class ResourceManager : public Details::Singleton<ResourceManager> {
     std::string resource_name;
   };
 
-  ResourcePtr Add(Resource &&resource) {
+  ResourcePtr Add(Resource resource) {
     auto key = resource.name;
-    auto emplace_result = resources_.emplace(key, std::make_shared<Resource>(std::move(resource)));
+    auto emplace_result = resources_.emplace(key, std::make_shared<Resource>(resource));
     if (!emplace_result.second) {
       throw ResourceAlreadyExists(key);
     }
@@ -338,7 +339,7 @@ auto AddResource(const KeyRepr &key, ResourceManager::Resource res) {
             name.c_str());
   }
   res.name = name;
-  return ResourceManager::Instance().Add(std::move(res));
+  return ResourceManager::Instance().Add(res);
 }
 
 template<typename T>
