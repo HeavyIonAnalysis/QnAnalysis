@@ -78,7 +78,7 @@ hades_analysis:
 #        - *axis_protons_eta
       cuts:
         mdc_vtx_tracks_extra/chi2: {range: [0.0, 100.0]}
-        mdc_vtx_tracks_extra/is_in_protons_acceptance: {equals: 1}
+#        mdc_vtx_tracks_extra/is_in_protons_acceptance: {equals: 1}
 #      charge-cuts:
 #        mdc_vtx_tracks_extra/is_positive: {equals: 1}
       qa:
