@@ -20,6 +20,7 @@ add_executable(QnAnalysisObservables na61.cpp )
 target_link_libraries(QnAnalysisObservables PUBLIC
         QnToolsBase
         QnToolsExtension
+        gse
         ${ROOT_LIBRARIES}
         ${Boost_LIBRARIES}
         QnAnalysisTools

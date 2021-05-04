@@ -958,7 +958,7 @@ int main() {
 
   {
     /* v1 (y,Pt) Multigraphs */
-    ::Tools::ToRoot<TMultiGraph> root_saver("multigraphs_pt.root", "UPDATE");
+    ::Tools::ToRoot<TList> root_saver("multigraphs_pt.root", "UPDATE");
     gResourceManager
         .ForEach(
             [&root_saver, &v1_reco_centrality_feature_set](const StringKey &key, ResourceManager::Resource &resource) {
@@ -978,8 +978,8 @@ int main() {
                 );
               }
               syst_data.AddSystematicSource("reference");
-//              auto multigraph = Qn::ToTMultiGraph(data, "pT");
-//              root_saver.operator()(key, *multigraph);
+              auto graph_list = Qn::ToGSE2D(syst_data, "pT");
+              root_saver.operator()(key, *graph_list);
             },
             META["type"] == "v1_centrality" &&
                 META["v1.axis"] == "2d" &&

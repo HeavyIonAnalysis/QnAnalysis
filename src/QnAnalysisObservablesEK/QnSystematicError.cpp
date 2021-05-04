@@ -53,7 +53,7 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data) {
     return nullptr;
   }
 
-  auto graph = new GraphSysErr;
+  auto graph = new GraphSysErr(data.size());
 
   std::map<int, int> systematic_id_map;
   for (auto &systematic_source_name : data.GetSystematicSources()) {
@@ -61,6 +61,7 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data) {
     auto graph_error_id = graph->DeclarePoint2Point(systematic_source_name.c_str(), false);
     systematic_id_map.emplace(data_error_id, graph_error_id);
   }
+
 
   unsigned int ibin = 0;
   for (const auto &bin : data) {
@@ -75,17 +76,39 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data) {
     auto xhalfwidth = (xhi - xlo)/2.;
     auto x = xlo + xhalfwidth;
 
-    auto graph_point_id = graph->GetN();
+    const auto graph_point_id = graph->GetN();
     graph->SetPoint(graph_point_id, x, y);
     graph->SetStatError(graph_point_id, ey_stat);
-
     for (auto &stat_source_element : systematic_id_map) {
       const auto data_error_id = stat_source_element.first;
       const auto graph_error_id = stat_source_element.second;
       graph->SetSysError(graph_error_id, graph_point_id, 0., bin.GetSystematicalError(data_error_id));
     }
-
     ibin++;
   }
   return graph;
+}
+
+TList *Qn::ToGSE2D(const Qn::DataContainerSystematicError &data, const std::string& projection_axis_name) {
+  if (data.GetAxes().size() != 2) {
+    std::cout << "N(dim) != 2 " << std::endl;
+    return nullptr;
+  }
+
+  auto result = new TList;
+  result->SetOwner();
+
+  auto projection_axis = data.GetAxis(projection_axis_name);
+  for (decltype(projection_axis.GetNBins()) ibin = 0; ibin < projection_axis.GetNBins(); ++ibin) {
+    double bin_lo = projection_axis.GetLowerBinEdge(ibin);
+    double bin_hi = projection_axis.GetUpperBinEdge(ibin);
+    auto axis_to_select = Qn::AxisD(projection_axis_name, 1 ,bin_lo, bin_hi);
+    auto data_selected = data.Select(axis_to_select);
+    auto graph_selected = Qn::ToGSE(DataContainerSystematicError(data_selected));
+    graph_selected->SetName(Form("%s__%.2f_%.2f", projection_axis_name.c_str(), bin_lo, bin_hi));
+    graph_selected->SetTitle(Form("%s #in (%.2f, %.2f)", projection_axis_name.c_str(), bin_lo, bin_hi));
+    result->Add(graph_selected);
+  }
+
+  return result;
 }
