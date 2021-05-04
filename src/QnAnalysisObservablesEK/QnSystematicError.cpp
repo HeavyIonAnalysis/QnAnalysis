@@ -44,7 +44,9 @@ int Qn::DataContainerSystematicError::GetSystematicSourceId(const std::string &n
   return systematic_sources_ids.at(name);
 }
 
-GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data) {
+GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data,
+                       float error_x_scaling,
+                       double x_shift) {
   if (data.GetAxes().size() > 1) {
     std::cout << "Data container has more than one dimension. " << std::endl;
     std::cout
@@ -97,15 +99,16 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data) {
     auto xhi = data.GetAxes().front().GetUpperBinEdge(ibin);
     auto xlo = data.GetAxes().front().GetLowerBinEdge(ibin);
     auto xhalfwidth = (xhi - xlo)/2.;
-    auto x = xlo + xhalfwidth;
+    auto x = xlo + xhalfwidth + x_shift;
 
     graph->SetPoint(igraph, x, y);
+    graph->SetPointError(igraph, error_x_scaling*xhalfwidth);
     graph->SetStatError(igraph, ey_stat);
     for (auto &stat_source_element : systematic_id_map) {
       const auto data_error_id = stat_source_element.first;
       const auto pp_id = stat_source_element.second;
       const auto error = bin.GetSystematicalError(data_error_id);
-      graph->SetSysError(pp_id, igraph, xhalfwidth, error);
+      graph->SetSysError(pp_id, igraph, 0., error);
     }
     ibin++;
     igraph++;
@@ -113,7 +116,9 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data) {
   return graph;
 }
 
-TList *Qn::ToGSE2D(const Qn::DataContainerSystematicError &data, const std::string& projection_axis_name) {
+TList *Qn::ToGSE2D(const Qn::DataContainerSystematicError &data,
+                   const std::string& projection_axis_name,
+                   double x_shift) {
   if (data.GetAxes().size() != 2) {
     std::cout << "N(dim) != 2 " << std::endl;
     return nullptr;
@@ -121,6 +126,7 @@ TList *Qn::ToGSE2D(const Qn::DataContainerSystematicError &data, const std::stri
 
   auto result = new TList;
   result->SetOwner();
+
 
   auto projection_axis = data.GetAxis(projection_axis_name);
   for (decltype(projection_axis.GetNBins()) ibin = 0; ibin < projection_axis.GetNBins(); ++ibin) {
@@ -130,7 +136,7 @@ TList *Qn::ToGSE2D(const Qn::DataContainerSystematicError &data, const std::stri
     auto data_selected = DataContainerSystematicError(data.Select(axis_to_select));
     data_selected.CopySourcesInfo(data);
 
-    auto graph_selected = Qn::ToGSE(data_selected);
+    auto graph_selected = Qn::ToGSE(data_selected, 0., ibin*x_shift);
     graph_selected->SetName(Form("%s__%.2f_%.2f", projection_axis_name.c_str(), bin_lo, bin_hi));
     graph_selected->SetTitle(Form("%s #in (%.2f, %.2f)", projection_axis_name.c_str(), bin_lo, bin_hi));
     result->Add(graph_selected);

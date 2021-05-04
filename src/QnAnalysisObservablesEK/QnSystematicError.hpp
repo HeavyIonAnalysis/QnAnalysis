@@ -96,9 +96,13 @@ class DataContainerSystematicError : public DataContainer<SystematicError> {
 
 };
 
-GraphSysErr *ToGSE(const DataContainerSystematicError& data);
+GraphSysErr *ToGSE(const DataContainerSystematicError& data,
+                   float error_x_scaling = 0.1,
+                   double x_shift = 0.0);
 
-TList *ToGSE2D(const DataContainerSystematicError& data, const std::string& projection_axis_name);
+TList *ToGSE2D(const DataContainerSystematicError& data,
+               const std::string& projection_axis_name,
+               double x_shift = 0.0);
 
 
 } // namespace Qn
