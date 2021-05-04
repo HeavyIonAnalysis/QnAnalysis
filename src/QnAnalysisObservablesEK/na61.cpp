@@ -969,7 +969,7 @@ int main() {
                 auto fs_reference = fs(resource);
                 gResourceManager.ForEach(
                     [&fs, &fs_reference,& syst_data](const StringKey &key,
-                                         ResourceManager::Resource &component) {
+                                                     ResourceManager::Resource &component) {
                       if (fs(component) != fs_reference) return;
                       syst_data.AddSystematicVariation("component", component.As<DTCalc>());
                     },
@@ -977,7 +977,17 @@ int main() {
                         (META["v1.component"] == "x1x1" || META["v1.component"] == "y1y1")
                 );
               }
-//              syst_data.AddSystematicSource("reference");
+              {
+                syst_data.AddSystematicSource("psd_reference");
+                auto fs = v1_reco_centrality_feature_set - "v1.ref";
+                auto fs_reference = fs(resource);
+                gResourceManager.ForEach(
+                    [&fs, &fs_reference, &syst_data] (const StringKey& key, ResourceManager::Resource& psd_ref) {
+                      if (fs(psd_ref) != fs_reference) return;
+                      syst_data.AddSystematicVariation("psd_reference", psd_ref.As<DTCalc>());
+                    }, META["type"] == "v1_centrality" && META["v1.ref"].Matches("psd[0-9]"));
+              }
+//
               auto graph_list = Qn::ToGSE2D(syst_data, "pT");
               root_saver.operator()(key, *graph_list);
             },
@@ -1372,8 +1382,8 @@ int main() {
                    }
 
                    if (n_set_points > 0) {
-//                     slope_graph->Sort();
-//                     offset_graph->Sort();
+                     slope_graph->Sort();
+                     offset_graph->Sort();
 
                      ResourceManager::Resource resource_slope(*slope_graph, {});
                      resource_slope.meta.put("type", "v1_slope");

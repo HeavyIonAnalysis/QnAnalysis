@@ -53,6 +53,10 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data) {
     return nullptr;
   }
 
+  const std::vector<short> def_color_palette = {
+      kRed - 7, kBlue - 8, kCyan -2, kGreen - 1, kOrange + 6, kViolet -5
+  };
+
   auto n_points =
       std::count_if(data.begin(), data.end(), [] (const SystematicError& bin_err) { return bin_err.SumWeights() > 0; });
 
@@ -65,18 +69,20 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data) {
     systematic_id_map.emplace(data_error_id, pp_id);
   }
 
-  // Draw data with-out ticks
-  graph->SetDataOption(GraphSysErr::kNoTick);
+  graph->SetDataOption(GraphSysErr::kNormal);
 
   graph->SetSumLineColor(kRed+2);
   graph->SetSumLineWidth(2);
   graph->SetSumTitle("All errors");
   graph->SetSumOption(GraphSysErr::kHat);
 
+  int ipalette = 0;
   for (auto &sys_errors : systematic_id_map) {
     auto pp_id = sys_errors.second;
-    graph->SetSysOption(pp_id, GraphSysErr::kBox);
-    graph->SetSysFillColor(pp_id, kRed - 7);
+    graph->SetSysOption(pp_id, GraphSysErr::kFill);
+    graph->SetSysFillStyle(pp_id, 1001);
+    graph->SetSysFillColor(pp_id, def_color_palette.at(ipalette % def_color_palette.size()));
+    ipalette++;
   }
 
   unsigned int ibin = 0;
@@ -99,7 +105,7 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data) {
       const auto data_error_id = stat_source_element.first;
       const auto pp_id = stat_source_element.second;
       const auto error = bin.GetSystematicalError(data_error_id);
-      graph->SetSysError(pp_id, igraph, 0., error);
+      graph->SetSysError(pp_id, igraph, xhalfwidth, error);
     }
     ibin++;
     igraph++;
