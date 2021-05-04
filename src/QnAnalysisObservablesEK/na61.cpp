@@ -88,7 +88,6 @@ ToTMultiGraph(const Qn::DataContainerStatCalculate &data, const std::string &pro
   return result;
 }
 
-
 } // namespace Qn
 
 namespace Details {
@@ -203,8 +202,6 @@ int main() {
   using Meta = ResourceManager::MetaType;
 
   using Tmpltor = ::Predicates::MetaTemplateGenerator;
-
-  Qn::DataContainerSystematicError err;
 
   TFile f("correlation.root", "READ");
   LoadROOTFile<DTColl>(f.GetName(), "raw");
@@ -957,6 +954,37 @@ int main() {
             },
             META["type"] == "v1_centrality" &&
                 META["v1.axis"] == "2d");
+  }
+
+  {
+    /* v1 (y,Pt) Multigraphs */
+    ::Tools::ToRoot<TMultiGraph> root_saver("multigraphs_pt.root", "UPDATE");
+    gResourceManager
+        .ForEach(
+            [&root_saver, &v1_reco_centrality_feature_set](const StringKey &key, ResourceManager::Resource &resource) {
+              auto syst_data = Qn::DataContainerSystematicError(resource.As<DTCalc>());
+              {
+                syst_data.AddSystematicSource("component");
+                auto fs = v1_reco_centrality_feature_set - "v1.component";
+                auto fs_reference = fs(resource);
+                gResourceManager.ForEach(
+                    [&fs, &fs_reference,& syst_data](const StringKey &key,
+                                         ResourceManager::Resource &component) {
+                      if (fs(component) != fs_reference) return;
+                      syst_data.AddSystematicVariation("component", component.As<DTCalc>());
+                    },
+                    META["type"] == "v1_centrality" &&
+                        (META["v1.component"] == "x1x1" || META["v1.component"] == "y1y1")
+                );
+              }
+              syst_data.AddSystematicSource("reference");
+//              auto multigraph = Qn::ToTMultiGraph(data, "pT");
+//              root_saver.operator()(key, *multigraph);
+            },
+            META["type"] == "v1_centrality" &&
+                META["v1.axis"] == "2d" &&
+                META["v1.component"] == "combined" &&
+                META["v1.ref"] == "combined");
   }
 
   /*********** v1 systematics (component) ********************/
