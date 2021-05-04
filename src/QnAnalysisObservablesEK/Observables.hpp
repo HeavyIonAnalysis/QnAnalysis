@@ -10,5 +10,6 @@
 #include "Predicates.hpp"
 #include "Tools.hpp"
 #include "Methods.hpp"
+#include "QnSystematicError.hpp"
 
 #endif //QNANALYSIS_SRC_QNANALYSISOBSERVABLES_OBSERVABLES_HPP

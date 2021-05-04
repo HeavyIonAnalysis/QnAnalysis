@@ -31,16 +31,17 @@
 namespace Qn {
 
 inline
-TGraph2DErrors *ToTGraph2D(const Qn::DataContainerStatCalculate &data, double min_sumw = 1e3) {
+TGraph2DErrors *
+ToTGraph2D(const Qn::DataContainerStatCalculate &data, double min_sumw = 1e3) {
   if (data.GetAxes().size() != 2) {
-    std::cout << "Data container different from 2 dimension. " << std::endl;
+    std::cout << "Data container different from 2 dimensions. " << std::endl;
     return nullptr;
   }
 
   auto graph_2d = new TGraph2DErrors;
   int ibin = 0;
   for (const auto &bin : data) {
-    if (bin.SumWeights() < min_sumw){
+    if (bin.SumWeights() < min_sumw) {
       ibin++;
       continue;
     }
@@ -53,13 +54,42 @@ TGraph2DErrors *ToTGraph2D(const Qn::DataContainerStatCalculate &data, double mi
       return 0.5 * (xlo + xhi);
     };
     graph_2d->SetPoint(graph_2d->GetN(), get_bin_center(0), get_bin_center(1), z);
-    graph_2d->SetPointError(graph_2d->GetN() - 1 , 0., 0., ez);
+    graph_2d->SetPointError(graph_2d->GetN() - 1, 0., 0., ez);
     ibin++;
   }
   return graph_2d;
-}
 
 }
+
+inline
+TMultiGraph *
+ToTMultiGraph(const Qn::DataContainerStatCalculate &data, const std::string &projection_axis_name = "") {
+  if (data.GetAxes().size() != 2) {
+    std::cout << "N(dim) != 2 " << std::endl;
+    return nullptr;
+  }
+
+  auto result = new TMultiGraph;
+  auto projection_axis = data.GetAxis(projection_axis_name);
+  for (decltype(projection_axis.GetNBins()) ibin = 0; ibin < projection_axis.GetNBins(); ++ibin) {
+    auto axis_to_select = Qn::AxisD(projection_axis_name, 1,
+                                    projection_axis.GetLowerBinEdge(ibin),
+                                    projection_axis.GetUpperBinEdge(ibin));
+    auto data_selected = data.Select(axis_to_select);
+    auto graph_selected = Qn::ToTGraph(data_selected);
+
+    graph_selected->SetTitle(Form("%s #in (%.2f, %.2f)",
+                                  projection_axis_name.c_str(),
+                                  projection_axis.GetLowerBinEdge(ibin),
+                                  projection_axis.GetUpperBinEdge(ibin)));
+    result->Add(graph_selected, "lp");
+  }
+
+  return result;
+}
+
+
+} // namespace Qn
 
 namespace Details {
 
@@ -174,7 +204,7 @@ int main() {
 
   using Tmpltor = ::Predicates::MetaTemplateGenerator;
 
-
+  Qn::DataContainerSystematicError err;
 
   TFile f("correlation.root", "READ");
   LoadROOTFile<DTColl>(f.GetName(), "raw");
@@ -885,6 +915,7 @@ int main() {
               }
 
             }
+
             VectorKey new_key(key.begin(), key.end());
             new_key.insert(new_key.begin(), "profiles");
             auto meta = resource.meta;
@@ -900,6 +931,33 @@ int main() {
           META["type"] == "v1_centrality" ||
               META["type"] == "c1_centrality");
 
+  {
+    /* v1 (pT,y) Multigraphs */
+    ::Tools::ToRoot<TMultiGraph> root_saver("multigraphs.root", "RECREATE");
+    gResourceManager
+        .ForEach(
+            [&root_saver](const StringKey &key, ResourceManager::Resource &resource) {
+              auto &data = resource.As<DTCalc>();
+              auto multigraph = Qn::ToTMultiGraph(data, "y_cm");
+              root_saver.operator()(key, *multigraph);
+            },
+            META["type"] == "v1_centrality" &&
+                META["v1.axis"] == "2d");
+  }
+
+  {
+    /* v1 (y,Pt) Multigraphs */
+    ::Tools::ToRoot<TMultiGraph> root_saver("multigraphs_pt.root", "RECREATE");
+    gResourceManager
+        .ForEach(
+            [&root_saver](const StringKey &key, ResourceManager::Resource &resource) {
+              auto &data = resource.As<DTCalc>();
+              auto multigraph = Qn::ToTMultiGraph(data, "pT");
+              root_saver.operator()(key, *multigraph);
+            },
+            META["type"] == "v1_centrality" &&
+                META["v1.axis"] == "2d");
+  }
 
   /*********** v1 systematics (component) ********************/
   {
@@ -1020,7 +1078,7 @@ int main() {
 
             },
             META["type"] == "v1_centrality" &&
-            (META["v1.axis"] == "y" || META["v1.axis"] == "pt") &&
+                (META["v1.axis"] == "y" || META["v1.axis"] == "pt") &&
 //                META["centrality.no"] == "2" &&
                 META["v1.ref"] == "combined");
   }
