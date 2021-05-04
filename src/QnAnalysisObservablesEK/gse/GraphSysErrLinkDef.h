@@ -9,5 +9,8 @@
 #pragma link off all functions;
 
 #pragma link C++ class GraphSysErr +;
+#pragma link C++ class GraphSysErr::Holder +;
+#pragma link C++ class GraphSysErr::HolderCommon +;
+#pragma link C++ class GraphSysErr::HolderP2P +;
 
 #endif
