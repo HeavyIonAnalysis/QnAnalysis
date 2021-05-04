@@ -53,17 +53,34 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data) {
     return nullptr;
   }
 
-  auto graph = new GraphSysErr(data.size());
+  auto n_points =
+      std::count_if(data.begin(), data.end(), [] (const SystematicError& bin_err) { return bin_err.SumWeights() > 0; });
+
+  auto graph = new GraphSysErr(n_points);
 
   std::map<int, int> systematic_id_map;
   for (auto &systematic_source_name : data.GetSystematicSources()) {
     auto data_error_id = data.GetSystematicSourceId(systematic_source_name);
-    auto graph_error_id = graph->DeclarePoint2Point(systematic_source_name.c_str(), false);
-    systematic_id_map.emplace(data_error_id, graph_error_id);
+    auto pp_id = graph->DeclarePoint2Point(systematic_source_name.c_str(), false);
+    systematic_id_map.emplace(data_error_id, pp_id);
   }
 
+  // Draw data with-out ticks
+  graph->SetDataOption(GraphSysErr::kNoTick);
+
+  graph->SetSumLineColor(kRed+2);
+  graph->SetSumLineWidth(2);
+  graph->SetSumTitle("All errors");
+  graph->SetSumOption(GraphSysErr::kHat);
+
+  for (auto &sys_errors : systematic_id_map) {
+    auto pp_id = sys_errors.second;
+    graph->SetSysOption(pp_id, GraphSysErr::kBox);
+    graph->SetSysFillColor(pp_id, kRed - 7);
+  }
 
   unsigned int ibin = 0;
+  unsigned int igraph = 0;
   for (const auto &bin : data) {
     if (bin.SumWeights() <= 0) {
       ibin++;
@@ -76,15 +93,16 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data) {
     auto xhalfwidth = (xhi - xlo)/2.;
     auto x = xlo + xhalfwidth;
 
-    const auto graph_point_id = graph->GetN();
-    graph->SetPoint(graph_point_id, x, y);
-    graph->SetStatError(graph_point_id, ey_stat);
+    graph->SetPoint(igraph, x, y);
+    graph->SetStatError(igraph, ey_stat);
     for (auto &stat_source_element : systematic_id_map) {
       const auto data_error_id = stat_source_element.first;
-      const auto graph_error_id = stat_source_element.second;
-      graph->SetSysError(graph_error_id, graph_point_id, 0., bin.GetSystematicalError(data_error_id));
+      const auto pp_id = stat_source_element.second;
+      const auto error = bin.GetSystematicalError(data_error_id);
+      graph->SetSysError(pp_id, igraph, 0., error);
     }
     ibin++;
+    igraph++;
   }
   return graph;
 }
@@ -103,8 +121,10 @@ TList *Qn::ToGSE2D(const Qn::DataContainerSystematicError &data, const std::stri
     double bin_lo = projection_axis.GetLowerBinEdge(ibin);
     double bin_hi = projection_axis.GetUpperBinEdge(ibin);
     auto axis_to_select = Qn::AxisD(projection_axis_name, 1 ,bin_lo, bin_hi);
-    auto data_selected = data.Select(axis_to_select);
-    auto graph_selected = Qn::ToGSE(DataContainerSystematicError(data_selected));
+    auto data_selected = DataContainerSystematicError(data.Select(axis_to_select));
+    data_selected.CopySourcesInfo(data);
+
+    auto graph_selected = Qn::ToGSE(data_selected);
     graph_selected->SetName(Form("%s__%.2f_%.2f", projection_axis_name.c_str(), bin_lo, bin_hi));
     graph_selected->SetTitle(Form("%s #in (%.2f, %.2f)", projection_axis_name.c_str(), bin_lo, bin_hi));
     result->Add(graph_selected);

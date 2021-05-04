@@ -41,7 +41,9 @@ class SystematicError {
   }
   double GetSystematicalError(int id) const {
     auto &means = variations_means.at(id);
-    return *max(begin(means), end(means)) - *min(begin(means), end(means));
+    auto val_max = *max_element(begin(means), end(means));
+    auto val_min = *min_element(begin(means), end(means));
+    return val_max - val_min;
   }
   double GetSystematicalError() const {
     auto sigma2 = 0.0;
@@ -75,6 +77,8 @@ class DataContainerSystematicError : public DataContainer<SystematicError> {
  public:
   template <typename T>
   explicit DataContainerSystematicError(DataContainer<T>& other) : DataContainer<SystematicError>(other) {}
+  template<typename T>
+  explicit DataContainerSystematicError(DataContainer<T>&&other) : DataContainer<SystematicError>(other) {}
 
   void AddSystematicSource(const std::string& name);
 
@@ -82,6 +86,10 @@ class DataContainerSystematicError : public DataContainer<SystematicError> {
 
   std::vector<std::string> GetSystematicSources() const;
   int GetSystematicSourceId(const std::string &name) const;
+
+  void CopySourcesInfo(const DataContainerSystematicError& other) {
+    this->systematic_sources_ids = other.systematic_sources_ids;
+  }
 
  private:
   std::map<std::string, int> systematic_sources_ids;

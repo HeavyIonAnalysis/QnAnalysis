@@ -977,7 +977,7 @@ int main() {
                         (META["v1.component"] == "x1x1" || META["v1.component"] == "y1y1")
                 );
               }
-              syst_data.AddSystematicSource("reference");
+//              syst_data.AddSystematicSource("reference");
               auto graph_list = Qn::ToGSE2D(syst_data, "pT");
               root_saver.operator()(key, *graph_list);
             },
