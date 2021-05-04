@@ -46,7 +46,8 @@ int Qn::DataContainerSystematicError::GetSystematicSourceId(const std::string &n
 
 GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data,
                        float error_x_scaling,
-                       double x_shift) {
+                       double x_shift,
+                       double min_sumw) {
   if (data.GetAxes().size() > 1) {
     std::cout << "Data container has more than one dimension. " << std::endl;
     std::cout
@@ -60,7 +61,8 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data,
   };
 
   auto n_points =
-      std::count_if(data.begin(), data.end(), [] (const SystematicError& bin_err) { return bin_err.SumWeights() > 0; });
+      std::count_if(data.begin(), data.end(),
+                    [min_sumw] (const SystematicError& bin_err) { return bin_err.SumWeights() >= min_sumw; });
 
   auto graph = new GraphSysErr(n_points);
 
@@ -90,7 +92,7 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data,
   unsigned int ibin = 0;
   unsigned int igraph = 0;
   for (const auto &bin : data) {
-    if (bin.SumWeights() <= 0) {
+    if (bin.SumWeights() < min_sumw) {
       ibin++;
       continue;
     }
@@ -118,7 +120,8 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data,
 
 TList *Qn::ToGSE2D(const Qn::DataContainerSystematicError &data,
                    const std::string& projection_axis_name,
-                   double x_shift) {
+                   double x_shift,
+                   double min_sumw) {
   if (data.GetAxes().size() != 2) {
     std::cout << "N(dim) != 2 " << std::endl;
     return nullptr;
@@ -136,7 +139,7 @@ TList *Qn::ToGSE2D(const Qn::DataContainerSystematicError &data,
     auto data_selected = DataContainerSystematicError(data.Select(axis_to_select));
     data_selected.CopySourcesInfo(data);
 
-    auto graph_selected = Qn::ToGSE(data_selected, 0., ibin*x_shift);
+    auto graph_selected = Qn::ToGSE(data_selected, 0., ibin*x_shift, min_sumw);
     graph_selected->SetName(Form("%s__%.2f_%.2f", projection_axis_name.c_str(), bin_lo, bin_hi));
     graph_selected->SetTitle(Form("%s #in (%.2f, %.2f)", projection_axis_name.c_str(), bin_lo, bin_hi));
     result->Add(graph_selected);

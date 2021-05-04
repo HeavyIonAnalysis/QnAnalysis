@@ -988,27 +988,33 @@ int main() {
                     }, META["type"] == "v1_centrality" && META["v1.ref"].Matches("psd[0-9]"));
               }
 
+              const std::vector<Color_t> rainbow_palette = {
+                  kRed + 3,
+                  kRed,
+                  kOrange + 7,
+                  kOrange,
+                  kSpring + 9,
+                  kGreen + 1,
+                  kGreen + 4,
+                  kTeal - 1,
+                  kCyan + 3,
+                  kBlue,
+                  kBlue + 3,
+                  kMagenta,
+                  kMagenta + 3,
+                  kGray + 1,
+                  kYellow -2,
+              };
+
+              /* pT scan, STAT + SYSTEMATIC */
               {
-                auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.01);
-                const std::vector<Color_t> main_palette = {
-                    kRed + 3,
-                    kRed,
-                    kOrange + 7,
-                    kOrange,
-                    kGreen + 2,
-                    kTeal,
-                    kCyan + 3,
-                    kBlue,
-                    kBlue + 3,
-                    kMagenta,
-                    kMagenta + 3
-                };
+                auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.01, 1e3);
                 TMultiGraph mg_pt_scan;
-                int i_plot = 0;
+                int i_slice = 0;
                 for (auto obj : *graph_list) {
                   auto *gse = (GraphSysErr *) obj;
 
-                  auto primary_color = main_palette.at(i_plot % size(main_palette));
+                  auto primary_color = rainbow_palette.at(i_slice % size(rainbow_palette));
                   gse->SetDataOption(GraphSysErr::kNone);
                   gse->SetLineColor(primary_color);
                   gse->SetMarkerColor(primary_color);
@@ -1018,20 +1024,70 @@ int main() {
                   gse->SetSumLineColor(primary_color);
 
                   auto multi = gse->GetMulti("COMBINED STAT QUAD MAX");
-                  mg_pt_scan.Add(multi);
-                  i_plot++;
+                  if (multi) {
+                    mg_pt_scan.Add(multi);
+                  }
+                  i_slice++;
                 }
+                mg_pt_scan.GetXaxis()->SetTitle("#it{y}_{CM}");
+                mg_pt_scan.GetYaxis()->SetTitle("v_{1}");
                 root_saver.operator()(BASE_OF(KEY)(resource) + "/stat_syst_combined", mg_pt_scan);
               }
 
+              /* pT scan, differenct contributions */
               {
-                auto graph_list = Qn::ToGSE2D(syst_data, "pT");
+                auto graph_list = Qn::ToGSE2D(syst_data, "pT", 1e3);
 
                 for (auto obj : *graph_list) {
                   auto *gse = (GraphSysErr *) obj;
-
                   auto multi = gse->GetMulti("STACK MIN");
-                  root_saver.operator()(BASE_OF(KEY)(resource) + "/" + gse->GetName(), *multi);
+                  if (multi) {
+                    multi->GetXaxis()->SetTitle("#it{y}_{CM}");
+                    multi->GetYaxis()->SetTitle("v_{1}");
+                    root_saver.operator()(BASE_OF(KEY)(resource) + "/" + gse->GetName(), *multi);
+                  }
+                }
+              }
+
+              /* Y scan, STAT + SYSTEMATIC */
+              {
+                auto graph_list = Qn::ToGSE2D(syst_data, "y_cm", 0.01, 1e3);
+                TMultiGraph mg_y_scan;
+                int i_slice = 0;
+                for (auto obj : *graph_list) {
+                  auto *gse = (GraphSysErr *) obj;
+
+                  auto primary_color = rainbow_palette.at(i_slice % size(rainbow_palette));
+                  gse->SetDataOption(GraphSysErr::kNone);
+                  gse->SetLineColor(primary_color);
+                  gse->SetMarkerColor(primary_color);
+                  gse->SetMarkerStyle(kFullCircle);
+
+                  gse->SetSumOption(GraphSysErr::kNoTick);
+                  gse->SetSumLineColor(primary_color);
+
+                  auto multi = gse->GetMulti("COMBINED STAT QUAD MAX");
+                  if (multi) {
+                    mg_y_scan.Add(multi);
+                  }
+                  i_slice++;
+                }
+                mg_y_scan.GetXaxis()->SetTitle("p_{T} (GeV/#it{c})");
+                mg_y_scan.GetYaxis()->SetTitle("v_{1}");
+                root_saver.operator()(BASE_OF(KEY)(resource) + "/v1_pt_stat_syst_combined", mg_y_scan);
+              }
+              /* Y scan, different contributions */
+              {
+                auto graph_list = Qn::ToGSE2D(syst_data, "y_cm", 0.0, 1e3);
+
+                for (auto obj : *graph_list) {
+                  auto *gse = (GraphSysErr *) obj;
+                  auto multi = gse->GetMulti("STACK MIN");
+                  if (multi) {
+                    multi->GetXaxis()->SetTitle("p_{T} (GeV/#it{c})");
+                    multi->GetYaxis()->SetTitle("v_{1}");
+                    root_saver.operator()(BASE_OF(KEY)(resource) + "/" + gse->GetName(), *multi);
+                  }
                 }
               }
             },
