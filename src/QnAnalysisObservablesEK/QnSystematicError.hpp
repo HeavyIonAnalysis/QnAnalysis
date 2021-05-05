@@ -43,10 +43,10 @@ class SystematicError {
     auto &means = variations_means.at(id);
     auto val_max = *max_element(begin(means), end(means));
     auto val_min = *min_element(begin(means), end(means));
-    return val_max - val_min;
+    return 0.5*(val_max - val_min);
   }
   double GetSystematicalError() const {
-    auto sigma2 = 0.0;
+    double sigma2 = 0.0;
     for (auto &syst_source_element : variations_means) {
       auto syst_source_id = syst_source_element.first;
       auto source_sigma = GetSystematicalError(syst_source_id);
@@ -106,11 +106,16 @@ SystematicError operator*(const SystematicError &operand, double scale);
 SystematicError operator*(double operand, const SystematicError &rhs);
 
 
-GraphSysErr *ToGSE(const Qn::DataContainerSystematicError &data, float error_x = .0f, double min_sumw = 1.);
+GraphSysErr *ToGSE(
+    const Qn::DataContainerSystematicError &data,
+    float error_x = .0f,
+    double min_sumw = 1.,
+    double max_sys_error = 0.0);
 TList *ToGSE2D(const DataContainerSystematicError& data,
                const std::string& projection_axis_name,
                float error_x = 1.0,
-               double min_sumw = 1.0);
+               double min_sumw = 1.0,
+               double max_sys_error = 0.0);
 
 
 } // namespace Qn

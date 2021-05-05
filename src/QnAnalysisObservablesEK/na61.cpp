@@ -958,7 +958,7 @@ int main() {
 
   {
     /* v1 (y,Pt) Multigraphs */
-    ::Tools::ToRoot<TMultiGraph> root_saver("multigraphs_pt.root", "UPDATE");
+    ::Tools::ToRoot<TMultiGraph> root_saver("v1_multigraph.root", "RECREATE");
     gResourceManager
         .ForEach(
             [&root_saver, &v1_reco_centrality_feature_set](const StringKey &key, ResourceManager::Resource &resource) {
@@ -991,7 +991,7 @@ int main() {
 
               /* pT scan, STAT + SYSTEMATIC */
               {
-                auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.005, 1e3);
+                auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.005, 1e3, 0.2);
                 TMultiGraph mg_pt_scan;
                 int i_slice = 0;
                 for (auto obj : *graph_list) {
@@ -1010,14 +1010,14 @@ int main() {
 
                   auto multi = gse->GetMulti("COMBINED QUAD");
                   if (multi) {
-                    ::Tools::GraphShiftX(multi, i_slice*0.015f);
+                    ::Tools::GraphShiftX(multi, i_slice*0.010f);
                     mg_pt_scan.Add(multi);
                   }
                   i_slice++;
                 }
                 mg_pt_scan.GetXaxis()->SetTitle("#it{y}_{CM}");
                 mg_pt_scan.GetYaxis()->SetTitle("v_{1}");
-                root_saver.operator()(BASE_OF(KEY)(resource) + "/stat_syst_combined", mg_pt_scan);
+                root_saver.operator()(BASE_OF(KEY)(resource) + "/v1_y", mg_pt_scan);
               }
 
               /* pT scan, different contributions */
@@ -1057,7 +1057,8 @@ int main() {
                   ibin++;
                 }
 
-                auto graph_list = Qn::ToGSE2D(syst_data_inverted, "y_cm", 0.005, 1e3);
+                auto graph_list = Qn::ToGSE2D(syst_data_inverted, "y_cm", 0.005,
+                                              1e3, 0.2);
                 TMultiGraph mg_y_scan;
                 int i_y_cm_slice = 0;
                 for (auto obj : *graph_list) {
@@ -1091,7 +1092,7 @@ int main() {
 
                   auto multi = gse->GetMulti("COMBINED QUAD");
                   if (multi) {
-                    ::Tools::GraphShiftX(multi, i_y_cm_slice*0.015f);
+                    ::Tools::GraphShiftX(multi, i_y_cm_slice*0.010f);
                     mg_y_scan.Add(multi);
                   }
 
@@ -1099,7 +1100,7 @@ int main() {
                 }
                 mg_y_scan.GetXaxis()->SetTitle("p_{T} (GeV/#it{c})");
                 mg_y_scan.GetYaxis()->SetTitle("v_{1}");
-                root_saver.operator()(BASE_OF(KEY)(resource) + "/v1_pt_stat_syst_combined", mg_y_scan);
+                root_saver.operator()(BASE_OF(KEY)(resource) + "/v1_pt  ", mg_y_scan);
               }
               /* Y scan, different contributions */
               {
