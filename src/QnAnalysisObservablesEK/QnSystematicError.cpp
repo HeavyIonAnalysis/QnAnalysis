@@ -147,3 +147,20 @@ TList *Qn::ToGSE2D(const Qn::DataContainerSystematicError &data,
 
   return result;
 }
+
+Qn::SystematicError Qn::operator*(const SystematicError &operand, double scale) {
+  SystematicError inverted;
+  inverted.mean = operand.mean * scale;
+  inverted.statistical_error = operand.statistical_error * TMath::Abs(scale);
+  inverted.sumw = operand.sumw;
+  inverted.variations_means = operand.variations_means;
+  for (auto &sys_error : inverted.variations_means) {
+    for (auto &value : sys_error.second) {
+      value *= scale;
+    }
+  }
+  return inverted;
+}
+Qn::SystematicError Qn::operator*(double operand, const Qn::SystematicError &rhs) {
+  return rhs * operand;
+}

@@ -64,14 +64,18 @@ class SystematicError {
     return mean;
   }
 
-
  private:
+  friend SystematicError operator*(const SystematicError &operand, double scale);
+  friend SystematicError operator*(double operand, const SystematicError &rhs);
+
   double mean;
   double statistical_error;
   double sumw;
   /* key = id of the systematic source, value = vector of value for given systematic source */
   std::map<int,std::vector<double>> variations_means;
 };
+
+
 
 class DataContainerSystematicError : public DataContainer<SystematicError> {
  public:
@@ -92,9 +96,15 @@ class DataContainerSystematicError : public DataContainer<SystematicError> {
   }
 
  private:
+
+
   std::map<std::string, int> systematic_sources_ids;
 
 };
+
+SystematicError operator*(const SystematicError &operand, double scale);
+SystematicError operator*(double operand, const SystematicError &rhs);
+
 
 GraphSysErr *ToGSE(const DataContainerSystematicError& data,
                    float error_x_scaling = 0.1,

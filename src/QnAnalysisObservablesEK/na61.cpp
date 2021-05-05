@@ -1051,17 +1051,51 @@ int main() {
 
               /* Y scan, STAT + SYSTEMATIC */
               {
-                auto graph_list = Qn::ToGSE2D(syst_data, "y_cm", 0.01, 1e3);
+                auto syst_data_inverted = syst_data;
+                int ibin = 0;
+                auto i_ax_y_cm = [&syst_data_inverted] () {
+                  auto &axes = syst_data_inverted.GetAxes();
+                  return std::distance(begin(axes), find_if(begin(axes), end(axes), [] (const Qn::AxisD& ax) {
+                    return ax.Name() == "y_cm";
+                  }));
+                }();
+                for (auto &bin : syst_data_inverted) {
+                  auto index = syst_data_inverted.GetIndex(ibin);
+                  auto i_y_cm = index.at(i_ax_y_cm);
+                  auto y_cm_lo = syst_data_inverted.GetAxes()[i_ax_y_cm].GetLowerBinEdge(i_y_cm);
+                  auto y_cm_up = syst_data_inverted.GetAxes()[i_ax_y_cm].GetUpperBinEdge(i_y_cm);
+                  auto y_cm_mid = 0.5*(y_cm_lo + y_cm_up);
+                  if (y_cm_mid < 0) {
+                    bin = bin * (-1.);
+                  }
+                }
+
+                auto graph_list = Qn::ToGSE2D(syst_data_inverted, "y_cm", 0.01, 1e3);
                 TMultiGraph mg_y_scan;
-                int i_slice = 0;
+                int i_y_cm_slice = 0;
                 for (auto obj : *graph_list) {
                   auto *gse = (GraphSysErr *) obj;
 
-                  auto primary_color = rainbow_palette.at(i_slice % size(rainbow_palette));
+                  bool is_backward = [&syst_data_inverted, &i_y_cm_slice] () {
+                    auto y_cm_lo = syst_data_inverted.GetAxis("y_cm").GetLowerBinEdge(i_y_cm_slice);
+                    auto y_cm_up = syst_data_inverted.GetAxis("y_cm").GetUpperBinEdge(i_y_cm_slice);
+                    auto y_cm_mid = 0.5*(y_cm_lo + y_cm_up);
+                    return y_cm_mid < 0;
+                  }();
+
+                  int i_abs_ycm = [&syst_data_inverted, &i_y_cm_slice] () {
+                    const auto &y_cm_axis = syst_data_inverted.GetAxis("y_cm");
+                    auto y_cm_lo = y_cm_axis.GetLowerBinEdge(i_y_cm_slice);
+                    auto y_cm_up = y_cm_axis.GetUpperBinEdge(i_y_cm_slice);
+                    auto y_cm_mid = 0.5*(y_cm_lo + y_cm_up);
+                    return y_cm_axis.FindBin(TMath::Abs(y_cm_mid)) - y_cm_axis.FindBin(0);
+                  }();
+
+                  auto primary_color = rainbow_palette.at(i_abs_ycm % size(rainbow_palette));
                   gse->SetDataOption(GraphSysErr::kNone);
                   gse->SetLineColor(primary_color);
                   gse->SetMarkerColor(primary_color);
-                  gse->SetMarkerStyle(kFullCircle);
+                  gse->SetMarkerStyle(is_backward? kOpenCircle : kFullCircle);
 
                   gse->SetSumOption(GraphSysErr::kNoTick);
                   gse->SetSumLineColor(primary_color);
@@ -1070,7 +1104,7 @@ int main() {
                   if (multi) {
                     mg_y_scan.Add(multi);
                   }
-                  i_slice++;
+                  i_y_cm_slice++;
                 }
                 mg_y_scan.GetXaxis()->SetTitle("p_{T} (GeV/#it{c})");
                 mg_y_scan.GetYaxis()->SetTitle("v_{1}");
