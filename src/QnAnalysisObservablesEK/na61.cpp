@@ -1018,9 +1018,9 @@ int main() {
                 root_saver.operator()(BASE_OF(KEY)(resource) + "/stat_syst_combined", mg_pt_scan);
               }
 
-              /* pT scan, differenct contributions */
+              /* pT scan, different contributions */
               {
-                auto graph_list = Qn::ToGSE2D(syst_data, "pT", 1e3);
+                auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.0, 1e3);
 
                 for (auto obj : *graph_list) {
                   auto *gse = (GraphSysErr *) obj;
@@ -1037,7 +1037,7 @@ int main() {
               {
                 auto syst_data_inverted = syst_data;
                 int ibin = 0;
-                auto i_ax_y_cm = [&syst_data_inverted] () {
+                const auto i_ax_y_cm = [&syst_data_inverted] () {
                   auto &axes = syst_data_inverted.GetAxes();
                   return std::distance(begin(axes), find_if(begin(axes), end(axes), [] (const Qn::AxisD& ax) {
                     return ax.Name() == "y_cm";
@@ -1052,6 +1052,7 @@ int main() {
                   if (y_cm_mid < 0) {
                     bin = bin * (-1.);
                   }
+                  ibin++;
                 }
 
                 auto graph_list = Qn::ToGSE2D(syst_data_inverted, "y_cm", 0.0, 1e3);
@@ -1458,8 +1459,8 @@ int main() {
   }
 
   {
-    float y_fit_lo = -0.6;
-    float y_fit_hi = 0.6;
+    float y_fit_lo = -0.4;
+    float y_fit_hi = 0.4;
     std::string base_dir = "dv1_dy";
     /* dv1/dy */
 //    TFile dv1dy_file("dv1dy.root", "recreate");
@@ -1484,7 +1485,7 @@ int main() {
                      // "Q" for quiet mode
                      // "F" for "If fitting a polN, use the minuit fitter"
                      // "N" for "Do not store the graphics function, do not draw"
-                     auto fit_result = v1_y_graph->Fit("pol1", "SQFNW", "", y_fit_lo, y_fit_hi);
+                     auto fit_result = v1_y_graph->Fit("pol1", "SQFN", "", y_fit_lo, y_fit_hi);
                      if (fit_result.Get() && fit_result->IsValid()) {
                        auto offset = fit_result->Value(0);
                        auto offset_erro = fit_result->Value(0);
