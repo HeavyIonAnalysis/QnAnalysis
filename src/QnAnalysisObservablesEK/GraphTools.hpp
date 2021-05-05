@@ -31,11 +31,11 @@ inline void GraphShiftX(TMultiGraph* multigraph, float shift_x) {
 inline
 std::vector<Color_t> GetRainbowPalette() {
   return {
-      kRed + 3,
-      kRed,
-      kOrange + 7,
-      kOrange,
-      kSpring + 9,
+      kRed + 4,
+      kRed + 1,
+      kOrange + 9,
+      kYellow +2,
+      kSpring + 3,
       kGreen + 1,
       kTeal - 1,
       kCyan + 3,
@@ -49,6 +49,26 @@ std::vector<Color_t> GetRainbowPalette() {
   };
 }
 
+inline
+std::vector<Color_t> GetRainbowPastelPalette() {
+  return {
+      kRed - 9,
+      kRed - 8,
+      kOrange + 6,
+      kOrange - 9,
+      kSpring + 7,
+      kGreen - 9,
+      kTeal - 9,
+      kCyan - 9,
+      kGreen - 8,
+      kBlue - 10,
+      kBlue - 9,
+      kMagenta - 9,
+      kMagenta - 6,
+      kGray,
+      kYellow - 9,
+  };
+}
 
 
 

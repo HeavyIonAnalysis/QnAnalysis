@@ -106,14 +106,10 @@ SystematicError operator*(const SystematicError &operand, double scale);
 SystematicError operator*(double operand, const SystematicError &rhs);
 
 
-GraphSysErr *ToGSE(const DataContainerSystematicError& data,
-                   float error_x_scaling = 0.1,
-                   double x_shift = 0.0,
-                   double min_sumw2 = 1.);
-
+GraphSysErr *ToGSE(const Qn::DataContainerSystematicError &data, float error_x = .0f, double min_sumw = 1.);
 TList *ToGSE2D(const DataContainerSystematicError& data,
                const std::string& projection_axis_name,
-               double x_shift = 0.0,
+               float error_x = 1.0,
                double min_sumw = 1.0);
 
 

@@ -35,7 +35,7 @@ std::vector<std::string> Qn::DataContainerSystematicError::GetSystematicSources(
   std::transform(
       ::std::begin(systematic_sources_ids),
       ::std::end(systematic_sources_ids),
-      ::std::back_inserter(result),
+      back_inserter(result),
       [] (const auto& entry) { return entry.first; });
   return result;
 }
@@ -44,10 +44,7 @@ int Qn::DataContainerSystematicError::GetSystematicSourceId(const std::string &n
   return systematic_sources_ids.at(name);
 }
 
-GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data,
-                       float error_x_scaling,
-                       double x_shift,
-                       double min_sumw) {
+GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data, float error_x, double min_sumw) {
   if (data.GetAxes().size() > 1) {
     std::cout << "Data container has more than one dimension. " << std::endl;
     std::cout
@@ -101,10 +98,10 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data,
     auto xhi = data.GetAxes().front().GetUpperBinEdge(ibin);
     auto xlo = data.GetAxes().front().GetLowerBinEdge(ibin);
     auto xhalfwidth = (xhi - xlo)/2.;
-    auto x = xlo + xhalfwidth + x_shift;
+    auto x = xlo + xhalfwidth;
 
     graph->SetPoint(igraph, x, y);
-    graph->SetPointError(igraph, error_x_scaling*xhalfwidth);
+    graph->SetPointError(igraph, error_x < 0? xhalfwidth : error_x);
     graph->SetStatError(igraph, ey_stat);
     for (auto &stat_source_element : systematic_id_map) {
       const auto data_error_id = stat_source_element.first;
@@ -120,7 +117,7 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data,
 
 TList *Qn::ToGSE2D(const Qn::DataContainerSystematicError &data,
                    const std::string& projection_axis_name,
-                   double x_shift,
+                   float error_x,
                    double min_sumw) {
   if (data.GetAxes().size() != 2) {
     std::cout << "N(dim) != 2 " << std::endl;
@@ -139,7 +136,7 @@ TList *Qn::ToGSE2D(const Qn::DataContainerSystematicError &data,
     auto data_selected = DataContainerSystematicError(data.Select(axis_to_select));
     data_selected.CopySourcesInfo(data);
 
-    auto graph_selected = Qn::ToGSE(data_selected, 0., ibin*x_shift, min_sumw);
+    auto graph_selected = Qn::ToGSE(data_selected, error_x, min_sumw);
     graph_selected->SetName(Form("%s__%.2f_%.2f", projection_axis_name.c_str(), bin_lo, bin_hi));
     graph_selected->SetTitle(Form("%s #in (%.2f, %.2f)", projection_axis_name.c_str(), bin_lo, bin_hi));
     result->Add(graph_selected);
