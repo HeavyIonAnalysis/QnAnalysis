@@ -1,0 +1,820 @@
+_layouts:
+  - &layout-na61-psd1
+    [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 ]
+  - &layout-na61-psd2
+    [ 16,17,18,19,20,21,22,23,24,25,26,27 ]
+  - &layout-na61-psd3
+    [ 28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43 ]
+
+reco_variables:
+  # Vtx Tracks (branch: RecParticles)
+  - &var-vtx-y-cm       RecParticles/y_cm
+  - &var-vtx-pt         RecParticles/pT
+  - &var-vtx-phi        RecParticles/phi
+  - &var-vtx-dcax       RecParticles/dcax
+  - &var-vtx-dcay       RecParticles/dcay
+  - &var-vtx-chi2-ndf       RecParticles/chi2_ndf
+  # Event variables
+  - &var-evt-centrality Centrality/Centrality_Epsd
+  - &var-evt-vtx-x      RecEventHeader/vtx_x
+  - &var-evt-vtx-y      RecEventHeader/vtx_y
+  - &var-evt-vtx-z      RecEventHeader/vtx_z
+  - &var-evt-e-psd      RecEventHeader/Epsd
+  - &var-evt-s1         RecEventHeader/s1
+  - &var-evt-s2         RecEventHeader/s2
+
+
+_commons:
+  - &common-pt-bin-edges [ 0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.8, 2.4, 3.0 ]
+  - &common-y-cm-bin-edges [ -0.6, -0.4, -0.2, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 2.0, 2.4 ]
+  # for pT distributions
+  # - &common-y-cm-correction-range [ 0., 1.0 ]
+  # due to non-uniform Phi anisotropy
+  - &common-y-cm-correction-range-pion-neg [ 0.000, 0.200, 0.500, 1.000 ]
+  - &common-y-cm-correction-range-protons [ 0.000, 0.200, 0.500 ]
+  # for y_cm distributions
+  # efficiency map for protons is defined in [0, 1.5] GeV
+  # +- uniform acceptance in the range 200-800 MeV
+  #  - &common-pt-correction-range-protons [ 0.200, 0.800 ]
+  # excluding spectators
+  #- &common-pt-correction-range-protons [ 0.400, 0.800 ]
+  # we can safely extend up pt range for protons since we don't actually loose acceptance
+  - &common-pt-correction-range-protons [ 0.400, 1.200 ]
+  #efficiency map for pions is defined in [0, 1] GeV
+  #- &common-pt-correction-range-pions [ 0.050, 0.800 ]
+  # gap doe to geometry pT < 150
+  # - &common-pt-correction-range-pion-neg [ 0.150, 0.800 ]
+  # we can safely extend up pt range for negative pions (as well) since we don't actually loose acceptance
+  - &common-pt-correction-range-pion-neg [ 0.150, 1.00 ]
+  - &common-correlation-centrality-bin-ranges [ 0., 5., 10., 15., 25., 35., 45., 60., 80., 100. ]
+
+_axes:
+  - &ax-pt-corr-protons { name: *var-vtx-pt, bin-edges: *common-pt-correction-range-protons }
+  - &ax-pt-corr-pion-neg { name: *var-vtx-pt, bin-edges: *common-pt-correction-range-pion-neg }
+
+
+setups-definitions:
+  # Preliminary 2019 (aka "preliminary")
+  # Quality cuts for vertex tracks preliminary
+  - &cuts-rec-particles-quality-preliminary
+    - { variable: RecParticles/nhits_total,      range: [ 30, 1000 ] }
+    - { variable: RecParticles/nhits_vtpc,       range: [ 10, 1000 ] }
+    - { variable: RecParticles/nhits_pot_total,  range: [ 1, 1000 ] }
+    - { variable: RecParticles/nhits_ratio,      range: [ 0.55, 1.1 ] }
+    - { variable: *var-vtx-dcax,                 range: [ -2., 2. ] }
+    - { variable: *var-vtx-dcay,                 range: [ -1., 1. ] }
+    - { variable: *var-vtx-chi2-ndf,                 range: [ 0., 10. ] }
+  ########################################################
+  # v1(pT) of PROTONS
+  ########################################################
+  # y-range for v1(pT) of protons
+  - &cuts-kinematics-protons-pt-preliminary
+    - { variable: *var-vtx-y-cm, range: [ 0., 1.2 ] }
+  # y-axis correction binning for v1(pT) of protons
+  - &ax-y-cm-correction-protons-pt-preliminary
+    name: *var-vtx-y-cm
+    bin-edges: [ 0., 1.2 ]
+  # pT-axis binning for v1(pT) of protons
+  - &ax-pt-correction-protons-pt-preliminary
+    name: *var-vtx-pt
+    bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0 ]
+  ########################################################
+  # v1(y) of PROTONS
+  ########################################################
+  # pT-range for v1(y) of protons
+  - &cuts-kinematics-protons-y-preliminary
+    - { variable: *var-vtx-pt, range: [ 0., 2.0 ] }
+  # pT correction axis for v1(y) of protons
+  - &ax-pt-correction-protons-y-preliminary
+    name: *var-vtx-pt
+    bin-edges: [ 0.0, 2.0 ]
+  # y-axis binning for v1(y) of protons
+  - &ax-y-cm-correction-protons-y-preliminary
+    name: *var-vtx-y-cm
+    nb: 15
+    lo: -0.6
+    hi: 2.4
+  ########################################################
+  # v1(pT) of the NEGATIVE PIONS
+  ########################################################
+  # y-range for v1(pT) of negative pions
+  - &cuts-kinematics-pion-neg-pt-preliminary
+    - { variable: *var-vtx-y-cm, range: [ 0., 1.2 ] }
+  # y-axis correction binning for v1(pT) of negative pions
+  - &ax-y-cm-correction-pion-neg-pt-preliminary
+    name: *var-vtx-y-cm
+    bin-edges: [ 0., 1.2 ]
+  # pT-axis binning for v1(pT) of negative pions
+  - &ax-pt-correction-pion-neg-pt-preliminary
+    name: *var-vtx-pt
+    bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0 ]
+  ########################################################
+  # v1(y) of the NEGATIVE PIONS
+  ########################################################
+  # pT-range for v1(y) of negative pions
+  - &cuts-kinematics-pion-neg-y-preliminary
+    - { variable: *var-vtx-pt, range: [ 0., 2.0 ] }
+  # pT correction axis for v1(y) of negative pions
+  - &ax-pt-correction-pion-neg-y-preliminary
+    name: *var-vtx-pt
+    bin-edges: [ 0.0, 2.0 ]
+  # y-axis binning for v1(y) of negative pions
+  - &ax-y-cm-correction-pion-neg-y-preliminary
+    name: *var-vtx-y-cm
+    nb: 15
+    lo: -0.6
+    hi: 2.4
+  ##########################################################
+  # Correction step base
+  ##########################################################
+  - &ax-centrality-correction-preliminary { name: *var-evt-centrality, bin-edges: [0., 5., 10., 15., 25., 35., 45., 60., 80., 100.] }
+  - &ax-centrality-correction-standard { name: *var-evt-centrality, nb: 20, lo: 0., hi: 100. }
+  # Preliminary 2021 (aka "standard")
+  # Quality cuts for vertex tracks standard
+  - &cuts-rec-particles-quality-standard
+    - { variable: RecParticles/nhits_total,      range: [ 30, 1000 ] }
+    - { variable: RecParticles/nhits_vtpc,       range: [ 15, 1000 ] }
+    - { variable: RecParticles/nhits_pot_total,  range: [ 1, 1000 ] }
+    - { variable: RecParticles/nhits_ratio,      range: [ 0.55, 1.1 ] }
+    - { variable: *var-vtx-dcax,                 range: [ -2., 2. ] }
+    - { variable: *var-vtx-dcay,                 range: [ -1., 1. ] }
+  ########################################################
+  # v1(pT) of PROTONS
+  ########################################################
+  # y-range for v1(pT) of protons
+  - &cuts-kinematics-protons-pt-standard
+    - { variable: *var-vtx-y-cm, range: [ 0.0, 1.0 ] }
+  # y-axis correction binning for v1(pT) of protons
+  - &ax-y-cm-correction-protons-pt-standard
+    name: *var-vtx-y-cm
+    bin-edges: [ 0.000, 0.300, 0.600, 1.000 ]
+  # pT-axis binning for v1(pT) of protons
+  - &ax-pt-correction-protons-pt-standard
+    name: *var-vtx-pt
+    bin-edges: [ 0.000, 0.091, 0.216, 0.276, 0.326, 0.371, 0.414, 0.456, 0.498, 0.54, 0.583, 0.627, 0.673, 0.722, 0.775, 0.834, 0.901, 0.981, 1.085, 1.241, 1.667, 2.000 ]
+  ########################################################
+  # v1(y) of PROTONS
+  ########################################################
+  # pT-range for v1(y) of protons
+  - &cuts-kinematics-protons-y-standard
+    - { variable: *var-vtx-pt, range: [ 0.400, 1.200 ] }
+  # pT correction axis for v1(y) of protons
+  - &ax-pt-correction-protons-y-standard
+    name: *var-vtx-pt
+    bin-edges: [ 0.400, 0.800, 1.200 ]
+  # y-axis binning for v1(y) of protons
+  - &ax-y-cm-correction-protons-y-standard
+    name: *var-vtx-y-cm
+    bin-edges: [-0.006,	-0.016,	0.08,	0.168,	0.252,	0.332,	0.408,	0.484,	0.564,	0.648,	0.732,	0.816,	0.908,	1.004,	1.104,	1.212,	1.324,	1.444,	1.596,	2.256, 2.500 ]
+  ########################################################
+  # v1(pT) of the NEGATIVE PIONS
+  ########################################################
+  # y-range for v1(pT) of negative pions
+  - &cuts-kinematics-pion-neg-pt-standard
+    - { variable: *var-vtx-y-cm, range: [ 0.000 , 1.000 ] }
+  # y-axis correction binning for v1(pT) of negative pions
+  - &ax-y-cm-correction-pion-neg-pt-standard
+    name: *var-vtx-y-cm
+    bin-edges: [ 0.000, 0.200, 0.400, 0.600, 0.800, 1.000 ]
+  # pT-axis binning for v1(pT) of negative pions
+  - &ax-pt-correction-pion-neg-pt-standard
+    name: *var-vtx-pt
+    bin-edges: [0.029,	0.073,	0.098,	0.118,	0.136,	0.154,	0.172,	0.19,	0.209,	0.23,	0.253,	0.279,	0.308,	0.341,	0.38,	0.427,	0.487,	0.569,	0.699,	1.389, 1.700]
+  ########################################################
+  # v1(y) of the NEGATIVE PIONS
+  ########################################################
+  # pT-range for v1(y) of negative pions
+  - &cuts-kinematics-pion-neg-y-standard
+    - { variable: *var-vtx-pt, range: [ 0.050, 1.000 ] }
+  # pT correction axis for v1(y) of negative pions
+  - &ax-pt-correction-pion-neg-y-standard
+    name: *var-vtx-pt
+    bin-edges: [ 0.050, 0.200, 0.500, 1.000 ]
+  # y-axis binning for v1(y) of negative pions
+  - &ax-y-cm-correction-pion-neg-y-standard
+    name: *var-vtx-y-cm
+    bin-edges: [-0.060,	-0.096,	0.02,	0.112,	0.196,	0.272,	0.344,	0.42,	0.496,	0.568,	0.644,	0.724,	0.804,	0.888,	0.984,	1.092,	1.212,	1.368,	1.596,	2.456, 3.000]
+
+_qa:
+  - &psd-qa
+    - { name: PsdModules/phi, nb: 100, lo: -4., hi: 4. }
+    - { name: PsdModules/signal, nb: 100, lo: 0., hi: 100. }
+  - &rec-particle-qa-kinematics
+    - &ax-phi-qa { name: *var-vtx-phi, nb: 400, lo: -4., hi: 4. }
+    - &ax-pt-qa { name: *var-vtx-pt, nb: 1000, lo: 0., hi: 2. }
+    - &ax-pz-qa { name: RecParticles/pz, nb: 1000, lo: 0., hi: 20. }
+    - &ax-p-qa  { name: RecParticles/p, nb: 1000, lo: 0., hi: 20. }
+    - &ax-rapidity-qa { name: *var-vtx-y-cm, nb: 1000, lo: -4., hi: 4. }
+    - &ax-eta-qa { name: RecParticles/eta, nb: 1000, lo: -2., hi: 6. }
+    - [ *ax-rapidity-qa, *ax-pt-qa ]
+    - [ *ax-eta-qa, *ax-pt-qa ]
+    - [ *ax-phi-qa, *ax-rapidity-qa ]
+    - [ *ax-phi-qa, *ax-pt-qa ]
+    - [ *ax-p-qa, *ax-eta-qa ]
+    - [ *ax-p-qa, *ax-pt-qa ]
+  - &sim-particle-qa-kinematics
+    - &ax-sim-phi-qa { name: SimTracksProc/phi,nb: 400, lo: -4., hi: 4. }
+    - &ax-sim-pt-qa  { name: SimTracksProc/pT, nb: 1000, lo: 0., hi: 2. }
+    - &ax-sim-pz-qa  { name: SimTracksProc/pz, nb: 1000, lo: 0., hi: 20. }
+    - &ax-sim-p-qa   { name: SimTracksProc/p,  nb: 1000, lo: 0., hi: 20. }
+    - &ax-sim-rapidity-qa { name: SimTracksProc/y_cm, nb: 1000, lo: -4., hi: 4. }
+    - &ax-sim-eta-qa { name: SimTracksProc/eta,nb: 1000, lo: -2., hi: 6. }
+    - [ *ax-sim-rapidity-qa, *ax-sim-pt-qa ]
+    - [ *ax-sim-eta-qa, *ax-sim-pt-qa ]
+    - [ *ax-sim-phi-qa, *ax-sim-pt-qa ]
+    - [ *ax-sim-phi-qa, *ax-sim-rapidity-qa ]
+    - [ *ax-sim-p-qa, *ax-sim-eta-qa ]
+    - [ *ax-sim-p-qa, *ax-sim-pt-qa ]
+  - &rec-particle-qa-kinematics-weighted
+    - { axes: [ *ax-rapidity-qa ], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [ *ax-pt-qa ], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [ *ax-phi-qa ], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [ *ax-rapidity-qa, *ax-pt-qa ], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [ *ax-phi-qa, *ax-pt-qa ], weight: RecParticles_w_eff_standard_cuts }
+    - { axes: [ *ax-phi-qa, *ax-rapidity-qa ], weight: RecParticles_w_eff_standard_cuts }
+  - &rec-particle-qa-quality
+    - &ax-dcax-qa { name: *var-vtx-dcax, nb: 200, lo: -10, hi: 10 }
+    - &ax-dcay-qa { name: *var-vtx-dcay, nb: 200, lo: -10, hi: 10 }
+    - [ *ax-dcax-qa, *ax-dcay-qa ]
+    - &ax-chi2-qa { name: *var-vtx-chi2-ndf, nb: 200, lo: 0, hi: 100 }
+    - [ *ax-pt-qa, *ax-chi2-qa ]
+    - [ *ax-rapidity-qa, *ax-chi2-qa ]
+    - &ax-nhits-vtpc-qa { name: RecParticles/nhits_vtpc, nb: 300, lo: 0, hi: 300 }
+    - &ax-nhits-total-qa { name: RecParticles/nhits_total, nb: 300, lo: 0, hi: 300 }
+    - &ax-nhits-pot-total-qa { name: RecParticles/nhits_pot_total, nb: 300, lo: 0, hi: 300 }
+    - [ *ax-nhits-pot-total-qa, *ax-nhits-total-qa ]
+
+########################################################################################
+#   DATA
+########################################################################################
+pbpb_30agev_16_025:
+  event-variables:
+    - *var-evt-centrality
+    - *var-evt-vtx-x
+    - *var-evt-vtx-y
+    - *var-evt-vtx-z
+    - *var-evt-e-psd
+    - *var-evt-s1
+    - *var-evt-s2
+  qa-vertex: &qa-vertex
+    - &ax-vtx-x-qa { name: *var-evt-vtx-x, nb: 1000, lo: -10., hi: 10 }
+    - &ax-vtx-y-qa { name: *var-evt-vtx-y, nb: 1000, lo: -10., hi: 10 }
+    - [ *ax-vtx-x-qa, *ax-vtx-y-qa ]
+    - &ax-vtx-z-qa { name: *var-evt-vtx-z, nb: 1000, lo: -602., hi: -582. }
+  qa-centrality: &qa-centrality
+    - &ax-epsd-qa { name: *var-evt-e-psd, nb: 1300, lo: 0, hi: 13000 }
+    - *ax-centrality-correction-preliminary
+    - [ *ax-epsd-qa, *ax-centrality-correction-preliminary ]
+    - [ *ax-vtx-z-qa, *ax-epsd-qa ]
+    - [ *ax-vtx-z-qa, *ax-centrality-correction-preliminary ]
+  qa:
+    - &ax-s1-qa { name: *var-evt-s1, nb: 500, lo: 0, hi: 500 }
+    - &ax-s2-qa { name: *var-evt-s2, nb: 500, lo: 0, hi: 500 }
+    - [ *ax-s1-qa, *ax-s2-qa ]
+    - [ *ax-s1-qa, *ax-epsd-qa ]
+    - [ *ax-s2-qa, *ax-epsd-qa ]
+  axes: [ *ax-centrality-correction-preliminary ]
+  q-vectors: &q-vectors-list
+    # OBSERVABLES
+    # v1(pT) for protons (PRELIMINARY SET)
+    - name: protons_pt_set_preliminary
+      tags: [ observable ]
+      _from: &tpc-base-detector
+        type: track
+        phi: *var-vtx-phi
+        weight: Ones
+        norm: m
+        corrections:
+          - recentering
+          - twist-and-rescale
+        qa-quality: *rec-particle-qa-quality
+        qa-kinematics: *rec-particle-qa-kinematics
+      axes:
+        - *ax-pt-correction-protons-pt-preliminary
+        - *ax-y-cm-correction-protons-pt-preliminary
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts-kinematics: *cuts-kinematics-protons-pt-preliminary
+      cuts-pid: &cuts-proton
+        RecParticles/pid: { equals: 2212 }
+    # v1(y) for protons (PRELIMINARY SET)
+    - name: protons_y_set_preliminary
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-y-cm-correction-protons-y-preliminary
+        - *ax-pt-correction-protons-y-preliminary
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts-kinematics: *cuts-kinematics-protons-y-preliminary
+      cuts-pid: *cuts-proton
+    # v1(pT, y) for protons (PRELIMINARY SET)
+    - name: protons_2d_set_preliminary
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes:
+        - {name: *var-vtx-pt, bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0 ]}
+        - {name: *var-vtx-y-cm, nb: 15, lo: -0.6, hi: 2.4}
+      cuts-quality: *cuts-rec-particles-quality-standard
+      cuts-pid: *cuts-proton
+      qa-weight: *rec-particle-qa-kinematics-weighted
+    # v1(pT) for pi- (PRELIMINARY SET)
+    - name: pion_neg_pt_set_preliminary
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-pt-correction-pion-neg-pt-preliminary
+        - *ax-y-cm-correction-pion-neg-pt-preliminary
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts-kinematics: *cuts-kinematics-pion-neg-pt-preliminary
+      cuts-pid: &cuts-pion-neg
+        RecParticles/pid: { equals: -211 }
+    # v1(y) for pi- (PRELIMINARY SET)
+    - name: pion_neg_y_set_preliminary
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-y-cm-correction-pion-neg-y-preliminary
+        - *ax-pt-correction-pion-neg-y-preliminary
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts-kinematics: *cuts-kinematics-pion-neg-y-preliminary
+      cuts-pid: *cuts-pion-neg
+    # v1(pT, y) for pi- (PRELIMINARY SET)
+    - name: pion_neg_2d_set_preliminary
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes:
+        - {name: *var-vtx-pt, bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0 ]}
+        - {name: *var-vtx-y-cm, nb: 15, lo: -0.6, hi: 2.4}
+      cuts-quality: *cuts-rec-particles-quality-standard
+      cuts-pid: *cuts-pion-neg
+      qa-weight: *rec-particle-qa-kinematics-weighted
+    # v1(pT) for pi+ (PRELIMINARY SET)
+    - name: pion_pos_pt_set_preliminary
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-pt-correction-pion-neg-pt-preliminary
+        - *ax-y-cm-correction-pion-neg-pt-preliminary
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts-kinematics: *cuts-kinematics-pion-neg-pt-preliminary
+      cuts-pid: &cuts-pion-pos
+        RecParticles/pid: { equals: 211 }
+    # v1(y) for pi+ (PRELIMINARY SET)
+    - name: pion_pos_y_set_preliminary
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-y-cm-correction-pion-neg-y-preliminary
+        - *ax-pt-correction-pion-neg-y-preliminary
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts-kinematics: *cuts-kinematics-pion-neg-y-preliminary
+      cuts-pid: *cuts-pion-pos
+    # v1(pT, y) for pi+ (PRELIMINARY SET)
+    - name: pion_pos_2d_set_preliminary
+      tags: [ observable ]
+      _from: *tpc-base-detector
+      axes:
+        - {name: *var-vtx-pt, bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0 ]}
+        - {name: *var-vtx-y-cm, nb: 15, lo: -0.6, hi: 2.4}
+      cuts-quality: *cuts-rec-particles-quality-standard
+      cuts-pid: *cuts-pion-pos
+      qa-weight: *rec-particle-qa-kinematics-weighted
+    # REFERENCE DETECTORS
+    # 4 subevents method TPC references
+    - name: 4sub_ref_preliminary
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes: [ ]
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts-pid: *cuts-proton
+      cuts-kinematics:
+        - { variable: *var-vtx-y-cm, range: [ 1.0, 1.4 ] }
+        - { variable: *var-vtx-pt,   range: [ 0.0, 2.0 ] }
+    - name: 4sub_ref_opt1
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes: [ ]
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: *cuts-pion-neg
+      cuts-kinematics:
+        - { variable: *var-vtx-y-cm, range: [ 0.8, 1.8 ] }
+        - { variable: *var-vtx-pt,  range: [ 0.2, 1.0 ] }
+    - name: 4sub_ref_opt2
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes: [ ]
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: *cuts-proton
+      cuts-kinematics:
+        - { variable: *var-vtx-y-cm, range: [ 0.8, 1.2 ] }
+        - { variable: *var-vtx-pt,   range: [ 0.4, 1.4 ] }
+    # PSD references
+    - name: psd1
+      tags: [ reference ]
+      _from: &reference-base-detector
+        type: channel
+        phi: PsdModules/phi
+        weight: PsdModules/signal
+        norm: m
+        corrections: [ recentering ]
+        qa: *psd-qa
+      channel-ids: *layout-na61-psd1
+    - name: psd2
+      tags: [ reference ]
+      _from: *reference-base-detector
+      channel-ids: *layout-na61-psd2
+    - name: psd3
+      tags: [ reference ]
+      _from: *reference-base-detector
+      channel-ids: *layout-na61-psd3
+
+
+_tasks:
+  - args:
+      - query: { tags: { any-in: [ observable ] } }
+        query-list: *q-vectors-list
+        components: &x1y1 [ x1, y1 ]
+        correction-steps: [ recentered, rescaled ]
+        weight: sumw
+      - query: { tags: { any-in: [ reference ] } }
+        query-list: *q-vectors-list
+        components: *x1y1
+        correction-steps: [ recentered ]
+        weight: ones
+    n-samples: 50
+    weights-type: observable
+    folder: "/uQ"
+    axes:
+      - &ax-centrality-correlation
+        name: Centrality_Centrality_Epsd
+        bin-edges: *common-correlation-centrality-bin-ranges
+  - args:
+      - query: { tags: { any-in: [ reference ] } }
+        query-list: *q-vectors-list
+        components: *x1y1
+        correction-steps: [ recentered ]
+        weight: ones
+      - query: { tags: { any-in: [ reference ] } }
+        query-list: *q-vectors-list
+        components: *x1y1
+        correction-steps: [ recentered ]
+        weight: ones
+    n-samples: 50
+    weights-type: reference
+    folder: "/QQ"
+    axes: [ *ax-centrality-correlation ]
+
+
+########################################################################################
+#   Monte-Carlo
+########################################################################################
+pbpb_13agev_mc:
+  event-variables:
+    - &var-rec-centrality   RecEventHeaderProc/Centrality_Epsd
+    - &var-rec-vtx-x        RecEventHeaderProc/vtx_x
+    - &var-rec-vtx-y        RecEventHeaderProc/vtx_y
+    - &var-rec-vtx-z        RecEventHeaderProc/vtx_z
+    - &var-rec-e-psd        RecEventHeaderProc/Epsd
+    - RecEventHeaderProc/M
+    - &var-sim-psi-rp       SimEventHeader/psi_RP
+    - &var-sim-b            SimEventHeader/b
+    - &var-sim-vtx-x        SimEventHeader/vtx_x
+    - &var-sim-vtx-y        SimEventHeader/vtx_y
+    - &var-sim-vtx-z        SimEventHeader/vtx_z
+  axes:
+    - &ax-centrality { name: *var-rec-centrality, nb: 20, lo: 0, hi: 100 }
+  qa-vertex:
+    - &ax-vtx-x-qa { name: *var-rec-vtx-x, nb: 1000, lo: -10., hi: 10 }
+    - &ax-vtx-y-qa { name: *var-rec-vtx-y, nb: 1000, lo: -10., hi: 10 }
+    - &ax-vtx-z-qa { name: *var-rec-vtx-z, nb: 1000, lo: -602., hi: -582. }
+    - [ *ax-vtx-x-qa, *ax-vtx-y-qa ]
+  qa-centrality:
+    - &ax-epsd-qa { name: *var-rec-e-psd, nb: 500, lo: 0, hi: 5000 }
+    - &ax-mult-qa { name: RecEventHeaderProc/M, nb: 500, lo: 0, hi: 500 }
+    - *ax-centrality
+    - [ *ax-epsd-qa, *ax-centrality ]
+    - [ *ax-mult-qa, *ax-epsd-qa ]
+    - [ *ax-vtx-z-qa, *ax-epsd-qa ]
+    - [ *ax-vtx-z-qa, *ax-centrality ]
+  qa-mc:
+    - &ax-psi-rp-qa { name: SimEventHeader/psi_RP, nb: 400, lo: -4., hi: 4. }
+    - &ax-sim-vtx-x-qa { name: *var-sim-vtx-x, nb: 1000, lo: -10., hi: 10. }
+    - &ax-sim-vtx-y-qa { name: *var-sim-vtx-y, nb: 1000, lo: -10., hi: 10. }
+    - &ax-sim-vtx-z-qa { name: *var-sim-vtx-z, nb: 1000, lo: -602., hi: -582. }
+    - [ *ax-sim-vtx-x-qa, *ax-sim-vtx-y-qa ]
+    - [ *ax-sim-vtx-x-qa, *ax-vtx-x-qa ]
+    - [ *ax-sim-vtx-y-qa, *ax-vtx-y-qa ]
+    - [ *ax-sim-vtx-z-qa, *ax-vtx-z-qa ]
+    - &ax-sim-b-qa     { name: *var-sim-b, nb: 200, lo: 0., hi: 20 }
+    - [ *ax-sim-b-qa, *ax-centrality ]
+    - [ *ax-vtx-z-qa, *ax-sim-b-qa ]
+  q-vectors: &q-vectors-list-mc
+    #   Rec particles
+    - name: protons_pt_set_standard
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes:
+        - &ax-pt { name: *var-vtx-pt, bin-edges: *common-pt-bin-edges }
+        - &ax-y-cm-corr-protons { name: *var-vtx-y-cm, bin-edges: *common-y-cm-correction-range-protons }
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: &cuts-proton
+        RecParticles/pid: { equals: 2212 }
+    - name: protons_y_set_standard
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-pt
+        - *ax-pt-corr-protons
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: *cuts-proton
+    - name: pion_neg_pt_set_standard
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-pt
+        - &ax-y-cm-corr-pion-neg { name: *var-vtx-y-cm, bin-edges: *common-y-cm-correction-range-pion-neg }
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: &cuts-pion-neg
+        RecParticles/pid: { equals: -211 }
+    - name: pion_neg_y_set_standard
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes:
+        - &ax-y-cm { name: *var-vtx-y-cm, bin-edges: *common-y-cm-bin-edges }
+        - *ax-pt-corr-pion-neg
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: *cuts-pion-neg
+    # weighted
+    - name: protons_pt_set_weighted
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      weight: RecParticles/w_eff_standard_cuts
+      axes:
+        - *ax-pt
+        - *ax-y-cm-corr-protons
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: &cuts-proton
+        RecParticles/pid: { equals: 2212 }
+      qa-weighted: *rec-particle-qa-kinematics-weighted
+    - name: protons_y_set_weighted
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      weight: RecParticles/w_eff_standard_cuts
+      axes:
+        - *ax-y-cm
+        - *ax-pt-corr-protons
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: *cuts-proton
+      qa-weighted: *rec-particle-qa-kinematics-weighted
+    - name: pion_neg_pt_set_weighted
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      weight: RecParticles/w_eff_standard_cuts
+      axes:
+        - *ax-pt
+        - *ax-y-cm-corr-pion-neg
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: &cuts-pion-neg
+        RecParticles/pid: { equals: -211 }
+      qa-weighted: *rec-particle-qa-kinematics-weighted
+    - name: pion_neg_y_set_weighted
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      weight: RecParticles/w_eff_standard_cuts
+      axes:
+        - *ax-y-cm
+        - *ax-pt-corr-pion-neg
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: *cuts-pion-neg
+      qa-weighted: *rec-particle-qa-kinematics-weighted
+    #   Rec particles (TRUE PRIMARIES)
+    - name: protons_pt_set_primaries
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-pt
+        - *ax-y-cm-corr-protons
+      cuts-quality: &rec-particle-cuts-quality-true-primaries
+        RecParticles/nhits_total: { range: [ 30, 1000 ] }
+        RecParticles/nhits_vtpc: { range: [ 10, 1000 ] }
+        RecParticles/nhits_pot_total: { range: [ 1, 1000 ] }
+        RecParticles/nhits_ratio: { range: [ 0.55, 1.1 ] }
+        RecParticles/sim_mother_id: { equals: -1 }
+      cuts: &cuts-proton
+        RecParticles/pid: { equals: 2212 }
+    - name: protons_y_set_primaries
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-y-cm
+        - *ax-pt-corr-protons
+      cuts-quality: *rec-particle-cuts-quality-true-primaries
+      cuts: *cuts-proton
+    - name: pion_neg_pt_set_primaries
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-pt
+        - *ax-y-cm-corr-pion-neg
+      cuts-quality: *rec-particle-cuts-quality-true-primaries
+      cuts: &cuts-pion-neg
+        RecParticles/pid: { equals: -211 }
+    - name: pion_neg_y_set_primaries
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-y-cm
+        - *ax-pt-corr-pion-neg
+      cuts-quality: *rec-particle-cuts-quality-true-primaries
+      cuts: *cuts-pion-neg
+    #   Fwd / backwd
+    - name: protons_pt_set_backward
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-pt
+        - { name: *var-vtx-y-cm, bin-edges: [ -0.6, 0.0 ] }
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: *cuts-proton
+    - name: protons_pt_set_forward
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes:
+        - *ax-pt
+        - { name: *var-vtx-y-cm, bin-edges: [ 0.0, 0.6 ] }
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: *cuts-proton
+    # 4 subevents method TPC references
+    - name: 4sub_ref_preliminary
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes: [ ]
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: *cuts-proton
+      cuts-kinematics:
+        - { variable: *var-vtx-y-cm, range: [ 1.0, 1.4 ] }
+        - { variable: *var-vtx-pt,   range: [ 0.0, 2.0 ] }
+    - name: 4sub_ref_opt1
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes: [ ]
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: *cuts-pion-neg
+      cuts-kinematics:
+        - { variable: *var-vtx-y-cm, range: [ 0.8, 1.8 ] }
+        - { variable: *var-vtx-pt,  range: [ 0.2, 1.0 ] }
+    - name: 4sub_ref_opt2e
+      tags: [ observable, reco ]
+      _from: *tpc-base-detector
+      axes: [ ]
+      cuts-quality: *cuts-rec-particles-quality-preliminary
+      cuts: *cuts-proton
+      cuts-kinematics:
+        - { variable: *var-vtx-y-cm, range: [ 0.8, 1.2 ] }
+        - { variable: *var-vtx-pt,   range: [ 0.4, 1.4 ] }
+    #   MC true
+    - name: mc_protons_pt
+      tags: [ observable, mc ]
+      _from: &sim-base-detector
+        type: track
+        phi: SimTracksProc/phi
+        weight: Ones
+        norm: m
+        qa-kinematics: *sim-particle-qa-kinematics
+        cuts-primary:
+          SimTracksProc/mother_id: { equals: -1 }
+      axes:
+        - &ax-mc-pt       { name: SimTracksProc/pT, bin-edges: *common-pt-bin-edges }
+        - &ax-mc-y-cm-corr-protons { name: SimTracksProc/y_cm, bin-edges: *common-y-cm-correction-range-protons }
+      cuts: &cuts-mc-proton
+        SimTracksProc/pdg: { equals: 2212 }
+    - name: mc_protons_y
+      tags: [ observable, mc ]
+      _from: *sim-base-detector
+      axes:
+        - &ax-mc-y-cm       { name: SimTracksProc/y_cm, bin-edges: *common-y-cm-bin-edges }
+        - { name: SimTracksProc/pT, bin-edges: *common-pt-correction-range-protons }
+      cuts: *cuts-mc-proton
+    - name: mc_pion_neg_pt
+      tags: [ observable, mc ]
+      _from: *sim-base-detector
+      axes:
+        - *ax-mc-pt
+        - { name: SimTracksProc/y_cm, bin-edges: *common-y-cm-correction-range-pion-neg }
+      cuts: &cuts-mc-pion-neg
+        SimTracksProc/pdg: { equals: -211 }
+    - name: mc_pion_neg_y
+      tags: [ observable, mc ]
+      _from: *sim-base-detector
+      axes:
+        - *ax-mc-y-cm
+        - { name: SimTracksProc/pT, bin-edges: *common-pt-correction-range-pion-neg }
+      cuts: *cuts-mc-pion-neg
+    # References
+    - name: psd1
+      tags: [ reference, reco ]
+      _from: *reference-base-detector
+      channel-ids: *layout-na61-psd1
+    - name: psd2
+      tags: [ reference, reco ]
+      _from: *reference-base-detector
+      channel-ids: *layout-na61-psd2
+    - name: psd3
+      tags: [ reference, reco ]
+      _from: *reference-base-detector
+      channel-ids: *layout-na61-psd3
+    # Removed 1st section
+    - name: psd1_90
+      tags: [ reference, reco ]
+      _from: &psd-90-base
+        type: channel
+        phi: PsdModules90/phi
+        weight: PsdModules90/signal
+        norm: m
+        corrections: [ recentering ]
+        qa:
+          - { name: PsdModules90/phi, nb: 100, lo: -4., hi: 4. }
+          - { name: PsdModules90/signal, nb: 100, lo: 0., hi: 100. }
+      channel-ids: *layout-na61-psd1
+    - name: psd2_90
+      tags: [ reference, reco ]
+      _from: *psd-90-base
+      channel-ids: *layout-na61-psd2
+    - name: psd3_90
+      tags: [ reference, reco ]
+      _from: *psd-90-base
+      channel-ids: *layout-na61-psd3
+    # PSI RP
+    - name: psi_rp
+      tags: [ reference, mc ]
+      type: psi
+      phi: *var-sim-psi-rp
+      norm: mag
+      correction-steps: [ ]
+      qa:
+        - *ax-psi-rp-qa
+
+
+correlations_mc:
+  - args:
+      - query: { tags: { all-in: [ observable, reco ] } }
+        query-list: *q-vectors-list-mc
+        components: &x1y1 [ x1, y1 ]
+        correction-steps: [ recentered, rescaled ]
+        weight: sumw
+      - query: { tags: { all-in: [ reference, reco ] } }
+        query-list: *q-vectors-list-mc
+        components: *x1y1
+        correction-steps: [ recentered ]
+        weight: ones
+    n-samples: 50
+    weights-type: observable
+    folder: "/uQ"
+    axes:
+      - &ax-centrality-correlation
+        name: RecEventHeaderProc_Centrality_Epsd
+        bin-edges: *common-correlation-centrality-bin-ranges
+  - args:
+      - query: { tags: { all-in: [ reference, reco ] } }
+        query-list: *q-vectors-list-mc
+        components: *x1y1
+        correction-steps: [ recentered ]
+        weight: ones
+      - query: { tags: { all-in: [ reference, reco ] } }
+        query-list: *q-vectors-list-mc
+        components: *x1y1
+        correction-steps: [ recentered ]
+        weight: ones
+    n-samples: 50
+    weights-type: reference
+    folder: "/QQ"
+    axes: [ *ax-centrality-correlation ]
+  - args:
+      - query: { tags: { all-in: [ mc, observable ] } }
+        query-list: *q-vectors-list-mc
+        components: *x1y1
+        correction-steps: [ plain ]
+        weight: sumw
+      - query: { tags: { all-in: [ mc, reference ] } }
+        query-list: *q-vectors-list-mc
+        components: *x1y1
+        correction-steps: [ plain ]
+        weight: ones
+    n-samples: 50
+    weights-type: observable
+    folder: "/uQ"
+    axes: [ *ax-centrality-correlation ]
+  - args:
+      - query: { tags: { all-in: [ reco, reference ] } }
+        query-list: *q-vectors-list-mc
+        components: *x1y1
+        correction-steps: [ plain, recentered ]
+        weight: ones
+      - query: { tags: { all-in: [ mc, reference ] } }
+        query-list: *q-vectors-list-mc
+        components: *x1y1
+        correction-steps: [ plain ]
+        weight: ones
+    n-samples: 50
+    weights-type: reference
+    folder: "/QQ"
+    axes: [ *ax-centrality-correlation ]
