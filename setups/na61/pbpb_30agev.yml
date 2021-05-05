@@ -315,7 +315,6 @@ pbpb_30agev_16_025:
         - {name: *var-vtx-y-cm, nb: 15, lo: -0.6, hi: 2.4}
       cuts-quality: *cuts-rec-particles-quality-standard
       cuts-pid: *cuts-proton
-      qa-weight: *rec-particle-qa-kinematics-weighted
     # v1(pT) for pi- (PRELIMINARY SET)
     - name: pion_neg_pt_set_preliminary
       tags: [ observable ]
@@ -346,7 +345,6 @@ pbpb_30agev_16_025:
         - {name: *var-vtx-y-cm, nb: 15, lo: -0.6, hi: 2.4}
       cuts-quality: *cuts-rec-particles-quality-standard
       cuts-pid: *cuts-pion-neg
-      qa-weight: *rec-particle-qa-kinematics-weighted
     # v1(pT) for pi+ (PRELIMINARY SET)
     - name: pion_pos_pt_set_preliminary
       tags: [ observable ]
@@ -377,7 +375,6 @@ pbpb_30agev_16_025:
         - {name: *var-vtx-y-cm, nb: 15, lo: -0.6, hi: 2.4}
       cuts-quality: *cuts-rec-particles-quality-standard
       cuts-pid: *cuts-pion-pos
-      qa-weight: *rec-particle-qa-kinematics-weighted
     # REFERENCE DETECTORS
     # 4 subevents method TPC references
     - name: 4sub_ref_preliminary
