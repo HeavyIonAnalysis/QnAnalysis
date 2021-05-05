@@ -988,33 +988,16 @@ int main() {
                     }, META["type"] == "v1_centrality" && META["v1.ref"].Matches("psd[0-9]"));
               }
 
-              const std::vector<Color_t> rainbow_palette = {
-                  kRed + 3,
-                  kRed,
-                  kOrange + 7,
-                  kOrange,
-                  kSpring + 9,
-                  kGreen + 1,
-                  kGreen + 4,
-                  kTeal - 1,
-                  kCyan + 3,
-                  kBlue,
-                  kBlue + 3,
-                  kMagenta,
-                  kMagenta + 3,
-                  kGray + 1,
-                  kYellow -2,
-              };
 
               /* pT scan, STAT + SYSTEMATIC */
               {
-                auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.01, 1e3);
+                auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.0, 1e3);
                 TMultiGraph mg_pt_scan;
                 int i_slice = 0;
                 for (auto obj : *graph_list) {
                   auto *gse = (GraphSysErr *) obj;
 
-                  auto primary_color = rainbow_palette.at(i_slice % size(rainbow_palette));
+                  auto primary_color = ::Tools::GetRainbowPalette().at(i_slice % size(::Tools::GetRainbowPalette()));
                   gse->SetDataOption(GraphSysErr::kNone);
                   gse->SetLineColor(primary_color);
                   gse->SetMarkerColor(primary_color);
@@ -1025,6 +1008,7 @@ int main() {
 
                   auto multi = gse->GetMulti("COMBINED STAT QUAD MAX");
                   if (multi) {
+                    ::Tools::GraphShiftX(multi, i_slice*0.01f);
                     mg_pt_scan.Add(multi);
                   }
                   i_slice++;
@@ -1070,7 +1054,7 @@ int main() {
                   }
                 }
 
-                auto graph_list = Qn::ToGSE2D(syst_data_inverted, "y_cm", 0.01, 1e3);
+                auto graph_list = Qn::ToGSE2D(syst_data_inverted, "y_cm", 0.0, 1e3);
                 TMultiGraph mg_y_scan;
                 int i_y_cm_slice = 0;
                 for (auto obj : *graph_list) {
@@ -1091,7 +1075,7 @@ int main() {
                     return y_cm_axis.FindBin(TMath::Abs(y_cm_mid)) - y_cm_axis.FindBin(0);
                   }();
 
-                  auto primary_color = rainbow_palette.at(i_abs_ycm % size(rainbow_palette));
+                  auto primary_color = ::Tools::GetRainbowPalette().at(i_abs_ycm % size(::Tools::GetRainbowPalette()));
                   gse->SetDataOption(GraphSysErr::kNone);
                   gse->SetLineColor(primary_color);
                   gse->SetMarkerColor(primary_color);
@@ -1102,6 +1086,7 @@ int main() {
 
                   auto multi = gse->GetMulti("COMBINED STAT QUAD MAX");
                   if (multi) {
+                    ::Tools::GraphShiftX(multi, i_abs_ycm*0.01f);
                     mg_y_scan.Add(multi);
                   }
                   i_y_cm_slice++;
