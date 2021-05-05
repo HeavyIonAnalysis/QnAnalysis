@@ -196,7 +196,10 @@ void QnCorrectionTask::Exec() {
     const auto &branch = var_manager_->GetVarEntries().at(qvec->GetVarEntryId());
     int i_channel{0};
     for (int i : qvec->GetModuleIds()) {
-      container[phi.GetId() + i_channel] = data_header_->GetModulePhi(0, i);//TODO fix hardcoded 0
+      auto module_x = data_header_->GetModulePositions(0).GetChannel(i).GetX();
+      auto module_y = data_header_->GetModulePositions(0).GetChannel(i).GetY();
+      auto module_phi = data_header_->GetModulePhi(0, i); //TODO fix hardcoded 0
+      container[phi.GetId() + i_channel] = module_phi;
       if (i < branch.GetValues().size()) {
         container[weight.GetId() + i_channel] = branch.GetValues()[i].at(0);//TODO fix hardcoded 0
       } else {

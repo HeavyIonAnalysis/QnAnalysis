@@ -928,33 +928,6 @@ int main() {
           META["type"] == "v1_centrality" ||
               META["type"] == "c1_centrality");
 
-  {
-    /* v1 (pT,y) Multigraphs */
-    ::Tools::ToRoot<TMultiGraph> root_saver("multigraphs.root", "RECREATE");
-    gResourceManager
-        .ForEach(
-            [&root_saver](const StringKey &key, ResourceManager::Resource &resource) {
-              auto &data = resource.As<DTCalc>();
-              auto multigraph = Qn::ToTMultiGraph(data, "y_cm");
-              root_saver.operator()(key, *multigraph);
-            },
-            META["type"] == "v1_centrality" &&
-                META["v1.axis"] == "2d");
-  }
-
-  {
-    /* v1 (y,Pt) Multigraphs */
-    ::Tools::ToRoot<TMultiGraph> root_saver("multigraphs_pt.root", "RECREATE");
-    gResourceManager
-        .ForEach(
-            [&root_saver](const StringKey &key, ResourceManager::Resource &resource) {
-              auto &data = resource.As<DTCalc>();
-              auto multigraph = Qn::ToTMultiGraph(data, "pT");
-              root_saver.operator()(key, *multigraph);
-            },
-            META["type"] == "v1_centrality" &&
-                META["v1.axis"] == "2d");
-  }
 
   {
     /* v1 (y,Pt) Multigraphs */
@@ -991,7 +964,7 @@ int main() {
 
               /* pT scan, STAT + SYSTEMATIC */
               {
-                auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.005, 1e3, 0.2);
+                auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.005, 1e2, 0.2);
                 TMultiGraph mg_pt_scan;
                 int i_slice = 0;
                 for (auto obj : *graph_list) {
@@ -1026,7 +999,7 @@ int main() {
 
                 for (auto obj : *graph_list) {
                   auto *gse = (GraphSysErr *) obj;
-                  auto multi = gse->GetMulti("STACK MIN");
+                  auto multi = gse->GetMulti("STACK");
                   if (multi) {
                     multi->GetXaxis()->SetTitle("#it{y}_{CM}");
                     multi->GetYaxis()->SetTitle("v_{1}");
@@ -1058,7 +1031,7 @@ int main() {
                 }
 
                 auto graph_list = Qn::ToGSE2D(syst_data_inverted, "y_cm", 0.005,
-                                              1e3, 0.2);
+                                              1e2, 0.2);
                 TMultiGraph mg_y_scan;
                 int i_y_cm_slice = 0;
                 for (auto obj : *graph_list) {
@@ -1108,7 +1081,7 @@ int main() {
 
                 for (auto obj : *graph_list) {
                   auto *gse = (GraphSysErr *) obj;
-                  auto multi = gse->GetMulti("STACK MIN");
+                  auto multi = gse->GetMulti("STACK");
                   if (multi) {
                     multi->GetXaxis()->SetTitle("p_{T} (GeV/#it{c})");
                     multi->GetYaxis()->SetTitle("v_{1}");
@@ -1412,56 +1385,6 @@ int main() {
                 META["v1.component"] == "combined" &&
                 META["v1.ref"] == "combined"
         );
-  }
-
-
-  /* compare forward/backward */
-  {
-    const auto v1_forward_backward_filter =
-        META["type"] == "v1_centrality" &&
-            META["v1.src"] == "reco" &&
-            META["v1.resolution.meta_key"] == "psd_mc" &&
-            (META["v1.set"] == "forward" || META["v1.set"] == "backward") &&
-            META["v1.ref"] == "combined" &&
-            META["v1.component"] == "combined";
-
-    const std::string save_dir = "v1_forward_backward";
-    gSystem->mkdir(save_dir.c_str());
-
-    gResourceManager.GroupBy(
-        ::Predicates::MetaFeatureSet({"centrality.key"}),
-        [&save_dir](auto feature, const std::vector<ResourceManager::ResourcePtr> &v1_list) {
-          assert(v1_list.size() == 2);
-          TMultiGraph mg;
-          const std::map<std::string, int> colors = {
-              {"backward", kRed},
-              {"forward", kBlack},
-          };
-          const std::map<std::string, int> markers = {
-              {"backward", kOpenCircle},
-              {"forward", kFullCircle},
-          };
-          for (const auto &v1_ptr : v1_list) {
-            auto v1_set = META["v1.set"](*v1_ptr);
-            auto graph = Qn::ToTGraph(v1_ptr->As<DTCalc>());
-            graph->SetMarkerColor(colors.at(v1_set));
-            graph->SetLineColor(colors.at(v1_set));
-            graph->SetMarkerStyle(markers.at(v1_set));
-            graph->SetTitle(v1_set.c_str());
-            mg.Add(graph);
-          }
-
-          TCanvas c;
-          c.SetCanvasSize(1280, 1024);
-          mg.Draw("A lp");
-          mg.GetYaxis()->SetRangeUser(-0.05, 0.15);
-          mg.GetYaxis()->SetTitle("v_{1}");
-          mg.GetXaxis()->SetTitle("p_{T} GeV/c");
-          auto legend = c.BuildLegend(0.15, 0.75, 0.45, 0.9);
-          legend->SetHeader(("Centrality: " + feature + "%").c_str());
-          SaveCanvas(c, save_dir + "/" + feature);
-        }, v1_forward_backward_filter);
-
   }
 
   {
