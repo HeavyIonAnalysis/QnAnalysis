@@ -7,6 +7,8 @@
 
 #include <DataContainer.hpp>
 #include <StatCalculate.hpp>
+#include <StatCollect.hpp>
+#include <Statistics.hpp>
 #include <TGraph.h>
 
 namespace Qn {
@@ -36,6 +38,10 @@ class Dv1Dy {
   double offset_error{0.0};
   double slope{0.0};
   double slope_error{0.0};
+
+  StatCollect data_offsets_;
+  StatCollect data_slopes_;
+
   bool fit_valid{false};
 };
 

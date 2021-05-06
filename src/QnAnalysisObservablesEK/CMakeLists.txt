@@ -16,14 +16,15 @@ target_link_libraries(QnToolsExtension PUBLIC
         gse
         )
 
-
-add_executable(QnAnalysisObservables na61.cpp )
-target_link_libraries(QnAnalysisObservables PUBLIC
+add_library(QnAnalysisObservables INTERFACE)
+target_include_directories(QnAnalysisObservables INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(QnAnalysisObservables INTERFACE
         QnToolsBase
         QnToolsExtension
+        QnAnalysisTools
         gse
         ${ROOT_LIBRARIES}
         ${Boost_LIBRARIES}
-        QnAnalysisTools
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:stdc++fs>
-        )
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:stdc++fs>)
+
+add_subdirectory(na61)

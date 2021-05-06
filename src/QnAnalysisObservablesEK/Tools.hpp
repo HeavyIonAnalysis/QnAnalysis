@@ -109,6 +109,7 @@ void SetArgTuple(const std::vector<std::string> &arg_names, std::tuple<Args...> 
   SetArgTupleImpl(arg_names, tuple, std::make_index_sequence<sizeof...(Args)>());
 }
 
+inline
 ResourceManager::MetaType MergeMeta(const ResourceManager::MetaType &lhs, const ResourceManager::MetaType &rhs) {
   using Meta = ResourceManager::MetaType;
 
@@ -128,29 +129,34 @@ ResourceManager::MetaType MergeMeta(const ResourceManager::MetaType &lhs, const 
 }
 
 template<typename T>
+inline
 ResourceManager::Resource MakeResource(T&& obj, const ResourceManager::MetaType& meta) {
   return ResourceManager::Resource(std::forward<T>(obj), meta);
 }
 
 template<>
+inline
 ResourceManager::Resource MakeResource<ResourceManager::Resource>(ResourceManager::Resource&& r,
                                                                   const ResourceManager::MetaType& meta) {
   return {r.obj, MergeMeta(r.meta, meta)};
 }
 
 template <typename KeyGenerator>
+inline
 auto EvalKey(const KeyGenerator & key_generator,
              const ResourceManager::Resource& res) {
   return key_generator(res);
 }
 
 template<>
+inline
 auto EvalKey<StringKey>(const StringKey &key,
                         const ResourceManager::Resource&) {
   return key;
 }
 
 template<>
+inline
 auto EvalKey<VectorKey>(const VectorKey &key,
                         const ResourceManager::Resource&) {
   return key;

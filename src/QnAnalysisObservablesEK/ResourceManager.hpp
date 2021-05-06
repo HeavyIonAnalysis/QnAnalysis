@@ -5,6 +5,9 @@
 #ifndef QNANALYSIS_SRC_QNANALYSISOBSERVABLES_RESOURCEMANAGER_HPP
 #define QNANALYSIS_SRC_QNANALYSISOBSERVABLES_RESOURCEMANAGER_HPP
 
+#include <iostream>
+#include <map>
+#include <set>
 #include <tuple>
 #include <functional>
 #include <string>
@@ -12,9 +15,12 @@
 #include <vector>
 #include <any>
 #include <memory>
+#include <filesystem>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+
+#include <TError.h>
 
 namespace Details {
 
