@@ -22,53 +22,12 @@ class SystematicError {
  public:
   SystematicError() = default;
 
-  explicit SystematicError(const StatCalculate& data) {
-    mean = data.Mean();
-    statistical_error = data.StandardErrorOfMean();
-    sumw = data.SumWeights();
-  }
-  explicit SystematicError(const StatCollect& data) {
-    mean = data.GetStatistics().Mean();
-    statistical_error = data.GetStatistics().StandardErrorOfMean();
-    sumw = data.GetStatistics().SumWeights();
-  }
-  void AddSystematicSource(int id) {
-    auto emplace_result = variations_means.emplace(id, std::vector<double>());
-    variations_errors.emplace(id, std::vector<double>());
-    assert(emplace_result.second);
-  }
-  void AddVariation(int id, const StatCalculate& data) {
-    variations_means.at(id).emplace_back(data.Mean());
-    variations_errors.at(id).emplace_back(data.StandardErrorOfMean());
-  }
-  double GetSystematicalError(int id) const {
-    /* using uncorrected standard deviation */
-    auto &var_v = variations_means.at(id);
-    auto &var_sigma_v = variations_errors.at(id);
-    assert(var_v.size() > 1);
-    assert(var_v.size() == var_sigma_v.size());
-
-    double sum2 = 0;
-    int n_passed_barlow = 0;
-    for(auto var_it = begin(var_v), var_sigma_it = begin(var_sigma_v);
-        var_it != end(var_v); ++var_it, ++var_sigma_it) {
-      if (BarlowCriterion(mean, statistical_error, *var_it, *var_sigma_it) > 1) {
-        ++n_passed_barlow;
-        sum2 += (*var_it - mean)*(*var_it - mean);
-      }
-    }
-    auto sigma = n_passed_barlow > 0? TMath::Sqrt(sum2 / n_passed_barlow) : 0.0;
-    return sigma;
-  }
-  double GetSystematicalError() const {
-    double sigma2 = 0.0;
-    for (auto &syst_source_element : variations_means) {
-      auto syst_source_id = syst_source_element.first;
-      auto source_sigma = GetSystematicalError(syst_source_id);
-      sigma2 += (source_sigma*source_sigma);
-    }
-    return TMath::Sqrt(sigma2);
-  }
+  explicit SystematicError(const StatCalculate& data);
+  explicit SystematicError(const StatCollect& data);
+  void AddSystematicSource(int id);
+  void AddVariation(int id, const StatCalculate& data);
+  double GetSystematicalError(int id) const;
+  double GetSystematicalError() const;
   double SumWeights() const {
     return sumw;
   }
@@ -80,13 +39,7 @@ class SystematicError {
   }
 
   static
-  inline
-  double BarlowCriterion(double ref, double sigma_ref, double var, double sigma_err) {
-    auto sigma2_ref = sigma_ref*sigma_ref;
-    auto sigma2_var = sigma_err*sigma_err;
-    auto barlow = TMath::Abs(ref - var) / TMath::Sqrt(TMath::Abs(sigma2_ref - sigma2_var));
-    return barlow;
-  }
+  double BarlowCriterion(double ref, double sigma_ref, double variation, double sigma_variation);
 
 
  private:
