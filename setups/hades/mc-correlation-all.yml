@@ -1,13 +1,10 @@
 _detectors: &detectors
+  - name: accepted
+    tags: [ rec_un_vector ]
   - name: protons
     tags: [ gen_un_vector ]
-    correction-step: plain
-  - name: pions
-    tags: [ gen_un_vector ]
-    correction-step: plain
   - name: psi_rp
     tags: [ psi_vector ]
-    correction-step: plain
 
 _axes:
   - &centrality
@@ -23,6 +20,12 @@ _components:
     [ cos1,sin1 ]
 
 _tasks_args:
+  - &ta_accepted
+    query: { tags: { any-in: [ rec_un_vector ] } }
+    query-list: *detectors
+    components: *sp_components
+    correction-steps: [ rescaled ]
+    weight: sumw
   - &ta_all
     query: { tags: { any-in: [ gen_un_vector ] } }
     query-list: *detectors
@@ -37,6 +40,11 @@ _tasks_args:
     weight: ones
 
 _tasks:
+  - args: [*ta_accepted, *ta_psi]
+    n-samples: 100
+    weights-type: observable
+    folder: "/uQ/reco"
+    axes: [ *centrality ]
   - args: [*ta_all, *ta_psi]
     n-samples: 100
     weights-type: observable
