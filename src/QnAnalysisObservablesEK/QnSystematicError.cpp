@@ -88,7 +88,7 @@ GraphSysErr *Qn::ToGSE(
   int ipalette = 0;
   for (auto &sys_errors : systematic_id_map) {
     auto pp_id = sys_errors.second;
-    graph->SetSysOption(pp_id, GraphSysErr::kFill);
+    graph->SetSysOption(pp_id, GraphSysErr::kRect);
     graph->SetSysFillStyle(pp_id, 1001);
     graph->SetSysFillColor(pp_id, def_color_palette.at(ipalette % def_color_palette.size()));
     ipalette++;
@@ -116,7 +116,7 @@ GraphSysErr *Qn::ToGSE(
       const auto data_error_id = stat_source_element.first;
       const auto pp_id = stat_source_element.second;
       const auto error = bin.GetSystematicalError(data_error_id);
-      graph->SetSysError(pp_id, igraph, 0., error);
+      graph->SetSysError(pp_id, igraph, error_x, error);
     }
     ibin++;
     igraph++;
