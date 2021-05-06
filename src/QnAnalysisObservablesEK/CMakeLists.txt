@@ -6,9 +6,10 @@ add_subdirectory(gse)
 ROOT_GENERATE_DICTIONARY(
         G__QnToolsExtension
         ${CMAKE_CURRENT_SOURCE_DIR}/QnSystematicError.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/QnDv1Dy.hpp
         LINKDEF QnToolsExtensionLinkDef.h
         OPTIONS -I${CMAKE_CURRENT_SOURCE_DIR}/gse)
-add_library(QnToolsExtension SHARED QnSystematicError.cpp G__QnToolsExtension.cxx)
+add_library(QnToolsExtension SHARED QnSystematicError.cpp QnDv1Dy.cpp G__QnToolsExtension.cxx)
 target_link_libraries(QnToolsExtension PUBLIC
         ${ROOT_LIBRARIES}
         QnToolsBase

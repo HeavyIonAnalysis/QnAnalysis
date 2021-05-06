@@ -11,6 +11,7 @@
 #include "Tools.hpp"
 #include "Methods.hpp"
 #include "QnSystematicError.hpp"
+#include "QnDv1Dy.hpp"
 #include "GraphTools.hpp"
 
 #endif //QNANALYSIS_SRC_QNANALYSISOBSERVABLES_OBSERVABLES_HPP

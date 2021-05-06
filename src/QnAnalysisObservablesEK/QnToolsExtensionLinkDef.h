@@ -11,4 +11,7 @@
 #pragma link C++ class Qn::SystematicError +;
 #pragma link C++ class Qn::DataContainer < Qn::SystematicError, Qn::Axis < double>> + ;
 
+#pragma linl C++ class Qn::Dv1Dy + ;
+#pragma link C++ class Qn::DataContainer < Qn::Dv1Dy, Qn::Axis < double>> + ;
+
 #endif

@@ -125,7 +125,7 @@ GraphSysErr *Qn::ToGSE(
 }
 
 TList *Qn::ToGSE2D(const Qn::DataContainerSystematicError &data,
-                   const std::string &projection_axis_name,
+                   const std::string &selection_axis_name,
                    float error_x,
                    double min_sumw,
                    double max_sys_error) {
@@ -137,18 +137,18 @@ TList *Qn::ToGSE2D(const Qn::DataContainerSystematicError &data,
   auto result = new TList;
   result->SetOwner();
 
-  auto projection_axis = data.GetAxis(projection_axis_name);
-  for (decltype(projection_axis.GetNBins()) ibin = 0; ibin < projection_axis.GetNBins(); ++ibin) {
-    double bin_lo = projection_axis.GetLowerBinEdge(ibin);
-    double bin_hi = projection_axis.GetUpperBinEdge(ibin);
-    auto axis_to_select = Qn::AxisD(projection_axis_name, 1, bin_lo, bin_hi);
+  auto selection_axis = data.GetAxis(selection_axis_name);
+  for (decltype(selection_axis.GetNBins()) ibin = 0; ibin < selection_axis.GetNBins(); ++ibin) {
+    double bin_lo = selection_axis.GetLowerBinEdge(ibin);
+    double bin_hi = selection_axis.GetUpperBinEdge(ibin);
+    auto axis_to_select = Qn::AxisD(selection_axis_name, 1, bin_lo, bin_hi);
     auto data_selected = DataContainerSystematicError(data.Select(axis_to_select));
     data_selected.CopySourcesInfo(data);
 
     auto graph_selected = Qn::ToGSE(data_selected, error_x, min_sumw, max_sys_error);
     if (graph_selected) {
-      graph_selected->SetName(Form("%s__%.2f_%.2f", projection_axis_name.c_str(), bin_lo, bin_hi));
-      graph_selected->SetTitle(Form("%s #in (%.2f, %.2f)", projection_axis_name.c_str(), bin_lo, bin_hi));
+      graph_selected->SetName(Form("%s__%.2f_%.2f", selection_axis_name.c_str(), bin_lo, bin_hi));
+      graph_selected->SetTitle(Form("%s #in (%.2f, %.2f)", selection_axis_name.c_str(), bin_lo, bin_hi));
       result->Add(graph_selected);
     }
   }

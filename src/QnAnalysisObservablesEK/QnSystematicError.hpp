@@ -112,7 +112,7 @@ GraphSysErr *ToGSE(
     double min_sumw = 1.,
     double max_sys_error = 0.0);
 TList *ToGSE2D(const DataContainerSystematicError& data,
-               const std::string& projection_axis_name,
+               const std::string& selection_axis_name,
                float error_x = 1.0,
                double min_sumw = 1.0,
                double max_sys_error = 0.0);

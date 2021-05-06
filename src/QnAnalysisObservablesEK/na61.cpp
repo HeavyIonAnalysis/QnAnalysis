@@ -1390,6 +1390,22 @@ int main() {
   {
     float y_fit_lo = -0.4;
     float y_fit_hi = 0.4;
+
+    ::Tools::ToRoot<TMultiGraph> root_saver("dv1_dy_slope.root", "RECREATE");
+    gResourceManager
+      .ForEach([y_fit_lo, y_fit_hi, &root_saver] (const StringKey &key, ResourceManager::Resource &resources) {
+        auto data = resources.As<DTCalc>();
+        auto slope_data = Qn::EvalSlopeND(data, "y_cm", y_fit_lo, y_fit_hi);
+        auto slope_multigraph_pt = Qn::ToTMultiGraphSlope(slope_data, "pT");
+        root_saver.operator()(key + "_pt", *slope_multigraph_pt);
+        auto slope_multigraph_centrality = Qn::ToTMultiGraphSlope(slope_data, "Centrality");
+        root_saver.operator()(key + "_centrality", *slope_multigraph_centrality);
+      }, META["type"] == "v1" && META["v1.axis"] == "2d");
+  }
+
+  {
+    float y_fit_lo = -0.4;
+    float y_fit_hi = 0.4;
     std::string base_dir = "dv1_dy";
     /* dv1/dy */
 //    TFile dv1dy_file("dv1dy.root", "recreate");
