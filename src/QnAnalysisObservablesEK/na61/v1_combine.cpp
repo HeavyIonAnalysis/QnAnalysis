@@ -27,35 +27,42 @@ void v1_combine() {
     AddResource(new_name, std::move(new_resource));
   };
 
+  /* v1 RECO */
   v1_key_generator = v1_key();
   gResourceManager.GroupBy(
       v1_reco_feature_set() - "v1.component",
       combine_components_function,
       META["type"] == "v1" && META["v1.src"] == "reco" && META["v1.component"].Matches("^(x1x1|y1y1)$"));
-
+  /* c1 RECO */
+  gResourceManager.GroupBy(
+      v1_reco_feature_set() - "v1.component",
+      combine_components_function,
+      META["type"] == "c1" && META["v1.src"] == "reco" && META["v1.component"].Matches("^(x1x1|y1y1)$"));
+  /* v1 MC */
   v1_key_generator = v1_mc_key();
   gResourceManager.GroupBy(
       v1_mc_feature_set() - "v1.component",
       combine_components_function,
-      META["type"] == "v1" && META["v1.src"] == "mc" && META["v1.component"].Matches("^(x1x1|y1y1)$"));
-
+      (META["type"] == "v1") && META["v1.src"] == "mc" && META["v1.component"].Matches("^(x1x1|y1y1)$"));
+  /* v1 centrality MC */
   v1_key_generator = v1_centrality_mc_key();
   gResourceManager.GroupBy(
       v1_centrality_mc_feature_set() - "v1.component",
       combine_components_function,
-      META["type"] == "v1_centrality" && META["v1.src"] == "mc" && META["v1.component"].Matches("^(x1x1|y1y1)$"));
-
+      (META["type"] == "v1_centrality") && META["v1.src"] == "mc" && META["v1.component"].Matches("^(x1x1|y1y1)$"));
+  /* v1 centrality RECO */
   v1_key_generator = v1_centrality_reco_key();
   gResourceManager.GroupBy(
       v1_centrality_reco_feature_set() - "v1.component",
       combine_components_function,
-      META["type"] == "v1_centrality" && META["v1.src"] == "reco" && META["v1.component"].Matches("^(x1x1|y1y1)$"));
-
-  v1_key_generator = v1_centrality_mc_key();
+      (META["type"] == "v1_centrality") && META["v1.src"] == "reco" && META["v1.component"].Matches("^(x1x1|y1y1)$"));
+  /* c1 centrality RECO */
+  v1_key_generator = v1_centrality_reco_key();
   gResourceManager.GroupBy(
-      v1_centrality_mc_feature_set() - "v1.component",
+      v1_centrality_reco_feature_set() - "v1.component",
       combine_components_function,
-      META["type"] == "v1_centrality" && META["v1.src"] == "mc" && META["v1.component"].Matches("^(x1x1|y1y1)$"));
+      (META["type"] == "c1_centrality") && META["v1.src"] == "reco" && META["v1.component"].Matches("^(x1x1|y1y1)$"));
+
 
 
 
@@ -83,12 +90,22 @@ void v1_combine() {
   gResourceManager.GroupBy(
       v1_centrality_reco_feature_set() - "v1.ref",
       combine_reference_function,
-      META["type"] == "v1_centrality" && META["v1.src"] == "reco");
+      (META["type"] == "v1_centrality") && META["v1.src"] == "reco");
+  v1_key_generator = v1_centrality_reco_key();
+  gResourceManager.GroupBy(
+      v1_centrality_reco_feature_set() - "v1.ref",
+      combine_reference_function,
+      (META["type"] == "c1_centrality") && META["v1.src"] == "reco");
 
   v1_key_generator = v1_key();
   gResourceManager.GroupBy(
       v1_reco_feature_set() - "v1.ref",
       combine_reference_function,
-      META["type"] == "v1" && META["v1.src"] == "reco");
+      (META["type"] == "v1") && META["v1.src"] == "reco");
+  v1_key_generator = v1_key();
+  gResourceManager.GroupBy(
+      v1_reco_feature_set() - "v1.ref",
+      combine_reference_function,
+      (META["type"] == "c1") && META["v1.src"] == "reco");
 }
 

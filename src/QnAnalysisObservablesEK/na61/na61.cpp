@@ -603,54 +603,18 @@ int main() {
 
               /* Y scan, STAT + SYSTEMATIC */
               {
-                auto syst_data_inverted = syst_data;
-                int ibin = 0;
-                const auto i_ax_y_cm = [&syst_data_inverted] () {
-                  auto &axes = syst_data_inverted.GetAxes();
-                  return std::distance(begin(axes), find_if(begin(axes), end(axes), [] (const Qn::AxisD& ax) {
-                    return ax.Name() == "y_cm";
-                  }));
-                }();
-                for (auto &bin : syst_data_inverted) {
-                  auto index = syst_data_inverted.GetIndex(ibin);
-                  auto i_y_cm = index.at(i_ax_y_cm);
-                  auto y_cm_lo = syst_data_inverted.GetAxes()[i_ax_y_cm].GetLowerBinEdge(i_y_cm);
-                  auto y_cm_up = syst_data_inverted.GetAxes()[i_ax_y_cm].GetUpperBinEdge(i_y_cm);
-                  auto y_cm_mid = 0.5*(y_cm_lo + y_cm_up);
-                  if (y_cm_mid < 0) {
-                    bin = bin * (-1.);
-                  }
-                  ibin++;
-                }
-
-                auto graph_list = Qn::ToGSE2D(syst_data_inverted, "y_cm", 0.005,
+                auto graph_list = Qn::ToGSE2D(syst_data, "y_cm", 0.005,
                                               1e2, 0.2);
                 TMultiGraph mg_y_scan;
                 int i_y_cm_slice = 0;
                 for (auto obj : *graph_list) {
                   auto *gse = (GraphSysErr *) obj;
 
-                  bool is_backward = [&syst_data_inverted, &i_y_cm_slice] () {
-                    auto y_cm_lo = syst_data_inverted.GetAxis("y_cm").GetLowerBinEdge(i_y_cm_slice);
-                    auto y_cm_up = syst_data_inverted.GetAxis("y_cm").GetUpperBinEdge(i_y_cm_slice);
-                    auto y_cm_mid = 0.5*(y_cm_lo + y_cm_up);
-                    return y_cm_mid < 0;
-                  }();
-
-                  int i_abs_ycm = [&syst_data_inverted, &i_y_cm_slice] () -> int {
-                    const auto &y_cm_axis = syst_data_inverted.GetAxis("y_cm");
-                    auto y_cm_lo = y_cm_axis.GetLowerBinEdge(i_y_cm_slice);
-                    auto y_cm_up = y_cm_axis.GetUpperBinEdge(i_y_cm_slice);
-                    auto y_cm_mid = 0.5*(y_cm_lo + y_cm_up);
-                    return y_cm_axis.FindBin(TMath::Abs(y_cm_mid)) - y_cm_axis.FindBin(0);
-                  }();
-
-                  auto primary_color = ::Tools::GetRainbowPalette().at(i_abs_ycm % size(::Tools::GetRainbowPalette()));
-                  auto alt_color = ::Tools::GetRainbowPastelPalette().at(i_abs_ycm % size(::Tools::GetRainbowPastelPalette()));
+                  auto primary_color = ::Tools::GetRainbowPalette().at(i_y_cm_slice % size(::Tools::GetRainbowPalette()));
+                  auto alt_color = ::Tools::GetRainbowPastelPalette().at(i_y_cm_slice % size(::Tools::GetRainbowPastelPalette()));
                   gse->SetDataOption(GraphSysErr::kHat);
                   gse->SetLineColor(primary_color);
                   gse->SetMarkerColor(primary_color);
-                  gse->SetMarkerStyle(is_backward? kOpenCircle : kFullCircle);
 
                   gse->SetSumOption(GraphSysErr::kRect);
                   gse->SetSumFillStyle(1001);

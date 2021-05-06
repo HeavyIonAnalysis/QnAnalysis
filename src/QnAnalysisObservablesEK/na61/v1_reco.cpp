@@ -63,23 +63,26 @@ void v1() {
           auto reference = META["arg1.name"](*uQ_resource);
           auto uQ_component = META["component"](*uQ_resource);
           auto resolution_component = (uQ_component == "x1y1" ? "Y" : "X");
-          auto c1_component = (uQ_component == "x1y1" ? "X" : "Y");
+          auto c1_component = (uQ_component == "x1y1" ? "x1x1" : "y1y1");
 
-          auto resolution_keys = gResourceManager
-              .SelectUniq(KEY, META["type"] == "resolution" &&
-                  META["resolution.method"] == "mc" &&
-                  META["resolution.ref"] == reference &&
-                  META["resolution.component"] == resolution_component);
-          if (resolution_keys.size() != 1) {
-            return;
-          }
 
-          Meta meta;
-          meta.put("type", "c1");
-          meta.put("v1.ref", reference);
-          meta.put("v1.component", c1_component);
-          meta.put("v1.src", "reco");
-          Define(v1_key(), Methods::v1, {KEY(*uQ_resource), resolution_keys[0]}, meta);
+          const auto resolution_filter = (META["type"] == "resolution" &&
+              META["resolution.component"] == resolution_component &&
+              META["resolution.ref"] == reference);
+
+          const auto uq_key = uQ_resource->name;
+          /* Lookup resolution */
+          gResourceManager.ForEach([uq_key, c1_component](const StringKey &resolution_key,
+                                                                   const ResourceManager::Resource &res) {
+            std::cout << resolution_key << std::endl;
+            Meta meta;
+            meta.put("type", "c1");
+            meta.put("v1.ref", META["resolution.ref"](res));
+            meta.put("v1.component", c1_component);
+            meta.put("v1.src", "reco");
+            Define(v1_key(), Methods::v1, {uq_key, resolution_key}, meta);
+          }, resolution_filter);
+
         }
       },
       META["type"] == "uQ" &&

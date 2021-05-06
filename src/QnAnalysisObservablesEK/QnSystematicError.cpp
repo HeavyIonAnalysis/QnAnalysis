@@ -167,6 +167,12 @@ Qn::SystematicError Qn::operator*(const SystematicError &operand, double scale) 
       value *= scale;
     }
   }
+  result.variations_errors = operand.variations_errors;
+  for (auto &sys_error : result.variations_errors) {
+    for (auto &value : sys_error.second) {
+      value *= TMath::Abs(scale);
+    }
+  }
   return result;
 }
 Qn::SystematicError Qn::operator*(double operand, const Qn::SystematicError &rhs) {

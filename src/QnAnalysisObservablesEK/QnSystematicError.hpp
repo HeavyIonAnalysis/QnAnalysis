@@ -34,16 +34,31 @@ class SystematicError {
   }
   void AddSystematicSource(int id) {
     auto emplace_result = variations_means.emplace(id, std::vector<double>());
+    variations_errors.emplace(id, std::vector<double>());
     assert(emplace_result.second);
   }
   void AddVariation(int id, const StatCalculate& data) {
     variations_means.at(id).emplace_back(data.Mean());
+    variations_errors.at(id).emplace_back(data.StandardErrorOfMean());
   }
   double GetSystematicalError(int id) const {
-    auto &means = variations_means.at(id);
-    auto val_max = *max_element(begin(means), end(means));
-    auto val_min = *min_element(begin(means), end(means));
-    return 0.5*(val_max - val_min);
+    /* using uncorrected standard deviation */
+    auto &var_v = variations_means.at(id);
+    auto &var_sigma_v = variations_errors.at(id);
+    assert(var_v.size() > 1);
+    assert(var_v.size() == var_sigma_v.size());
+
+    double sum2 = 0;
+    int n_passed_barlow = 0;
+    for(auto var_it = begin(var_v), var_sigma_it = begin(var_sigma_v);
+        var_it != end(var_v); ++var_it, ++var_sigma_it) {
+      if (BarlowCriterion(mean, statistical_error, *var_it, *var_sigma_it) > 1) {
+        ++n_passed_barlow;
+        sum2 += (*var_it - mean)*(*var_it - mean);
+      }
+    }
+    auto sigma = n_passed_barlow > 0? TMath::Sqrt(sum2 / n_passed_barlow) : 0.0;
+    return sigma;
   }
   double GetSystematicalError() const {
     double sigma2 = 0.0;
@@ -64,6 +79,16 @@ class SystematicError {
     return mean;
   }
 
+  static
+  inline
+  double BarlowCriterion(double ref, double sigma_ref, double var, double sigma_err) {
+    auto sigma2_ref = sigma_ref*sigma_ref;
+    auto sigma2_var = sigma_err*sigma_err;
+    auto barlow = TMath::Abs(ref - var) / TMath::Sqrt(TMath::Abs(sigma2_ref - sigma2_var));
+    return barlow;
+  }
+
+
  private:
   friend SystematicError operator*(const SystematicError &operand, double scale);
   friend SystematicError operator*(double operand, const SystematicError &rhs);
@@ -73,6 +98,7 @@ class SystematicError {
   double sumw;
   /* key = id of the systematic source, value = vector of value for given systematic source */
   std::map<int,std::vector<double>> variations_means;
+  std::map<int,std::vector<double>> variations_errors;
 };
 
 
