@@ -21,10 +21,13 @@ namespace Qn {
 class SystematicError {
  public:
   SystematicError() = default;
-
   explicit SystematicError(const StatCalculate& data);
   explicit SystematicError(const StatCollect& data);
+  void SetRef(const StatCalculate& data);
+  void SetRef(const StatCollect& data);
+  void SetRef(double value, double error, double sumw);
   void AddSystematicSource(int id);
+  void AddVariation(int id, double value, double error);
   void AddVariation(int id, const StatCalculate& data);
   double GetSystematicalError(int id) const;
   double GetSystematicalError() const;
@@ -46,9 +49,9 @@ class SystematicError {
   friend SystematicError operator*(const SystematicError &operand, double scale);
   friend SystematicError operator*(double operand, const SystematicError &rhs);
 
-  double mean;
-  double statistical_error;
-  double sumw;
+  double mean{0.};
+  double statistical_error{-1.};
+  double sumw{-1.};
   /* key = id of the systematic source, value = vector of value for given systematic source */
   std::map<int,std::vector<double>> variations_means;
   std::map<int,std::vector<double>> variations_errors;
@@ -58,12 +61,37 @@ class SystematicError {
 
 class DataContainerSystematicError : public DataContainer<SystematicError> {
  public:
+  DataContainerSystematicError();
+
+  DataContainerSystematicError(const std::vector<AxisD> &axes);
   template <typename T>
   explicit DataContainerSystematicError(DataContainer<T>& other) : DataContainer<SystematicError>(other) {}
   template<typename T>
   explicit DataContainerSystematicError(DataContainer<T>&&other) : DataContainer<SystematicError>(other) {}
 
   void AddSystematicSource(const std::string& name);
+
+  template<typename Function, typename T>
+  void AddSystematicVariation(const std::string& name, const DataContainer<T>& other, Function && f) {
+    auto source_id_it = systematic_sources_ids.find(name);
+    if (source_id_it == systematic_sources_ids.end()) {
+      AddSystematicSource(name);
+      source_id_it = systematic_sources_ids.find(name);
+    }
+    auto source_id = source_id_it->second;
+
+    /* consistency check between this and other */
+    assert(this->size() == other.size());
+    // TODO other bin consistency checks
+    using size_type = decltype(this->size());
+    for (size_type ibin = 0; ibin < this->size(); ++ibin) {
+      double mean;
+      double error;
+      if (f(ibin, other[ibin], mean, error)) {
+        (*this)[ibin].AddVariation(source_id, mean, error);
+      }
+    }
+  }
 
   void AddSystematicVariation(const std::string& name, const DataContainerStatCalculate& other);
 

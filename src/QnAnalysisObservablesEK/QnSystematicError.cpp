@@ -5,15 +5,29 @@
 #include "QnSystematicError.hpp"
 
 Qn::SystematicError::SystematicError(const Qn::StatCalculate &data) {
+  SetRef(data);
+}
+
+Qn::SystematicError::SystematicError(const Qn::StatCollect &data) {
+  SetRef(data);
+}
+
+void Qn::SystematicError::SetRef(const Qn::StatCalculate &data) {
   mean = data.Mean();
   statistical_error = data.StandardErrorOfMean();
   sumw = data.SumWeights();
 }
 
-Qn::SystematicError::SystematicError(const Qn::StatCollect &data) {
+void Qn::SystematicError::SetRef(const Qn::StatCollect &data) {
   mean = data.GetStatistics().Mean();
   statistical_error = data.GetStatistics().StandardErrorOfMean();
   sumw = data.GetStatistics().SumWeights();
+}
+
+void Qn::SystematicError::SetRef(double value, double error, double sumw) {
+  this->mean = value;
+  this->statistical_error = error;
+  this->sumw = sumw;
 }
 
 void Qn::SystematicError::AddSystematicSource(int id) {
@@ -22,16 +36,17 @@ void Qn::SystematicError::AddSystematicSource(int id) {
   assert(emplace_result.second);
 }
 
-void Qn::SystematicError::AddVariation(int id, const Qn::StatCalculate &data) {
-  variations_means.at(id).emplace_back(data.Mean());
-  variations_errors.at(id).emplace_back(data.StandardErrorOfMean());
+void Qn::SystematicError::AddVariation(int id, double value, double error) {
+  variations_means.at(id).emplace_back(value);
+  variations_errors.at(id).emplace_back(error);
 }
-
+void Qn::SystematicError::AddVariation(int id, const Qn::StatCalculate &data) {
+  AddVariation(id, data.Mean(), data.StandardErrorOfMean());
+}
 double Qn::SystematicError::GetSystematicalError(int id) const {
   /* using uncorrected standard deviation */
   auto &var_v = variations_means.at(id);
   auto &var_sigma_v = variations_errors.at(id);
-  assert(var_v.size() > 1);
   assert(var_v.size() == var_sigma_v.size());
 
   double sum2 = 0;
@@ -47,6 +62,7 @@ double Qn::SystematicError::GetSystematicalError(int id) const {
   return sigma;
 }
 
+
 double Qn::SystematicError::GetSystematicalError() const {
   double sigma2 = 0.0;
   for (auto &syst_source_element : variations_means) {
@@ -56,7 +72,6 @@ double Qn::SystematicError::GetSystematicalError() const {
   }
   return TMath::Sqrt(sigma2);
 }
-
 double Qn::SystematicError::BarlowCriterion(double ref, double sigma_ref, double variation, double sigma_variation) {
   auto sigma2_ref = sigma_ref*sigma_ref;
   auto sigma2_var = sigma_variation*sigma_variation;
@@ -100,6 +115,9 @@ std::vector<std::string> Qn::DataContainerSystematicError::GetSystematicSources(
 int Qn::DataContainerSystematicError::GetSystematicSourceId(const std::string &name) const {
   return systematic_sources_ids.at(name);
 }
+Qn::DataContainerSystematicError::DataContainerSystematicError() {}
+Qn::DataContainerSystematicError::DataContainerSystematicError(const std::vector<AxisD> &axes)
+    : DataContainer(axes) {}
 GraphSysErr *Qn::ToGSE(
     const Qn::DataContainerSystematicError &data,
     float error_x,

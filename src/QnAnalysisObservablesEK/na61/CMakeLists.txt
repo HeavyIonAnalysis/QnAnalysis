@@ -12,5 +12,13 @@ add_executable(na61_main
         v1_reco.cpp
         v1_reco.hpp
         v1_mc.cpp
-        v1_mc.hpp v1_centrality.cpp v1_centrality.hpp v1_combine.cpp v1_combine.hpp plot_v1_2d.cpp plot_v1_2d.hpp)
+        v1_mc.hpp
+        v1_centrality.cpp
+        v1_centrality.hpp
+        v1_combine.cpp
+        v1_combine.hpp
+        plot_v1_2d.cpp
+        plot_v1_2d.hpp
+        plot_dv1_dy.cpp
+        plot_dv1_dy.hpp)
 target_link_libraries(na61_main PRIVATE QnAnalysisObservables)
