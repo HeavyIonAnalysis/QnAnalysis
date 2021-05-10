@@ -51,7 +51,7 @@ void plot_v1_2d() {
 
                 auto primary_color = ::Tools::GetRainbowPalette().at(i_slice % size(::Tools::GetRainbowPalette()));
                 auto alt_color = ::Tools::GetRainbowPastelPalette().at(i_slice % size(::Tools::GetRainbowPastelPalette()));
-                gse->SetDataOption(GraphSysErr::kNormal);
+                gse->SetDataOption(GraphSysErr::kConnect);
                 gse->SetLineColor(primary_color);
                 gse->SetMarkerColor(primary_color);
                 gse->SetMarkerStyle(kFullCircle);
@@ -62,7 +62,8 @@ void plot_v1_2d() {
 
                 auto multi = gse->GetMulti("COMBINED QUAD");
                 if (multi) {
-                  ::Tools::GraphShiftX(multi, i_slice*0.010f);
+//                  ::Tools::GraphShiftX(multi, i_slice*0.010f);
+                  ::Tools::GraphShiftX(multi, 0.00f);
                   mg_pt_scan.Add(multi);
                 }
                 i_slice++;
@@ -98,7 +99,7 @@ void plot_v1_2d() {
 
                 auto primary_color = ::Tools::GetRainbowPalette().at(i_y_cm_slice % size(::Tools::GetRainbowPalette()));
                 auto alt_color = ::Tools::GetRainbowPastelPalette().at(i_y_cm_slice % size(::Tools::GetRainbowPastelPalette()));
-                gse->SetDataOption(GraphSysErr::kNormal);
+                gse->SetDataOption(GraphSysErr::kConnect);
                 gse->SetLineColor(primary_color);
                 gse->SetMarkerColor(primary_color);
 
@@ -108,7 +109,8 @@ void plot_v1_2d() {
 
                 auto multi = gse->GetMulti("COMBINED QUAD");
                 if (multi) {
-                  ::Tools::GraphShiftX(multi, i_y_cm_slice*0.010f);
+//                  ::Tools::GraphShiftX(multi, i_y_cm_slice*0.010f);
+                  ::Tools::GraphShiftX(multi, 0.0f);
                   mg_y_scan.Add(multi);
                 }
 
