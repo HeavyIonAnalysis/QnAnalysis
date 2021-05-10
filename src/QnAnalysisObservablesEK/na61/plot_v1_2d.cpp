@@ -40,14 +40,11 @@ void plot_v1_2d() {
   ::Tools::ToRoot<TMultiGraph> root_saver("v1_multigraph.root", "RECREATE");
   Qn::AxisD axis_pt("pT", {0., 0.2, 0.4, 0.6, 0.8, 1.2, 1.8});
   Qn::AxisD axis_y_cm("y_cm", {-0.4, 0., 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8});
-
-  auto preprocess = [&axis_pt] (const DTCalc& data) {
-    return data.Rebin(axis_pt);
-  };
+  Qn::AxisD axis_y_cm_pions ("y_cm", {-0.4, 0., 0.4, 0.8, 1.2, 1.6});
 
   gResourceManager
       .ForEach(
-          [&root_saver, &axis_pt, &axis_y_cm](const StringKey &key, ResourceManager::Resource &resource) {
+          [=,&root_saver](const StringKey &key, ResourceManager::Resource &resource) {
             auto reference_data = resource.As<DTCalc>();
             auto reference_mg = ToTMultiGraph(resource.As<DTCalc>(),"pT");
             root_saver.operator()(BASE_OF(KEY)(resource) + "/orig_reference", *reference_mg);
@@ -91,8 +88,11 @@ void plot_v1_2d() {
               int i_slice = 0;
               for (auto obj : *graph_list) {
                 auto *gse = (GraphSysErr *) obj;
-                if (!gse)
+                if (!gse) {
+                  i_slice++;
                   continue;
+                }
+
 
                 auto primary_color = ::Tools::GetRainbowPalette().at(i_slice % size(::Tools::GetRainbowPalette()));
                 auto alt_color = ::Tools::GetRainbowPastelPalette().at(i_slice % size(::Tools::GetRainbowPastelPalette()));
@@ -105,6 +105,10 @@ void plot_v1_2d() {
                 gse->SetSumFillStyle(3001);
                 gse->SetSumFillColor(alt_color);
 
+                auto plot_title = Form("%.2f < p_{T} < %.2f (GeV/#it{c})",
+                                       axis_pt.GetLowerBinEdge(i_slice),
+                                       axis_pt.GetUpperBinEdge(i_slice));
+
                 auto multi = gse->GetMulti("COMBINED QUAD");
                 if (multi) {
                   ::Tools::GraphShiftX(multi, 0.00f);
@@ -113,6 +117,8 @@ void plot_v1_2d() {
                   ::Tools::GraphSetErrorsX(errors_graph, 0.01);
                   auto data_graph = (TGraphAsymmErrors *) multi->GetListOfGraphs()->FindObject("data");
                   ::Tools::GraphSetErrorsX(data_graph, 0.0);
+                  data_graph->SetTitle(plot_title);
+
                   assert(errors_graph && data_graph);
                   mg_pt_scan_errors.Add( (TGraph *)errors_graph->Clone(), "20");
                   mg_pt_scan_data.Add( (TGraph *)data_graph->Clone(), "lpZ");
@@ -170,6 +176,10 @@ void plot_v1_2d() {
                 gse->SetSumFillStyle(3001);
                 gse->SetSumFillColor(alt_color);
 
+                auto plot_title = Form("%.2f < #it{y}_{CM} < %.2f",
+                                       axis_y_cm.GetLowerBinEdge(i_y_cm_slice),
+                                       axis_y_cm.GetUpperBinEdge(i_y_cm_slice));
+
                 auto multi = gse->GetMulti("COMBINED QUAD");
                 if (multi) {
                   ::Tools::GraphShiftX(multi, 0.0f);
@@ -177,6 +187,8 @@ void plot_v1_2d() {
                   ::Tools::GraphSetErrorsX(errors_graph, 0.01);
                   auto data_graph = (TGraphAsymmErrors *) multi->GetListOfGraphs()->FindObject("data");
                   ::Tools::GraphSetErrorsX(data_graph, 0.0);
+                  data_graph->SetTitle(plot_title);
+
                   assert(errors_graph && data_graph);
                   mg_y_scan_errors.Add( (TGraph *)errors_graph->Clone(), "20");
                   mg_y_scan_data.Add( (TGraph *)data_graph->Clone(), "lpZ");

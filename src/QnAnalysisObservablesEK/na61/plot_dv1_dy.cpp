@@ -32,12 +32,13 @@ Qn::DataContainerSystematicError MakeOffsetSysContainer(const Qn::DataContainer<
 void plot_dv1_dy() {
   float y_fit_lo = -0.2;
   float y_fit_hi = 0.8;
+  Qn::AxisD axis_pt("pT", {0.0, 0.4, 0.6, 0.8, 1.2, 1.8});
 
   ::Tools::ToRoot<TMultiGraph> root_saver("dv1_dy_slope.root", "RECREATE");
   gResourceManager
-      .ForEach([y_fit_lo, y_fit_hi, &root_saver](const StringKey &key, ResourceManager::Resource &resources) {
+      .ForEach([=,&root_saver](const StringKey &key, ResourceManager::Resource &resources) {
 
-                 auto data = resources.As<DTCalc>();
+                 auto data = resources.As<DTCalc>().Rebin(axis_pt);
                  auto slope_data = Qn::EvalSlopeND(data, "y_cm", y_fit_lo, y_fit_hi);
                  auto v1_slope_systematics = MakeSlopeSysContainer(slope_data);
                  auto v1_offset_systematics = MakeOffsetSysContainer(slope_data);
@@ -50,10 +51,11 @@ void plot_dv1_dy() {
                    gResourceManager.ForEach(
                        [&fs, &fs_reference,
                            y_fit_lo, y_fit_hi,
-                           &v1_slope_systematics, &v1_offset_systematics]
+                           &v1_slope_systematics, &v1_offset_systematics, axis_pt]
                            (const StringKey &key, ResourceManager::Resource &component) {
                          if (fs(component) != fs_reference) return;
-                         auto slope_data = Qn::EvalSlopeND(component.As<DTCalc>(), "y_cm", y_fit_lo, y_fit_hi);
+                         auto data = component.As<DTCalc>().Rebin(axis_pt);
+                         auto slope_data = Qn::EvalSlopeND(data, "y_cm", y_fit_lo, y_fit_hi);
                          v1_slope_systematics.AddSystematicVariation(
                              "component",
                              slope_data,
@@ -86,10 +88,11 @@ void plot_dv1_dy() {
                    gResourceManager.ForEach(
                        [&fs, &fs_reference,
                            y_fit_lo, y_fit_hi,
-                           &v1_slope_systematics, &v1_offset_systematics]
+                           &v1_slope_systematics, &v1_offset_systematics,axis_pt]
                            (const StringKey &key, ResourceManager::Resource &component) {
                          if (fs(component) != fs_reference) return;
-                         auto slope_data = Qn::EvalSlopeND(component.As<DTCalc>(), "y_cm", y_fit_lo, y_fit_hi);
+                         auto data = component.As<DTCalc>().Rebin(axis_pt);
+                         auto slope_data = Qn::EvalSlopeND(data, "y_cm", y_fit_lo, y_fit_hi);
                          v1_slope_systematics.AddSystematicVariation(
                              "psd_reference",
                              slope_data,
@@ -115,11 +118,17 @@ void plot_dv1_dy() {
 
                  /* pT scan, STAT + SYSTEMATIC */
                  {
-                   auto graph_list = Qn::ToGSE2D(v1_slope_systematics, "pT", 0.4, 0., -1);
+                   auto graph_list = Qn::ToGSE2D(v1_slope_systematics, "pT",
+                                                 0.4, 0.,
+                                                 1., 0.1, 0.1);
                    TMultiGraph mg_pt_scan;
                    int i_slice = 0;
                    for (auto obj : *graph_list) {
                      auto *gse = (GraphSysErr *) obj;
+                     if (!gse) {
+                       i_slice++;
+                       continue;
+                     }
 
                      auto primary_color = ::Tools::GetRainbowPalette().at(i_slice % size(::Tools::GetRainbowPalette()));
                      auto alt_color = ::Tools::GetRainbowPastelPalette().at(i_slice % size(::Tools::GetRainbowPastelPalette()));
@@ -146,11 +155,17 @@ void plot_dv1_dy() {
 
                  /* Centrality scan, STAT + SYSTEMATIC */
                  {
-                   auto graph_list = Qn::ToGSE2D(v1_slope_systematics, "Centrality", 0.005,0.0, -1.0);
+                   auto graph_list = Qn::ToGSE2D(v1_slope_systematics, "Centrality",
+                                                 0.005,0.0,
+                                                 1.,0.1, 0.1);
                    TMultiGraph mg_y_scan;
                    int i_y_cm_slice = 0;
                    for (auto obj : *graph_list) {
                      auto *gse = (GraphSysErr *) obj;
+                     if (!gse) {
+                       i_y_cm_slice++;
+                       continue;
+                     }
 
                      auto primary_color = ::Tools::GetRainbowPalette().at(i_y_cm_slice % size(::Tools::GetRainbowPalette()));
                      auto alt_color = ::Tools::GetRainbowPastelPalette().at(i_y_cm_slice % size(::Tools::GetRainbowPastelPalette()));

@@ -20,7 +20,7 @@ Dv1Dy Qn::EvalSlope1D(DataContainer<Qn::StatCalculate> &data, double fit_lo, dou
   auto tmp_graph = std::unique_ptr<TGraph>(Qn::ToTGraph(data));
 
   Dv1Dy result;
-  auto fit_result = tmp_graph->Fit("pol1", "SQFN", "", fit_lo, fit_hi);
+  auto fit_result = tmp_graph->Fit("pol1", "SQFNE", "", fit_lo, fit_hi);
   if (fit_result.Get() && fit_result->IsValid()) {
     auto offset = fit_result->Value(0);
     auto offset_erro = fit_result->Error(0);
