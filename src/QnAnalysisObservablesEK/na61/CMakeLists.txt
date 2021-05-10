@@ -22,3 +22,4 @@ add_executable(na61_main
         plot_dv1_dy.cpp
         plot_dv1_dy.hpp)
 target_link_libraries(na61_main PRIVATE QnAnalysisObservables)
+target_precompile_headers(na61_main REUSE_FROM gse)

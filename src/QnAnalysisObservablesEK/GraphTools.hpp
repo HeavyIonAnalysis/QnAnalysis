@@ -28,45 +28,35 @@ inline void GraphShiftX(TMultiGraph* multigraph, float shift_x) {
   }
 }
 
+inline void GraphSetErrorsX(TGraphAsymmErrors *graph, float error_x) {
+  auto n = graph->GetN();
+  for (int ipoint = 0; ipoint < n; ++ipoint) {
+    auto ylo = graph->GetErrorYlow(ipoint);
+    auto yhi = graph->GetErrorYhigh(ipoint);
+    graph->SetPointError(ipoint, error_x, error_x, ylo, yhi);
+  }
+}
+
+
 inline
 std::vector<Color_t> GetRainbowPalette() {
-  return {
-      kRed + 4,
-      kRed + 1,
-      kOrange + 9,
-      kYellow +2,
-      kSpring + 3,
-      kGreen + 1,
-      kTeal - 1,
-      kCyan + 3,
-      kGreen + 4,
-      kBlue,
-      kBlue + 3,
-      kMagenta,
-      kMagenta + 3,
-      kGray + 1,
-      kYellow -2,
-  };
+  return {kRed+1,
+          kOrange+7,
+          kYellow+1,
+          kGreen+2,
+          kAzure+1,
+          kBlue+1};
 }
 
 inline
 std::vector<Color_t> GetRainbowPastelPalette() {
   return {
-      kRed - 9,
-      kRed - 8,
-      kOrange + 6,
-      kOrange - 9,
-      kSpring + 7,
-      kGreen - 9,
-      kTeal - 9,
-      kCyan - 9,
-      kGreen - 8,
-      kBlue - 10,
-      kBlue - 9,
-      kMagenta - 9,
-      kMagenta - 6,
-      kGray,
-      kYellow - 9,
+    kRed-7,
+    kOrange+1,
+    kYellow-0,
+    kGreen-7,
+    kAzure+6,
+    kBlue-7
   };
 }
 

@@ -113,16 +113,19 @@ SystematicError operator*(const SystematicError &operand, double scale);
 SystematicError operator*(double operand, const SystematicError &rhs);
 
 
-GraphSysErr *ToGSE(
-    const Qn::DataContainerSystematicError &data,
-    float error_x = .0f,
-    double min_sumw = 1.,
-    double max_sys_error = 0.0);
+GraphSysErr *ToGSE(const Qn::DataContainerSystematicError &data,
+                   float err_x_data,
+                   float err_x_sys,
+                   double min_sumw,
+                   double max_sys_error,
+                   double max_stat_error);
 TList *ToGSE2D(const DataContainerSystematicError& data,
                const std::string& selection_axis_name,
-               float error_x = 1.0,
+               float err_x_data = 0.0,
+               float err_x_sys = 0.0,
                double min_sumw = 1.0,
-               double max_sys_error = 0.0);
+               double max_sys_error = 0.0,
+               double max_stat_error = 0.0);
 
 
 } // namespace Qn

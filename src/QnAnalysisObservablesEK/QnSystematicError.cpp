@@ -51,30 +51,30 @@ double Qn::SystematicError::GetSystematicalError(int id) const {
 
   double sum2 = 0;
   int n_passed_barlow = 0;
-  for(auto var_it = begin(var_v), var_sigma_it = begin(var_sigma_v);
-      var_it != end(var_v); ++var_it, ++var_sigma_it) {
-    if (BarlowCriterion(mean, statistical_error, *var_it, *var_sigma_it) > 1) {
+  for (auto var_it = begin(var_v), var_sigma_it = begin(var_sigma_v);
+       var_it != end(var_v); ++var_it, ++var_sigma_it) {
+//    if (true) {
+    if (BarlowCriterion(mean, statistical_error, *var_it, *var_sigma_it) > 1.5) {
       ++n_passed_barlow;
-      sum2 += (*var_it - mean)*(*var_it - mean);
+      sum2 += (*var_it - mean) * (*var_it - mean);
     }
   }
-  auto sigma = n_passed_barlow > 0? TMath::Sqrt(sum2 / n_passed_barlow) : 0.0;
+  auto sigma = n_passed_barlow > 0 ? TMath::Sqrt(sum2) : 0.0;
   return sigma;
 }
-
 
 double Qn::SystematicError::GetSystematicalError() const {
   double sigma2 = 0.0;
   for (auto &syst_source_element : variations_means) {
     auto syst_source_id = syst_source_element.first;
     auto source_sigma = GetSystematicalError(syst_source_id);
-    sigma2 += (source_sigma*source_sigma);
+    sigma2 += (source_sigma * source_sigma);
   }
   return TMath::Sqrt(sigma2);
 }
 double Qn::SystematicError::BarlowCriterion(double ref, double sigma_ref, double variation, double sigma_variation) {
-  auto sigma2_ref = sigma_ref*sigma_ref;
-  auto sigma2_var = sigma_variation*sigma_variation;
+  auto sigma2_ref = sigma_ref * sigma_ref;
+  auto sigma2_var = sigma_variation * sigma_variation;
   auto barlow = TMath::Abs(ref - variation) / TMath::Sqrt(TMath::Abs(sigma2_ref - sigma2_var));
   return barlow;
 }
@@ -118,11 +118,12 @@ int Qn::DataContainerSystematicError::GetSystematicSourceId(const std::string &n
 Qn::DataContainerSystematicError::DataContainerSystematicError() {}
 Qn::DataContainerSystematicError::DataContainerSystematicError(const std::vector<AxisD> &axes)
     : DataContainer(axes) {}
-GraphSysErr *Qn::ToGSE(
-    const Qn::DataContainerSystematicError &data,
-    float error_x,
-    double min_sumw,
-    double max_sys_error) {
+GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data,
+                       float err_x_data,
+                       float err_x_sys,
+                       double min_sumw,
+                       double max_sys_error,
+                       double max_stat_error) {
   if (data.GetAxes().size() > 1) {
     std::cout << "Data container has more than one dimension. " << std::endl;
     std::cout
@@ -135,9 +136,10 @@ GraphSysErr *Qn::ToGSE(
       kRed - 7, kBlue - 8, kCyan - 2, kGreen - 1, kOrange + 6, kViolet - 5
   };
 
-  auto TestPoint = [min_sumw, max_sys_error](const SystematicError &bin_err) {
+  auto TestPoint = [min_sumw, max_sys_error, max_stat_error](const SystematicError &bin_err) {
     return bin_err.SumWeights() >= min_sumw &&
-        (max_sys_error <= 0 || bin_err.GetSystematicalError() < max_sys_error);
+        (max_sys_error <= 0 || bin_err.GetSystematicalError() < max_sys_error) &&
+        (max_stat_error <= 0 || bin_err.GetStatisticalErrorOfMean() < max_stat_error);
   };
 
   auto n_points =
@@ -169,7 +171,7 @@ GraphSysErr *Qn::ToGSE(
   }
 
   unsigned int ibin = 0;
-  unsigned int igraph = 0;
+  int ipoint = 0;
   for (const auto &bin : data) {
     if (!TestPoint(bin)) {
       ibin++;
@@ -183,32 +185,33 @@ GraphSysErr *Qn::ToGSE(
     auto xhalfwidth = (xhi - xlo) / 2.;
     auto x = xlo + xhalfwidth;
 
-    graph->SetPoint(igraph, x, y);
-    graph->SetPointError(igraph, error_x < 0 ? xhalfwidth : error_x);
-    graph->SetStatError(igraph, ey_stat);
+    graph->SetPoint(ipoint, x, y);
+    graph->SetPointError(ipoint, err_x_data < 0 ? xhalfwidth : err_x_data);
+    graph->SetStatError(ipoint, ey_stat);
     for (auto &stat_source_element : systematic_id_map) {
       const auto data_error_id = stat_source_element.first;
       const auto pp_id = stat_source_element.second;
-      const auto error = bin.GetSystematicalError(data_error_id);
-      graph->SetSysError(pp_id, igraph, error_x, error);
+      const auto yerr = bin.GetSystematicalError(data_error_id);
+      graph->SetSysError(pp_id, ipoint, err_x_sys < 0 ? xhalfwidth : err_x_sys, yerr);
     }
     ibin++;
-    igraph++;
+    ipoint++;
   }
   return graph;
 }
 TList *Qn::ToGSE2D(const Qn::DataContainerSystematicError &data,
                    const std::string &selection_axis_name,
-                   float error_x,
+                   float err_x_data,
+                   float err_x_sys,
                    double min_sumw,
-                   double max_sys_error) {
+                   double max_sys_error,
+                   double max_stat_error) {
   if (data.GetAxes().size() != 2) {
     std::cout << "N(dim) != 2 " << std::endl;
     return nullptr;
   }
 
   auto result = new TList;
-  result->SetOwner();
 
   auto selection_axis = data.GetAxis(selection_axis_name);
   for (decltype(selection_axis.GetNBins()) ibin = 0; ibin < selection_axis.GetNBins(); ++ibin) {
@@ -218,12 +221,13 @@ TList *Qn::ToGSE2D(const Qn::DataContainerSystematicError &data,
     auto data_selected = DataContainerSystematicError(data.Select(axis_to_select));
     data_selected.CopySourcesInfo(data);
 
-    auto graph_selected = Qn::ToGSE(data_selected, error_x, min_sumw, max_sys_error);
+    auto graph_selected = Qn::ToGSE(data_selected, err_x_data, err_x_sys, min_sumw, max_sys_error, max_stat_error);
     if (graph_selected) {
       graph_selected->SetName(Form("%s__%.2f_%.2f", selection_axis_name.c_str(), bin_lo, bin_hi));
-      graph_selected->SetTitle(Form("%s #in (%.2f, %.2f)", selection_axis_name.c_str(), bin_lo, bin_hi));
+      graph_selected->SetTitle(Form("%.2f < %s < %.2f", bin_lo, selection_axis_name.c_str(), bin_hi));
       result->Add(graph_selected);
     }
+    result->Add(nullptr);
   }
 
   return result;
