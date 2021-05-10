@@ -40,23 +40,29 @@ inline void GraphSetErrorsX(TGraphAsymmErrors *graph, float error_x) {
 
 inline
 std::vector<Color_t> GetRainbowPalette() {
-  return {kRed+1,
+  return {
+          kRed+3,
+          kRed+1,
           kOrange+7,
           kYellow+1,
           kGreen+2,
           kAzure+1,
-          kBlue+1};
+          kBlue+1,
+          kMagenta+1
+          };
 }
 
 inline
 std::vector<Color_t> GetRainbowPastelPalette() {
   return {
+    kRed - 5,
     kRed-7,
     kOrange+1,
     kYellow-0,
     kGreen-7,
     kAzure+6,
-    kBlue-7
+    kBlue-7,
+    kMagenta - 7
   };
 }
 

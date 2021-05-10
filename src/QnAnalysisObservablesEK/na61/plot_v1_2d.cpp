@@ -47,7 +47,7 @@ void plot_v1_2d() {
 
   gResourceManager
       .ForEach(
-          [&root_saver, &preprocess, &axis_pt, &axis_y_cm](const StringKey &key, ResourceManager::Resource &resource) {
+          [&root_saver, &axis_pt, &axis_y_cm](const StringKey &key, ResourceManager::Resource &resource) {
             auto reference_data = resource.As<DTCalc>();
             auto reference_mg = ToTMultiGraph(resource.As<DTCalc>(),"pT");
             root_saver.operator()(BASE_OF(KEY)(resource) + "/orig_reference", *reference_mg);
@@ -83,8 +83,8 @@ void plot_v1_2d() {
 
             /* pT scan, STAT + SYSTEMATIC */
             {
-              auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.01, 0.01,1e2,
-                                            0.05, 0.05);
+              auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.01, 0.01,
+                                            1e2,0.05, 0.05);
               TMultiGraph mg_pt;
               TMultiGraph mg_pt_scan_errors;
               TMultiGraph mg_pt_scan_data;
@@ -122,6 +122,8 @@ void plot_v1_2d() {
               }
               mg_pt.Add((TMultiGraph *) mg_pt_scan_errors.Clone(), "20");
               mg_pt.Add((TMultiGraph *) mg_pt_scan_data.Clone(), "lpZ");
+              mg_pt.GetXaxis()->SetTitle("#it{y}_{CM}");
+              mg_pt.GetYaxis()->SetTitle("v_{1}");
               root_saver.operator()(BASE_OF(KEY)(resource) + "/v1_y", mg_pt);
               root_saver.operator()(BASE_OF(KEY)(resource) + "/v1_y_data", mg_pt_scan_data);
               root_saver.operator()(BASE_OF(KEY)(resource) + "/v1_y_sys_errors", mg_pt_scan_errors);
@@ -129,7 +131,7 @@ void plot_v1_2d() {
 
             /* pT scan, different contributions */
             {
-              auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.0, 0.1,1e3);
+              auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.1, 0.1,1);
 
               for (auto obj : *graph_list) {
                 auto *gse = (GraphSysErr *) obj;
@@ -144,8 +146,8 @@ void plot_v1_2d() {
 
             /* Y scan, STAT + SYSTEMATIC */
             {
-              auto graph_list = Qn::ToGSE2D(syst_data, "y_cm", 0.01, 0.01,1e2,
-                                            0.05, 0.05);
+              auto graph_list = Qn::ToGSE2D(syst_data, "y_cm", 0.01, 0.01,
+                                            1e2,0.05, 0.05);
               TMultiGraph mg_y_scan;
               TMultiGraph mg_y_scan_data;
               TMultiGraph mg_y_scan_errors;
@@ -182,15 +184,17 @@ void plot_v1_2d() {
 
                 i_y_cm_slice++;
               }
+              mg_y_scan.Add((TMultiGraph *) mg_y_scan_errors.Clone(), "20");
+              mg_y_scan.Add((TMultiGraph *) mg_y_scan_data.Clone(), "lpZ");
               mg_y_scan.GetXaxis()->SetTitle("p_{T} (GeV/#it{c})");
               mg_y_scan.GetYaxis()->SetTitle("v_{1}");
-//              root_saver.operator()(BASE_OF(KEY)(resource) + "/v1_pt  ", mg_y_scan);
+              root_saver.operator()(BASE_OF(KEY)(resource) + "/v1_pt  ", mg_y_scan);
               root_saver.operator()(BASE_OF(KEY)(resource) + "/v1_pt_data", mg_y_scan_data);
               root_saver.operator()(BASE_OF(KEY)(resource) + "/v1_pt_sys_errors", mg_y_scan_errors);
             }
             /* Y scan, different contributions */
             {
-              auto graph_list = Qn::ToGSE2D(syst_data, "y_cm", 0.0, 0.1, 1e3);
+              auto graph_list = Qn::ToGSE2D(syst_data, "y_cm", 0.1, 0.1, 1);
 
               for (auto obj : *graph_list) {
                 auto *gse = (GraphSysErr *) obj;
