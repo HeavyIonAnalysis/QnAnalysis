@@ -443,7 +443,9 @@ _tasks:
     axes:
       - &ax-centrality-correlation
         name: Centrality_Centrality_Epsd
-        bin-edges: *common-correlation-centrality-bin-ranges
+        nb: 20
+        lo: 0.
+        hi: 100.
   - args:
       - query: { tags: { any-in: [ reference ] } }
         query-list: *q-vectors-list
