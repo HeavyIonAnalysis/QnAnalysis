@@ -140,19 +140,33 @@ void plot_dv1_dy() {
                      gse->SetMarkerStyle(kFullCircle);
 
                      gse->SetSumOption(GraphSysErr::kRect);
-                     gse->SetSumFillStyle(1001);
+                     gse->SetSumFillStyle(3001);
                      gse->SetSumFillColor(alt_color);
+
+                     auto plot_title = Form("%.2f < p_{T} < %.2f (GeV/#it{c})",
+                                            axis_pt.GetLowerBinEdge(i_slice),
+                                            axis_pt.GetUpperBinEdge(i_slice));
 
                      auto multi = gse->GetMulti("COMBINED QUAD");
                      if (multi) {
-                       ::Tools::GraphShiftX(multi, i_slice * 0.f);
-                       mg_pt_scan.Add(multi);
+                       auto errors_graph = (TGraphAsymmErrors *) multi->GetListOfGraphs()->FindObject("error");
+                       auto data_graph = (TGraphAsymmErrors *) multi->GetListOfGraphs()->FindObject("data");
+                       assert(errors_graph && data_graph);
+                       ::Tools::GraphSetErrorsX(errors_graph, 0.01);
+                       ::Tools::GraphSetErrorsX(data_graph, 0.0);
+                       data_graph->SetTitle(plot_title);
+                       mg_pt_scan_errors.Add((TGraph *) errors_graph->Clone(), "20");
+                       mg_pt_scan_data.Add((TGraph *) data_graph->Clone(), "lpZ");
                      }
                      i_slice++;
                    }
+                   mg_pt_scan.Add((TMultiGraph *) mg_pt_scan_errors.Clone(), "20");
+                   mg_pt_scan.Add((TMultiGraph *) mg_pt_scan_data.Clone(), "lpZ");
                    mg_pt_scan.GetXaxis()->SetTitle("Centrality (%)");
                    mg_pt_scan.GetYaxis()->SetTitle("d v_{1} / d #it{y}_{CM}");
                    root_saver.operator()(BASE_OF(KEY)(resources) + "/dv1_dy__pt", mg_pt_scan);
+                   root_saver.operator()(BASE_OF(KEY)(resources) + "/dv1_dy__pt_data", mg_pt_scan_data);
+                   root_saver.operator()(BASE_OF(KEY)(resources) + "/dv1_dy__pt_errors", mg_pt_scan_data);
                  }
 
                  /* Centrality scan, STAT + SYSTEMATIC */
