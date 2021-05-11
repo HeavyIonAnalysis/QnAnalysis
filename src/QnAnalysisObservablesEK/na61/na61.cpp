@@ -12,7 +12,7 @@
 #include "v1_centrality.hpp"
 #include "v1_combine.hpp"
 
-#include "plot_v1_2d.hpp"
+#include "plot_v1_pt_y.hpp"
 #include "plot_dv1_dy.hpp"
 
 #include "using.hpp"
@@ -525,7 +525,7 @@ int main() {
               META["type"] == "c1_centrality");
 
 
-  plot_v1_2d();
+  plot_v1_pt_y();
 
   /*********** v1 systematics (component) ********************/
   {

@@ -2,11 +2,10 @@
 // Created by eugene on 07/05/2021.
 //
 
-#include "plot_v1_2d.hpp"
+#include "plot_v1_pt_y.hpp"
 #include "using.hpp"
 #include "Observables.hpp"
 #include "v1_centrality.hpp"
-
 
 inline
 TMultiGraph *
@@ -35,53 +34,68 @@ ToTMultiGraph(const Qn::DataContainerStatCalculate &data, const std::string &pro
   return result;
 }
 
-void plot_v1_2d() {
+Qn::DataContainerSystematicError CollectV1Systematics(
+    ResourceManager::Resource &resource,
+    Qn::AxisD rebin_y_cm = {},
+    Qn::AxisD rebin_pt = {}) {
+
+  auto PreprocessData = [rebin_y_cm, rebin_pt] (const DTCalc& data) {
+    auto result = data;
+    if (!rebin_y_cm.Name().empty()) {
+      result = result.Rebin(rebin_y_cm);
+    }
+    if (!rebin_pt.Name().empty()) {
+      result = result.Rebin(rebin_pt);
+    }
+    return result;
+  };
+  auto reference_data = resource.As<DTCalc>();
+
+  auto syst_data = Qn::DataContainerSystematicError(PreprocessData(resource.As<DTCalc>()));
+  {
+    syst_data.AddSystematicSource("component");
+    auto fs = v1_centrality_reco_feature_set() - "v1.component";
+    auto fs_reference = fs(resource);
+    gResourceManager.ForEach(
+        [&fs, &fs_reference, &syst_data, &PreprocessData](const StringKey &key,
+                                                               ResourceManager::Resource &component) {
+          if (fs(component) != fs_reference) return;
+          syst_data.AddSystematicVariation("component", PreprocessData(component.As<DTCalc>()));
+        },
+        META["type"] == "v1_centrality" &&
+            (META["v1.component"] == "x1x1" || META["v1.component"] == "y1y1")
+    );
+  }
+  {
+    syst_data.AddSystematicSource("psd_reference");
+    auto fs = v1_centrality_reco_feature_set() - "v1.ref";
+    auto fs_reference = fs(resource);
+    gResourceManager.ForEach(
+        [&fs, &fs_reference, &syst_data, &PreprocessData](const StringKey &key, ResourceManager::Resource &psd_ref) {
+          if (fs(psd_ref) != fs_reference) return;
+          syst_data.AddSystematicVariation("psd_reference", PreprocessData(psd_ref.As<DTCalc>()));
+        }, META["type"] == "v1_centrality" && META["v1.ref"].Matches("psd[0-9]"));
+  }
+  return  syst_data;
+}
+
+
+
+void plot_v1_pt_y() {
 /* v1 (y,Pt) Multigraphs */
   ::Tools::ToRoot<TMultiGraph> root_saver("v1_multigraph.root", "RECREATE");
   Qn::AxisD axis_pt("pT", {0., 0.2, 0.4, 0.6, 0.8, 1.2, 1.8});
   Qn::AxisD axis_y_cm("y_cm", {-0.4, 0., 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8});
-  Qn::AxisD axis_y_cm_pions ("y_cm", {-0.4, 0., 0.4, 0.8, 1.2, 1.6});
+  Qn::AxisD axis_y_cm_pions("y_cm", {-0.4, 0., 0.4, 0.8, 1.2, 1.6});
 
   gResourceManager
       .ForEach(
-          [=,&root_saver](const StringKey &key, ResourceManager::Resource &resource) {
-            auto reference_data = resource.As<DTCalc>();
-            auto reference_mg = ToTMultiGraph(resource.As<DTCalc>(),"pT");
-            root_saver.operator()(BASE_OF(KEY)(resource) + "/orig_reference", *reference_mg);
-            auto syst_data = Qn::DataContainerSystematicError(
-                reference_data.Rebin(axis_pt).Rebin(axis_y_cm));
-            {
-              syst_data.AddSystematicSource("component");
-              auto fs = v1_centrality_reco_feature_set() - "v1.component";
-              auto fs_reference = fs(resource);
-              gResourceManager.ForEach(
-                  [&fs, &fs_reference,&syst_data,&axis_pt,&axis_y_cm](const StringKey &key,
-                                                   ResourceManager::Resource &component) {
-                    if (fs(component) != fs_reference) return;
-                    syst_data.AddSystematicVariation("component", component.As<DTCalc>()
-                        .Rebin(axis_pt).Rebin(axis_y_cm));
-                  },
-                  META["type"] == "v1_centrality" &&
-                      (META["v1.component"] == "x1x1" || META["v1.component"] == "y1y1")
-              );
-            }
-            {
-              syst_data.AddSystematicSource("psd_reference");
-              auto fs = v1_centrality_reco_feature_set() - "v1.ref";
-              auto fs_reference = fs(resource);
-              gResourceManager.ForEach(
-                  [&fs, &fs_reference, &syst_data,axis_pt,axis_y_cm] (const StringKey& key, ResourceManager::Resource& psd_ref) {
-                    if (fs(psd_ref) != fs_reference) return;
-                    syst_data.AddSystematicVariation("psd_reference", psd_ref.As<DTCalc>()
-                        .Rebin(axis_pt).Rebin(axis_y_cm));
-                  }, META["type"] == "v1_centrality" && META["v1.ref"].Matches("psd[0-9]"));
-            }
-
-
+          [=, &root_saver](const StringKey &key, ResourceManager::Resource &resource) {
             /* pT scan, STAT + SYSTEMATIC */
             {
+              auto syst_data = CollectV1Systematics(resource, {}, axis_pt);
               auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.01, 0.01,
-                                            1e2,0.05, 0.05);
+                                            1e2, 0.05, 0.05);
               TMultiGraph mg_pt;
               TMultiGraph mg_pt_scan_errors;
               TMultiGraph mg_pt_scan_data;
@@ -93,9 +107,9 @@ void plot_v1_2d() {
                   continue;
                 }
 
-
                 auto primary_color = ::Tools::GetRainbowPalette().at(i_slice % size(::Tools::GetRainbowPalette()));
-                auto alt_color = ::Tools::GetRainbowPastelPalette().at(i_slice % size(::Tools::GetRainbowPastelPalette()));
+                auto alt_color =
+                    ::Tools::GetRainbowPastelPalette().at(i_slice % size(::Tools::GetRainbowPastelPalette()));
                 gse->SetDataOption(GraphSysErr::kNormal);
                 gse->SetLineColor(primary_color);
                 gse->SetMarkerColor(primary_color);
@@ -120,8 +134,8 @@ void plot_v1_2d() {
                   data_graph->SetTitle(plot_title);
 
                   assert(errors_graph && data_graph);
-                  mg_pt_scan_errors.Add( (TGraph *)errors_graph->Clone(), "20");
-                  mg_pt_scan_data.Add( (TGraph *)data_graph->Clone(), "lpZ");
+                  mg_pt_scan_errors.Add((TGraph *) errors_graph->Clone(), "20");
+                  mg_pt_scan_data.Add((TGraph *) data_graph->Clone(), "lpZ");
                 }
                 delete multi;
                 i_slice++;
@@ -137,7 +151,8 @@ void plot_v1_2d() {
 
             /* pT scan, different contributions */
             {
-              auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.1, 0.1,1);
+              auto syst_data = CollectV1Systematics(resource, {}, axis_pt);
+              auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.1, 0.1, 1);
 
               for (auto obj : *graph_list) {
                 auto *gse = (GraphSysErr *) obj;
@@ -152,8 +167,11 @@ void plot_v1_2d() {
 
             /* Y scan, STAT + SYSTEMATIC */
             {
+              auto y_cm_rebin_axis = (META["v1.particle"] == "pion_neg" || META["v1.particle"] == "pion_pos")(resource)?
+                  axis_y_cm_pions : axis_y_cm;
+              auto syst_data = CollectV1Systematics(resource, y_cm_rebin_axis, {});
               auto graph_list = Qn::ToGSE2D(syst_data, "y_cm", 0.01, 0.01,
-                                            1e2,0.05, 0.05);
+                                            1e2, 0.05, 0.05);
               TMultiGraph mg_y_scan;
               TMultiGraph mg_y_scan_data;
               TMultiGraph mg_y_scan_errors;
@@ -167,7 +185,8 @@ void plot_v1_2d() {
                 }
 
                 auto primary_color = ::Tools::GetRainbowPalette().at(i_y_cm_slice % size(::Tools::GetRainbowPalette()));
-                auto alt_color = ::Tools::GetRainbowPastelPalette().at(i_y_cm_slice % size(::Tools::GetRainbowPastelPalette()));
+                auto alt_color =
+                    ::Tools::GetRainbowPastelPalette().at(i_y_cm_slice % size(::Tools::GetRainbowPastelPalette()));
                 gse->SetDataOption(GraphSysErr::kConnect);
                 gse->SetLineColor(primary_color);
                 gse->SetMarkerColor(primary_color);
@@ -177,8 +196,8 @@ void plot_v1_2d() {
                 gse->SetSumFillColor(alt_color);
 
                 auto plot_title = Form("%.2f < #it{y}_{CM} < %.2f",
-                                       axis_y_cm.GetLowerBinEdge(i_y_cm_slice),
-                                       axis_y_cm.GetUpperBinEdge(i_y_cm_slice));
+                                       y_cm_rebin_axis.GetLowerBinEdge(i_y_cm_slice),
+                                       y_cm_rebin_axis.GetUpperBinEdge(i_y_cm_slice));
 
                 auto multi = gse->GetMulti("COMBINED QUAD");
                 if (multi) {
@@ -190,8 +209,8 @@ void plot_v1_2d() {
                   data_graph->SetTitle(plot_title);
 
                   assert(errors_graph && data_graph);
-                  mg_y_scan_errors.Add( (TGraph *)errors_graph->Clone(), "20");
-                  mg_y_scan_data.Add( (TGraph *)data_graph->Clone(), "lpZ");
+                  mg_y_scan_errors.Add((TGraph *) errors_graph->Clone(), "20");
+                  mg_y_scan_data.Add((TGraph *) data_graph->Clone(), "lpZ");
                 }
 
                 i_y_cm_slice++;
@@ -206,6 +225,9 @@ void plot_v1_2d() {
             }
             /* Y scan, different contributions */
             {
+              auto y_cm_rebin_axis = (META["v1.particle"] == "pion_neg" || META["v1.particle"] == "pion_pos")(resource)?
+                                     axis_y_cm_pions : axis_y_cm;
+              auto syst_data = CollectV1Systematics(resource, y_cm_rebin_axis, {});
               auto graph_list = Qn::ToGSE2D(syst_data, "y_cm", 0.1, 0.1, 1);
 
               for (auto obj : *graph_list) {

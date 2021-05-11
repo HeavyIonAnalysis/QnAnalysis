@@ -35,8 +35,8 @@ void v1_centrality() {
     for (size_t ic = 0; ic < centrality_axis.size(); ++ic) {
       auto c_lo = centrality_axis.GetLowerBinEdge(ic);
       auto c_hi = centrality_axis.GetUpperBinEdge(ic);
-      auto centrality_range_str = (Format("centrality_%1%-%2%") % c_lo % c_hi).str();
-      auto centrality_key = (Format("%1%-%2%") % c_lo % c_hi).str();
+      auto centrality_range_str = (Format("centrality_%05.1f-%05.1f") % c_lo % c_hi).str();
+      auto centrality_key = (Format("%05.1f-%05.1f") % c_lo % c_hi).str();
 
       auto selected = calc.Select(Qn::AxisD(centrality_axis.Name(), 1, c_lo, c_hi));
 
