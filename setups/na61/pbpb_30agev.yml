@@ -263,17 +263,17 @@ pbpb_30agev_16_025:
     - &ax-vtx-z-qa { name: *var-evt-vtx-z, nb: 1000, lo: -602., hi: -582. }
   qa-centrality: &qa-centrality
     - &ax-epsd-qa { name: *var-evt-e-psd, nb: 1300, lo: 0, hi: 13000 }
-    - *ax-centrality-correction-preliminary
-    - [ *ax-epsd-qa, *ax-centrality-correction-preliminary ]
+    - *ax-centrality-correction-standard
+    - [ *ax-epsd-qa, *ax-centrality-correction-standard ]
     - [ *ax-vtx-z-qa, *ax-epsd-qa ]
-    - [ *ax-vtx-z-qa, *ax-centrality-correction-preliminary ]
+    - [ *ax-vtx-z-qa, *ax-centrality-correction-standard ]
   qa:
     - &ax-s1-qa { name: *var-evt-s1, nb: 500, lo: 0, hi: 500 }
     - &ax-s2-qa { name: *var-evt-s2, nb: 500, lo: 0, hi: 500 }
     - [ *ax-s1-qa, *ax-s2-qa ]
     - [ *ax-s1-qa, *ax-epsd-qa ]
     - [ *ax-s2-qa, *ax-epsd-qa ]
-  axes: [ *ax-centrality-correction-preliminary ]
+  axes: [ *ax-centrality-correction-standard ]
   q-vectors: &q-vectors-list
     # OBSERVABLES
     # v1(pT) for protons (PRELIMINARY SET)
