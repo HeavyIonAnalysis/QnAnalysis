@@ -84,16 +84,20 @@ Qn::DataContainerSystematicError CollectV1Systematics(
 void plot_v1_pt_y() {
 /* v1 (y,Pt) Multigraphs */
   ::Tools::ToRoot<TMultiGraph> root_saver("v1_multigraph.root", "RECREATE");
-  Qn::AxisD axis_pt("pT", {0., 0.2, 0.4, 0.6, 0.8, 1.2, 1.8});
-  Qn::AxisD axis_y_cm("y_cm", {-0.4, 0., 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8});
-  Qn::AxisD axis_y_cm_pions("y_cm", {-0.4, 0., 0.4, 0.8, 1.2, 1.6});
+  Qn::AxisD axis_pt("pT", {0., 0.2, 0.6, 1.0, 1.8});
+  Qn::AxisD axis_pt_pions("pT", {0., 0.2, 0.6, 1.0, 1.8});
+//  Qn::AxisD axis_y_cm("y_cm", {-0.4, 0., 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8});
+  Qn::AxisD axis_y_cm("y_cm", {-0.4, 0.4, 0.8, 1.0, 1.8});
+  Qn::AxisD axis_y_cm_pions("y_cm", {0., 0.8, 1.6});
 
   gResourceManager
       .ForEach(
           [=, &root_saver](const StringKey &key, ResourceManager::Resource &resource) {
             /* pT scan, STAT + SYSTEMATIC */
             {
-              auto syst_data = CollectV1Systematics(resource, {}, axis_pt);
+              auto pt_rebin_axis = (META["v1.particle"] == "pion_neg" || META["v1.particle"] == "pion_pos")(resource)?
+                                     axis_pt_pions : axis_pt;
+              auto syst_data = CollectV1Systematics(resource, {}, pt_rebin_axis);
               auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.01, 0.01,
                                             1e2, 0.05, 0.05);
               TMultiGraph mg_pt;
@@ -120,8 +124,8 @@ void plot_v1_pt_y() {
                 gse->SetSumFillColor(alt_color);
 
                 auto plot_title = Form("%.2f < p_{T} < %.2f (GeV/#it{c})",
-                                       axis_pt.GetLowerBinEdge(i_slice),
-                                       axis_pt.GetUpperBinEdge(i_slice));
+                                       pt_rebin_axis.GetLowerBinEdge(i_slice),
+                                       pt_rebin_axis.GetUpperBinEdge(i_slice));
 
                 auto multi = gse->GetMulti("COMBINED QUAD");
                 if (multi) {
@@ -151,7 +155,9 @@ void plot_v1_pt_y() {
 
             /* pT scan, different contributions */
             {
-              auto syst_data = CollectV1Systematics(resource, {}, axis_pt);
+              auto pt_rebin_axis = (META["v1.particle"] == "pion_neg" || META["v1.particle"] == "pion_pos")(resource)?
+                                   axis_pt_pions : axis_pt;
+              auto syst_data = CollectV1Systematics(resource, {}, pt_rebin_axis);
               auto graph_list = Qn::ToGSE2D(syst_data, "pT", 0.1, 0.1, 1);
 
               for (auto obj : *graph_list) {

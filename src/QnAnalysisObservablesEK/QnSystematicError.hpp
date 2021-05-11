@@ -117,8 +117,8 @@ GraphSysErr *ToGSE(const Qn::DataContainerSystematicError &data,
                    float err_x_data,
                    float err_x_sys,
                    double min_sumw,
-                   double max_sys_error,
-                   double max_stat_error);
+                   double max_abs_sys_error,
+                   double max_abs_stat_error);
 TList *ToGSE2D(const DataContainerSystematicError& data,
                const std::string& selection_axis_name,
                float err_x_data = 0.0,

@@ -77,8 +77,8 @@ int main() {
 
         const std::map<std::string, std::pair<double, double>> y_ranges = {
             {"protons", {-0.1, 0.6}},
-            {"pion_neg", {-0.4, 0.2}},
-            {"pion_pos", {-0.4, 0.2}},
+            {"pion_neg", {-0.4, 0.3}},
+            {"pion_pos", {-0.4, 0.3}},
         };
 
         const std::map<std::string, std::pair<double, double>> x_ranges = {
@@ -139,14 +139,14 @@ int main() {
           canvas_ptr->cd();
           canvas_ptr->Clear();
           mg->GetHistogram()->Draw("AXIS");
-          line.DrawClone();
-          mg->Draw("");
-          legend->Draw();
-          description->Draw();
           mg->GetXaxis()->SetLimits(x_ranges.at(axis).first, x_ranges.at(axis).second);
           mg->GetYaxis()->SetRangeUser(y_ranges.at(particle).first, y_ranges.at(particle).second);
           gPad->Modified();
           gPad->Update();
+          line.DrawClone();
+          mg->DrawClone("");
+          legend->Draw();
+          description->Draw();
           canvas_ptr->Print(pdf_path.c_str());
           canvases_root.WriteObject(canvas_ptr.get(), centrality_string.c_str());
         }

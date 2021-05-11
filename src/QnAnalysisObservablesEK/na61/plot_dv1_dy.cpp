@@ -32,7 +32,7 @@ Qn::DataContainerSystematicError MakeOffsetSysContainer(const Qn::DataContainer<
 void plot_dv1_dy() {
   float y_fit_lo = -0.2;
   float y_fit_hi = 0.8;
-  Qn::AxisD axis_pt("pT", {0.0, 0.4, 0.6, 0.8, 1.2, 1.8});
+  Qn::AxisD axis_pt("pT", {0., 0.2, 0.6, 1.0, 1.8});
 
   ::Tools::ToRoot<TMultiGraph> root_saver("dv1_dy_slope.root", "RECREATE");
   gResourceManager
@@ -122,6 +122,8 @@ void plot_dv1_dy() {
                                                  0.4, 0.,
                                                  1., 0.1, 0.1);
                    TMultiGraph mg_pt_scan;
+                   TMultiGraph mg_pt_scan_data;
+                   TMultiGraph mg_pt_scan_errors;
                    int i_slice = 0;
                    for (auto obj : *graph_list) {
                      auto *gse = (GraphSysErr *) obj;
@@ -143,7 +145,7 @@ void plot_dv1_dy() {
 
                      auto multi = gse->GetMulti("COMBINED QUAD");
                      if (multi) {
-                       ::Tools::GraphShiftX(multi, i_slice * 0.5f);
+                       ::Tools::GraphShiftX(multi, i_slice * 0.f);
                        mg_pt_scan.Add(multi);
                      }
                      i_slice++;

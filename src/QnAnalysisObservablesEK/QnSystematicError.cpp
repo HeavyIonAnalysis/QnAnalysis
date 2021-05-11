@@ -122,8 +122,8 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data,
                        float err_x_data,
                        float err_x_sys,
                        double min_sumw,
-                       double max_sys_error,
-                       double max_stat_error) {
+                       double max_abs_sys_error,
+                       double max_abs_stat_error) {
   if (data.GetAxes().size() > 1) {
     std::cout << "Data container has more than one dimension. " << std::endl;
     std::cout
@@ -136,10 +136,15 @@ GraphSysErr *Qn::ToGSE(const Qn::DataContainerSystematicError &data,
       kRed - 7, kBlue - 8, kCyan - 2, kGreen - 1, kOrange + 6, kViolet - 5
   };
 
-  auto TestPoint = [min_sumw, max_sys_error, max_stat_error](const SystematicError &bin_err) {
-    return bin_err.SumWeights() >= min_sumw &&
-        (max_sys_error <= 0 || bin_err.GetSystematicalError() < max_sys_error) &&
-        (max_stat_error <= 0 || bin_err.GetStatisticalErrorOfMean() < max_stat_error);
+  auto TestPoint = [min_sumw, max_abs_sys_error, max_abs_stat_error](const SystematicError &bin_err) {
+    auto eps_stat = bin_err.GetStatisticalErrorOfMean() / TMath::Abs(bin_err.Mean());
+    auto eps_syst = bin_err.GetSystematicalError() / TMath::Abs(bin_err.Mean());
+    double max_eps_stat = 0.7;
+    double max_eps_syst = 0.7;
+    return
+      bin_err.SumWeights() >= min_sumw &&
+          (eps_stat <= max_eps_stat || bin_err.GetStatisticalErrorOfMean() < max_abs_stat_error) &&
+          (eps_syst <= max_eps_syst || bin_err.GetSystematicalError() < max_abs_sys_error);
   };
 
   auto n_points =
