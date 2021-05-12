@@ -311,7 +311,7 @@ pbpb_30agev_16_025:
       tags: [ observable ]
       _from: *tpc-base-detector
       axes:
-        - {name: *var-vtx-pt, bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0 ]}
+        - {name: *var-vtx-pt, bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0 ]}
         - {name: *var-vtx-y-cm, nb: 15, lo: -0.6, hi: 2.4}
       cuts-quality: *cuts-rec-particles-quality-standard
       cuts-pid: *cuts-proton
@@ -341,7 +341,7 @@ pbpb_30agev_16_025:
       tags: [ observable ]
       _from: *tpc-base-detector
       axes:
-        - {name: *var-vtx-pt, bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0 ]}
+        - {name: *var-vtx-pt, bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0 ]}
         - {name: *var-vtx-y-cm, nb: 15, lo: -0.6, hi: 2.4}
       cuts-quality: *cuts-rec-particles-quality-standard
       cuts-pid: *cuts-pion-neg
@@ -371,7 +371,7 @@ pbpb_30agev_16_025:
       tags: [ observable ]
       _from: *tpc-base-detector
       axes:
-        - {name: *var-vtx-pt, bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.8, 2.2, 2.6, 3.0 ]}
+        - {name: *var-vtx-pt, bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0 ]}
         - {name: *var-vtx-y-cm, nb: 15, lo: -0.6, hi: 2.4}
       cuts-quality: *cuts-rec-particles-quality-standard
       cuts-pid: *cuts-pion-pos
