@@ -3,6 +3,8 @@ _detectors: &detectors
     tags: [ un_vector ]
   - name: gen_prim_protons
     tags: [ gen_un_vector ]
+  - name: gen_prim_protons_weighted
+    tags: [ gen_un_vector ]
   - name: psi_rp
     tags: [ psi_vector ]
   - name: W1

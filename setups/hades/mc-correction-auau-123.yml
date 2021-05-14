@@ -128,7 +128,26 @@ hades_analysis:
       cuts-pid:
         *gen_prim_protons_cut
       cuts-efficiency:
-#        sim_particles_extra/is_in_acceptance: { equals: 1 }
+        sim_particles_extra/is_in_high_efficiency: { equals: 1 }
+      qa:
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_protons_pT
+        - *axis_gen_protons_rapidity
+        - [*axis_gen_protons_rapidity, *axis_gen_protons_pT]
+  #############################################################
+    - name: gen_prim_protons_weighted
+      type: track
+      phi:  sim_particles_extra/phi
+      weight: sim_particles_extra/efficiency
+      norm: m
+      axes:
+        - *axis_gen_protons_pT
+        - *axis_gen_protons_rapidity
+#        - *axis_gen_protons_eta
+      cuts-pid:
+        *gen_prim_protons_cut
+      cuts-efficiency:
+        sim_particles_extra/is_in_high_efficiency: { equals: 1 }
       qa:
         - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_gen_protons_pT
