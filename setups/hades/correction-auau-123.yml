@@ -11,9 +11,9 @@ _axes:
     hi: 0.75
   - &axis_protons_eta
     name: mdc_vtx_tracks_extra/eta
-    nb: 11
+    nb: 20
     lo: 0.0
-    hi: 2.2
+    hi: 2.0
 _cuts:
   - &protons_cuts
     mdc_vtx_tracks_extra/pid: { equals: 2212 }
