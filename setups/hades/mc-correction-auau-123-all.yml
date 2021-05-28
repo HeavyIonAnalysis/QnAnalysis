@@ -24,9 +24,9 @@ _axes:
     hi: 0.75
   - &axis_gen_protons_eta
     name: sim_particles_extra/eta
-    nb: 11
+    nb: 20
     lo: 0.0
-    hi: 2.2
+    hi: 2.0
 
 hades_analysis:
   event-variables:
@@ -45,7 +45,7 @@ hades_analysis:
         - twist-and-rescale
       axes:
         - *axis_protons_pT
-        - *axis_protons_rapidity
+#        - *axis_protons_rapidity
         - *axis_protons_eta
       cuts:
         mdc_vtx_tracks_extra/chi2: {range: [0.0, 100.0]}
@@ -63,7 +63,7 @@ hades_analysis:
         sim_particles_extra/is_charged: {equals: 1}
       axes:
         - *axis_gen_protons_pT
-        - *axis_gen_protons_rapidity
+#        - *axis_gen_protons_rapidity
         - *axis_gen_protons_eta
       qa:
         - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
