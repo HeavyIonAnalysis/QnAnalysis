@@ -11,9 +11,9 @@ _axes:
     hi: 0.75
   - &axis_protons_eta
     name: mdc_vtx_tracks_extra/eta
-    nb: 20
+    nb: 11
     lo: 0.0
-    hi: 2.0
+    hi: 2.2
 _cuts:
   - &protons_cuts
     mdc_vtx_tracks_extra/pid: { equals: 2212 }
@@ -52,12 +52,12 @@ hades_analysis:
       phi:  mdc_vtx_tracks_extra/phi
 #      weight: mdc_vtx_tracks_extra/efficiency
       weight: Ones
-      norm: m
+#      norm: m
       corrections:
         - recentering
         - twist-and-rescale
       axes:
-        - *axis_protons_pT
+#        - *axis_protons_pT
 #        - *axis_protons_rapidity
         - *axis_protons_eta
       cuts:
