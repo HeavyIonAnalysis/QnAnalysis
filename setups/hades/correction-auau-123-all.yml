@@ -52,7 +52,7 @@ hades_analysis:
       phi:  mdc_vtx_tracks_extra/phi
 #      weight: mdc_vtx_tracks_extra/efficiency
       weight: Ones
-#      norm: m
+      norm: m
       corrections:
         - recentering
         - twist-and-rescale
