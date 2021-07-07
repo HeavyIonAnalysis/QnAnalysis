@@ -26,6 +26,8 @@ _axes:
 _components:
   - &sp_components
     [ x1,y1 ]
+  - &sp2_components
+    [ x2,y2 ]
 
 _tasks_args:
   - &ta_reco
@@ -34,16 +36,33 @@ _tasks_args:
     components: *sp_components
     correction-steps: [ rescaled ]
     weight: sumw
+  - &ta_reco2
+    query: { tags: { any-in: [ un_vector ] } }
+    query-list: *detectors
+    components: *sp2_components
+    correction-steps: [ rescaled ]
+    weight: sumw
   - &ta_sim
     query: { tags: { any-in: [ gen_un_vector ] } }
     query-list: *detectors
     components: *sp_components
+    correction-steps: [ plain ]
+  - &ta_sim2
+    query: { tags: { any-in: [ gen_un_vector ] } }
+    query-list: *detectors
+    components: *sp2_components
     correction-steps: [ plain ]
     weight: sumw
   - &ta_psi
     query: { tags: { any-in: [ psi_vector ] } }
     query-list: *detectors
     components: *sp_components
+    correction-steps: [ plain ]
+    weight: ones
+  - &ta_psi2
+    query: { tags: { any-in: [ psi_vector ] } }
+    query-list: *detectors
+    components: *sp2_components
     correction-steps: [ plain ]
     weight: ones
   - &ta_qn
@@ -59,6 +78,11 @@ _tasks:
     weights-type: observable
     folder: "/uQ/reco"
     axes: [ *centrality ]
+  - args: [*ta_reco2, *ta_psi2]
+    n-samples: 100
+    weights-type: observable
+    folder: "/u2Q2/reco"
+    axes: [ *centrality ]
   - args: [*ta_reco, *ta_qn]
     n-samples: 100
     weights-type: observable
@@ -68,6 +92,11 @@ _tasks:
     n-samples: 100
     weights-type: observable
     folder: "/uQ/gen"
+    axes: [ *centrality ]
+  - args: [*ta_sim2, *ta_psi2]
+    n-samples: 100
+    weights-type: observable
+    folder: "/u2Q2/gen"
     axes: [ *centrality ]
   - args: [*ta_qn, *ta_psi]
     n-samples: 100
