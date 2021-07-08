@@ -16,6 +16,8 @@
 #include <TDirectory.h>
 #include <TObjString.h>
 
+#include "Config.hpp"
+
 using std::filesystem::path;
 using std::filesystem::current_path;
 using namespace Qn::Analysis::Correlate;
@@ -52,7 +54,6 @@ void Qn::Analysis::Correlate::CorrelationTaskRunner::Run() {
 
   TFile f(output_file_.c_str(), "RECREATE");
 
-  TObjString container_meta;
   for (auto &task : initialized_tasks_) {
     auto dir = mkcd(task->output_folder, f);
 
@@ -60,10 +61,10 @@ void Qn::Analysis::Correlate::CorrelationTaskRunner::Run() {
       Info(__func__, "Processing '%s'... ", correlation.result_ptr->GetName().c_str());
       auto &container = correlation.result_ptr.GetValue().GetDataContainer();
 
-      container_meta.String() = GenCorrelationMeta(correlation);
+      auto correlation_meta = GenCorrelationMeta(correlation);
 
       dir->WriteObject(&container, correlation.meta_key.c_str());
-      dir->WriteObject(&container_meta, (correlation.meta_key + "_meta").c_str());
+      dir->WriteObject(&correlation_meta, (correlation.meta_key + "_meta").c_str());
     }
   }
 
@@ -220,17 +221,23 @@ TDirectory *CorrelationTaskRunner::mkcd(const path &path, TDirectory& root_dir) 
   return pwd;
 }
 
-std::string CorrelationTaskRunner::GenCorrelationMeta(const CorrelationTaskRunner::Correlation &c) {
+TStringMeta CorrelationTaskRunner::GenCorrelationMeta(const CorrelationTaskRunner::Correlation &c) {
   using namespace YAML;
 
   Node n;
   n["meta_key"] = c.meta_key;
-  n["action_name"] = c.action_name;
-  n["argument_names"] = c.argument_names;
+  for (auto &arg : c.args_list) {
+    Node arg_node;
+    arg_node["q-vector"] = arg.q_vector_name;
+    arg_node["correction-step"] = Enum<EQnCorrectionStep>(arg.correction_step);
+    arg_node["component"] = arg.component;
+    arg_node["weight"] = arg.weight;
+    n["args"].push_back(arg_node);
+  }
 
   std::stringstream stream;
   stream << n;
-  return stream.str();
+  return TStringMeta(stream.str());
 }
 
 CorrelationTaskRunner::QVectorComponentFct CorrelationTaskRunner::GetQVectorComponentFct(const CorrelationArg &arg) {
