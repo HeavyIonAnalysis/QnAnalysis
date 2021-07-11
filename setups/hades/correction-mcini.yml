@@ -19,8 +19,8 @@ hades_analysis:
   ###########################################################################
     - name: protons
       type: track
-      phi:  mdc_vtx_tracks_extra/phi
-      weight: mdc_vtx_tracks_extra/efficiency
+      phi:  particles/phi
+      weight: particles/efficiency
       norm: m
       corrections:
         - recentering
@@ -31,7 +31,7 @@ hades_analysis:
       cuts-pid:
         particles/pid: { equals: 2212 }
       qa:
-        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: particles/phi, nb: 100, lo: -4., hi: 4.}
         - *axis_protons_pT
         - *axis_protons_rapidity
         - [*axis_protons_rapidity, *axis_protons_pT]
