@@ -38,6 +38,6 @@ hades_analysis:
   ###########################################################################
     - name: psi_rp
       type: psi
-      phi: sim_header/reaction_plane
+      phi: event_header/reaction_plane
       weight: Ones
       norm: mag
