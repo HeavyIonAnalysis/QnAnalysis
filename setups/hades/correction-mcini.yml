@@ -20,7 +20,7 @@ hades_analysis:
     - name: protons
       type: track
       phi:  particles/phi
-      weight: particles/efficiency
+      weight: Ones
       norm: m
       axes:
         - *axis_protons_pT
