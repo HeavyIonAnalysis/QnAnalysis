@@ -22,9 +22,6 @@ hades_analysis:
       phi:  particles/phi
       weight: particles/efficiency
       norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
       axes:
         - *axis_protons_pT
         - *axis_protons_rapidity

@@ -22,13 +22,13 @@ _tasks_args:
     query: { tags: { any-in: [ un_vector ] } }
     query-list: *detectors
     components: *sp_components
-    correction-steps: [ rescaled ]
+    correction-steps: [ plain ]
     weight: sumw
   - &ta_u2
     query: { tags: { any-in: [ un_vector ] } }
     query-list: *detectors
     components: *sp2_components
-    correction-steps: [ rescaled ]
+    correction-steps: [ plain ]
     weight: sumw
   - &ta_psi
     query: { tags: { any-in: [ psi_vector ] } }
