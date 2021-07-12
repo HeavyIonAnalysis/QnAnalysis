@@ -14,7 +14,7 @@ hades_analysis:
   event-variables:
     - event_header/centrality
   axes:
-    - { name: event_header/centrality, nb: 12, lo: 0.0, hi: 60 }
+    - { name: event_header/centrality, nb: 6, lo: 0.0, hi: 60 }
   q-vectors:
   ###########################################################################
     - name: protons
