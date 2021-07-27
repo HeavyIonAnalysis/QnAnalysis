@@ -3,12 +3,7 @@ _layouts:
 _axes:
   - &axis_pT
     name: mdc_vtx_tracks_rapidity/pT
-    bin-edges: [0.2, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 1.5]
-  - &axis_pT_uniform
-    name: mdc_vtx_tracks_rapidity/pT
-    nb: 16
-    lo: 0.0
-    hi: 1.6
+    bin-edges: [0.0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
   - &axis_rapidity
     name: mdc_vtx_tracks_rapidity/ycm
     nb: 15
@@ -17,10 +12,6 @@ _axes:
 _cuts:
   - &protons_cuts
     mdc_vtx_tracks_rapidity/pid: { equals: 2212 }
-  - &pion_plus_cuts
-    mdc_vtx_tracks_rapidity/pid: { equals: 211 }
-  - &pion_minus_cuts
-    mdc_vtx_tracks_rapidity/pid: { equals: -211 }
   - &good_particle_cuts
     mdc_vtx_tracks_rapidity/dca_xy: {range: [-10.0, 10.0]}
     mdc_vtx_tracks_rapidity/dca_z: {range: [-10.0, 10.0]}
@@ -58,6 +49,7 @@ hades_analysis:
   axes:
     - { name: event_header/selected_tof_rpc_hits_centrality, nb: 12, lo: 0.0, hi: 60 }
   q-vectors:
+    #############################################################
     - name: protons
       type: track
       phi:  mdc_vtx_tracks_rapidity/phi
@@ -78,6 +70,22 @@ hades_analysis:
         - *axis_pT
         - *axis_rapidity
         - [*axis_rapidity, *axis_pT]
+    #############################################################
+    - name: pions
+      type: track
+      phi:  mdc_vtx_tracks_extra/phi
+      weight: Ones
+      norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
+      cuts-quality:
+        *good_particle_cuts
+      cuts-pid:
+        mdc_vtx_tracks_extra/is_pion: { equals: 1 }
+      qa:
+        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+    #############################################################
     - name: Mf
       type: track
       phi:  mdc_vtx_tracks_rapidity/phi
@@ -94,6 +102,7 @@ hades_analysis:
         *protons_cuts
       qa:
         - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+    #############################################################
     - name: Mb
       type: track
       phi:  mdc_vtx_tracks_rapidity/phi
@@ -110,6 +119,7 @@ hades_analysis:
         *protons_cuts
       qa:
         - {name: mdc_vtx_tracks_rapidity/phi, nb: 100, lo: -4., hi: 4.}
+    #############################################################
     - name: R1
       type: track
       phi:  forward_wall_hits/phi
@@ -120,6 +130,7 @@ hades_analysis:
         - twist-and-rescale
       cuts:
         *r1_cuts
+    #############################################################
     - name: R2
       type: track
       phi:  forward_wall_hits/phi
@@ -130,6 +141,7 @@ hades_analysis:
         - twist-and-rescale
       cuts:
         *r2_cuts
+    #############################################################
     - name: W1
       type: track
       phi:  forward_wall_hits/phi
@@ -140,6 +152,7 @@ hades_analysis:
         - twist-and-rescale
       cuts:
         *w1_cuts
+    #############################################################
     - name: W2
       type: track
       phi:  forward_wall_hits/phi
@@ -150,6 +163,7 @@ hades_analysis:
         - twist-and-rescale
       cuts:
         *w2_cuts
+    #############################################################
     - name: W3
       type: track
       phi:  forward_wall_hits/phi
@@ -165,8 +179,3 @@ hades_analysis:
       phi: event_header/fw_angle_plain
       weight: Ones
       norm: m
-#    - name: wall_bk_corr
-#      type: psi
-#      phi: event_header/fw_angle_shift_charge_rotation
-#      weight: Ones
-#      norm: m
