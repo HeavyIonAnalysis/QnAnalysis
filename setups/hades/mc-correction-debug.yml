@@ -8,7 +8,7 @@ _axes:
     hi: 1.49
   - &axis_gen_rapidity
     name: sim_tracks/rapidity
-    nb: 15
+    nb: 1
     lo: -0.01
     hi: 1.49
   - &axis_pT_non_uniform
