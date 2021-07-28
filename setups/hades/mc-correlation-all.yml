@@ -17,9 +17,7 @@ _components:
   - &sp_components
     [ x1,y1 ]
   - &sp2_components
-    [ x1,y1 ]
-  - &ep_components
-    [ cos1,sin1 ]
+    [ x2,y2 ]
 
 _tasks_args:
   - &ta_accepted
@@ -49,7 +47,7 @@ _tasks_args:
   - &ta_psi
     query: { tags: { any-in: [ psi_vector ] } }
     query-list: *detectors
-    components: *ep_components
+    components: *sp_components
     correction-steps: [ plain ]
     weight: ones
   - &ta_psi2
@@ -73,10 +71,10 @@ _tasks:
   - args: [*ta_all, *ta_psi]
     n-samples: 100
     weights-type: observable
-    folder: "/uQ/reco"
+    folder: "/uQ/sim"
     axes: [ *centrality ]
   - args: [*ta_all2, *ta_psi2]
     n-samples: 100
     weights-type: observable
-    folder: "/u2Q2/reco"
+    folder: "/u2Q2/sim"
     axes: [ *centrality ]
