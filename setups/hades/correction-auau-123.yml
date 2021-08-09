@@ -9,11 +9,11 @@ _axes:
     nb: 15
     lo: -0.75
     hi: 0.75
-  - &axis_protons_eta
-    name: mdc_vtx_tracks_extra/eta_cm
-    nb: 15
-    lo: -1.8
-    hi: 1.2
+  - &axis_protons_theta
+    name: mdc_vtx_tracks_extra/theta
+    nb: 12
+    lo: 0.3
+    hi: 1.5
 _cuts:
   - &protons_cuts
     mdc_vtx_tracks_extra/pid: { equals: 2212 }
@@ -66,7 +66,7 @@ hades_analysis:
       axes:
         - *axis_protons_pT
         - *axis_protons_rapidity
-#        - *axis_protons_eta
+        - *axis_protons_theta
       cuts-pid:
         *protons_cuts
       cuts-quality:
