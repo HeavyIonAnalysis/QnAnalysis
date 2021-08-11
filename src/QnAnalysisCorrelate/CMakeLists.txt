@@ -11,9 +11,9 @@ if (HAS_STD_FILESYSTEM)
     message("-- Found std::filesystem")
 else()
     find_package(Boost REQUIRED COMPONENTS filesystem)
-    set(HAS_BOOST_FILESYSTEM ${BOOST_FILESYSTEM_FOUND})
+    set(HAS_BOOST_FILESYSTEM ${Boost_FILESYSTEM_FOUND})
     message("-- Found boost::filesystem")
-    message("${BOOST_FILESYSTEM_LIBRARY}")
+    message("${Boost_FILESYSTEM_LIBRARY}")
 endif()
 
 find_package(Boost REQUIRED COMPONENTS program_options)
@@ -28,7 +28,7 @@ target_link_libraries(QnAnalysisCorrelate
             # link std::filesystem if compiler supports it
             $<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:stdc++fs>
             # link Boost::filesystem if it was found
-            $<$<BOOL:${HAS_BOOST_FILESYSTEM}>:${BOOST_FILESYSTEM_LIBRARY}>
+            $<$<BOOL:${HAS_BOOST_FILESYSTEM}>:${Boost_FILESYSTEM_LIBRARY}>
         PUBLIC
         QnToolsDataFrame Boost::program_options yaml-cpp)
 target_compile_definitions(QnAnalysisCorrelate
