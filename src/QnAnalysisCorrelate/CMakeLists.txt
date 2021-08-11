@@ -10,6 +10,11 @@ try_compile(
 )
 if (HAS_STD_FILESYSTEM)
     message("-- Found std::filesystem")
+    set(FILESYSTEM_LIB $<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:stdc++fs>)
+else()
+    find_package(Boost REQUIRED COMPONENTS filesystem)
+    set(FILESYSTEM_LIB Boost::filesystem)
+    message("-- Found boost::filesystem")
 endif()
 
 find_package(Boost REQUIRED COMPONENTS program_options)
@@ -21,7 +26,7 @@ configure_file(BuildOptions.hpp.in BuildOptions.hpp)
 add_executable(QnAnalysisCorrelate CorrelationMain.cpp CorrelationTaskRunner.cpp)
 target_link_libraries(QnAnalysisCorrelate
         PRIVATE
-        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:stdc++fs>
+            ${FILESYSTEM_LIB}
         PUBLIC
         QnToolsDataFrame Boost::program_options yaml-cpp)
 target_include_directories(QnAnalysisCorrelate PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
