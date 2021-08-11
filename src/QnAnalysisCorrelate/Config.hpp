@@ -10,6 +10,7 @@
 #include <iostream>
 #include <yaml-cpp/yaml.h>
 #include <regex>
+#include <optional>
 #include <cassert>
 
 namespace YAMLHelper {
