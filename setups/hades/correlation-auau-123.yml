@@ -1,8 +1,10 @@
 _detectors: &detectors
   - name: protons
     tags: [ un_vector ]
-  - name: pions
-    tags: [ q2_vector ]
+  - name: pi_pos
+    tags: [ un_vector ]
+  - name: pi_neg
+    tags: [ un_vector ]
   - name: W1
     tags: [ qn_vector ]
   - name: W2
@@ -48,12 +50,6 @@ _tasks_args:
     components: *sp_components
     correction-steps: [ rescaled ]
     weight: ones
-  - &ta_q2_sp
-    query: { tags: { any-in: [ q2_vector ] } }
-    query-list: *detectors
-    components: *sp2_components
-    correction-steps: [ rescaled ]
-    weight: ones
   - &ta_qn_ep
     query: { tags: { any-in: [ qn_vector ] } }
     query-list: *detectors
@@ -84,11 +80,6 @@ _tasks:
 #    weights-type: observable
 #    folder: "/SP/u2Q1Q1"
 #    axes: [ *centrality ]
-#  - args: [*ta_u2, *ta_q2_sp]
-#    n-samples: 100
-#    weights-type: observable
-#    folder: "/SP/u2Q2"
-#    axes: [ *centrality ]
   - args: [*ta_u, *ta_qn_ep]
     n-samples: 100
     weights-type: observable
@@ -100,11 +91,6 @@ _tasks:
     weights-type: reference
     folder: "/SP/QQ"
     axes: [ *centrality ]
-#  - args: [*ta_q2_sp, *ta_qn_sp, *ta_qn_sp]
-#    n-samples: 100
-#    weights-type: reference
-#    folder: "/SP/Q2Q1Q1"
-#    axes: [ *centrality ]
   - args: [*ta_qn_ep, *ta_qn_ep]
     n-samples: 100
     weights-type: reference
