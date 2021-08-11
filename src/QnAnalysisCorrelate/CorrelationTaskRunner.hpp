@@ -9,7 +9,13 @@
 #include <utility>
 #include <vector>
 #include <string>
+
 #include <filesystem>
+#ifdef __cpp_lib_filesystem
+#pragma message("Using std::filesystem")
+#else
+#pragma message("std::filesystem is not found")
+#endif
 
 #include <QnDataFrame.hpp>
 #include <TFile.h>
