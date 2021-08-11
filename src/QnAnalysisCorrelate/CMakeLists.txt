@@ -1,4 +1,17 @@
 
+set(CMAKE_CXX_STANDARD 17)
+
+
+try_compile(
+        RESULT_VAR ${CMAKE_BINARY_DIR}
+            ${CMAKE_SOURCE_DIR}/cmake_tests_src/test_filesystem.cxx
+        LINK_LIBRARIES $<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:stdc++fs>
+        OUTPUT_VARIABLE HAS_STD_FILESYSTEM
+)
+if (HAS_STD_FILESYSTEM)
+    message("-- Found std::filesystem")
+endif()
+
 find_package(Boost REQUIRED COMPONENTS program_options)
 
 set(QnAnalysis_SETUPS_DIR ${CMAKE_SOURCE_DIR}/setups)
