@@ -10,12 +10,14 @@
 #include <vector>
 #include <string>
 
-#include <filesystem>
-#ifdef __cpp_lib_filesystem
-#pragma message("Using std::filesystem")
-#else
-#pragma message("std::filesystem is not found")
+#if defined(HAS_STD_FILESYSTEM)
+# include <filesystem>
+namespace fs = ::std::filesystem;
+#elif defined(HAS_BOOST_FILESYSTEM)
+# include <boost/filesystem.hpp>
+namespace fs = ::boost::filesystem;
 #endif
+
 
 #include <QnDataFrame.hpp>
 #include <TFile.h>
@@ -97,7 +99,7 @@ class CorrelationTaskRunner {
     size_t arity{0};
     size_t n_axes{0};
     std::list<Correlation> correlations;
-    std::filesystem::path output_folder;
+    fs::path output_folder;
   };
 
   struct bad_config_file : public std::exception {
@@ -125,7 +127,7 @@ class CorrelationTaskRunner {
   std::shared_ptr<TTree> GetTree();
   std::shared_ptr<ROOT::RDataFrame> GetRDF();
   void LookupConfiguration();
-  bool LoadConfiguration(const std::filesystem::path &path);
+  bool LoadConfiguration(const fs::path &path);
 
   static std::vector<Correlation> GetTaskCombinations(const CorrelationTask &args);
 
@@ -174,7 +176,7 @@ class CorrelationTaskRunner {
   template<size_t NAxes>
   static bool PredicateNAxes(const CorrelationTask &t) { return t.axes.size() == NAxes; }
 
-  static TDirectory *mkcd(const std::filesystem::path &path, TDirectory &root_dir);
+  static TDirectory *mkcd(const fs::path &path, TDirectory &root_dir);
 
   static std::string GenCorrelationMeta(const Correlation &c);
 
@@ -223,7 +225,7 @@ class CorrelationTaskRunner {
     auto df = GetRDF();
     auto df_sampled = Qn::Correlation::Resample(*df, t.n_samples);
 
-    result->output_folder = std::filesystem::path(t.output_folder);
+    result->output_folder = fs::path(t.output_folder);
     if (result->output_folder.is_relative()) {
       throw std::runtime_error("Output folder must be an absolute path");
     }
@@ -285,11 +287,11 @@ class CorrelationTaskRunner {
 
   void InitializeTasks();
 
-  std::filesystem::path configuration_file_path_{};
+  fs::path configuration_file_path_{};
   std::string configuration_node_name_{};
   std::string output_file_;
 
-  std::filesystem::path input_file_name_;
+  fs::path input_file_name_;
   std::string input_tree_;
 
   std::vector<CorrelationTask> config_tasks_;

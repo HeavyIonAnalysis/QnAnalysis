@@ -2,8 +2,6 @@
 // Created by eugene on 21/07/2020.
 //
 
-#include <filesystem>
-
 #include <yaml-cpp/yaml.h>
 
 #include <BuildOptions.hpp>
@@ -16,8 +14,8 @@
 #include <TDirectory.h>
 #include <TObjString.h>
 
-using std::filesystem::path;
-using std::filesystem::current_path;
+using fs::path;
+using fs::current_path;
 using namespace Qn::Analysis::Correlate;
 
 
@@ -95,7 +93,7 @@ void Qn::Analysis::Correlate::CorrelationTaskRunner::LookupConfiguration() {
 
 }
 
-bool Qn::Analysis::Correlate::CorrelationTaskRunner::LoadConfiguration(const std::filesystem::path &path) {
+bool Qn::Analysis::Correlate::CorrelationTaskRunner::LoadConfiguration(const fs::path &path) {
   using namespace YAML;
 
   Node top_node;
