@@ -3,10 +3,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 
 try_compile(
-        RESULT_VAR ${CMAKE_BINARY_DIR}
-            ${CMAKE_SOURCE_DIR}/cmake_tests_src/test_filesystem.cxx
+        HAS_STD_FILESYSTEM ${CMAKE_BINARY_DIR}
+        SOURCES ${CMAKE_SOURCE_DIR}/cmake_tests_src/test_filesystem.cxx
         LINK_LIBRARIES $<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:stdc++fs>
-        OUTPUT_VARIABLE HAS_STD_FILESYSTEM
 )
 if (HAS_STD_FILESYSTEM)
     message("-- Found std::filesystem")
