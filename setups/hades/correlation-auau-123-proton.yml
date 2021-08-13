@@ -1,0 +1,94 @@
+_detectors: &detectors
+  - name: protons
+    tags: [ un_vector ]
+  - name: W1
+    tags: [ qn_vector ]
+  - name: W2
+    tags: [ qn_vector ]
+  - name: W3
+    tags: [ qn_vector ]
+  - name: Mf
+    tags: [ qn_vector ]
+  - name: Mb
+    tags: [ qn_vector ]
+
+_axes:
+  - &centrality
+    name: event_header_selected_tof_rpc_hits_centrality
+    nb: 12
+    lo: 0
+    hi: 60
+
+_components:
+  - &sp_components
+    [ x1,y1 ]
+  - &sp2_components
+    [ x2,y2 ]
+  - &ep_components
+    [ cos1,sin1 ]
+
+_tasks_args:
+  - &ta_u
+    query: { tags: { any-in: [ un_vector ] } }
+    query-list: *detectors
+    components: *sp_components
+    correction-steps: [ rescaled ]
+    weight: sumw
+  - &ta_u2
+    query: { tags: { any-in: [ un_vector ] } }
+    query-list: *detectors
+    components: *sp2_components
+    correction-steps: [ rescaled ]
+    weight: sumw
+  - &ta_qn_sp
+    query: { tags: { any-in: [ qn_vector ] } }
+    query-list: *detectors
+    components: *sp_components
+    correction-steps: [ rescaled ]
+    weight: ones
+  - &ta_qn_ep
+    query: { tags: { any-in: [ qn_vector ] } }
+    query-list: *detectors
+    components: *ep_components
+    correction-steps: [ rescaled ]
+    weight: ones
+  - &ta_rnd_sp
+    query: { tags: { any-in: [ rnd_vector ] } }
+    query-list: *detectors
+    components: *sp_components
+    correction-steps: [ rescaled ]
+    weight: ones
+  - &ta_rnd_ep
+    query: { tags: { any-in: [ rnd_vector ] } }
+    query-list: *detectors
+    components: *ep_components
+    correction-steps: [ rescaled ]
+    weight: ones
+
+_tasks:
+  - args: [*ta_u, *ta_qn_sp]
+    n-samples: 100
+    weights-type: observable
+    folder: "/SP/uQ"
+    axes: [ *centrality ]
+#  - args: [*ta_u2, *ta_qn_sp, *ta_qn_sp]
+#    n-samples: 100
+#    weights-type: observable
+#    folder: "/SP/u2Q1Q1"
+#    axes: [ *centrality ]
+  - args: [*ta_u, *ta_qn_ep]
+    n-samples: 100
+    weights-type: observable
+    folder: "/EP/uQ"
+    axes: [ *centrality ]
+  # Reference x Reference
+  - args: [*ta_qn_sp, *ta_qn_sp]
+    n-samples: 100
+    weights-type: reference
+    folder: "/SP/QQ"
+    axes: [ *centrality ]
+  - args: [*ta_qn_ep, *ta_qn_ep]
+    n-samples: 100
+    weights-type: reference
+    folder: "/EP/QQ"
+    axes: [ *centrality ]
