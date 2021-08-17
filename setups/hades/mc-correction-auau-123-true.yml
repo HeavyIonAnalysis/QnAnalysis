@@ -1,0 +1,146 @@
+_layouts:
+
+_axes:
+  - &axis_gen_protons_pT
+    name: sim_particles_extra/pT
+    bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
+  - &axis_gen_pions_pT
+    name: sim_particles_extra/pT
+    bin-edges: [0, 0.08, 0.105, 0.13, 0.155, 0.18, 0.21, 0.25, 0.315, 0.535, 1.0]
+  - &axis_gen_protons_rapidity
+    name: sim_particles_extra/ycm
+    nb: 15
+    lo: -0.75
+    hi: 0.75
+  - &axis_gen_pions_rapidity
+    name: sim_particles_extra/ycm
+    nb: 17
+    lo: -0.65
+    hi: 1.05
+_cuts:
+  - &gen_prim_protons_cut
+    sim_particles_extra/pid: { equals: 2212 }
+    sim_particles_extra/is_primary: { equals: 1 }
+  - &gen_prim_pi_pos_cut
+    sim_particles_extra/pid: { equals: 211 }
+    sim_particles_extra/is_primary: { equals: 1 }
+  - &gen_prim_pi_neg_cut
+    sim_particles_extra/pid: { equals: -211 }
+    sim_particles_extra/is_primary: { equals: 1 }
+  - &theta_cut
+    sim_particles_extra/theta: { range: [0.3, 1.5] }
+
+hades_analysis:
+  event-variables:
+    - event_header/selected_tof_rpc_hits_centrality
+  axes:
+    - { name: event_header/selected_tof_rpc_hits_centrality, nb: 12, lo: 0.0, hi: 60 }
+  q-vectors:
+  #############################################################
+    - name: proton
+      type: track
+      phi:  sim_particles_extra/phi
+      weight: Ones
+      norm: m
+      axes:
+        - *axis_gen_protons_pT
+        - *axis_gen_protons_rapidity
+      cuts-pid:
+        *gen_prim_protons_cut
+      qa:
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_protons_pT
+        - *axis_gen_protons_rapidity
+        - [*axis_gen_protons_rapidity, *axis_gen_protons_pT]
+  #############################################################
+    - name: proton_theta
+      type: track
+      phi:  sim_particles_extra/phi
+      weight: Ones
+      norm: m
+      axes:
+        - *axis_gen_protons_pT
+        - *axis_gen_protons_rapidity
+      cuts-pid:
+        *gen_prim_protons_cut
+      cuts-theta:
+        *theta_cut
+      qa:
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_protons_pT
+        - *axis_gen_protons_rapidity
+        - [*axis_gen_protons_rapidity, *axis_gen_protons_pT]
+  #############################################################
+    - name: pi_pos
+      type: track
+      phi:  sim_particles_extra/phi
+      weight: Ones
+      norm: m
+      axes:
+        - *axis_gen_pions_pT
+        - *axis_gen_pions_rapidity
+      cuts-pid:
+        *gen_prim_pi_pos_cut
+      qa:
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_protons_pT
+        - *axis_gen_protons_rapidity
+        - [*axis_gen_protons_rapidity, *axis_gen_protons_pT]
+  #############################################################
+    - name: pi_pos_theta
+      type: track
+      phi:  sim_particles_extra/phi
+      weight: Ones
+      norm: m
+      axes:
+        - *axis_gen_pions_pT
+        - *axis_gen_pions_rapidity
+      cuts-pid:
+        *gen_prim_pi_pos_cut
+      cuts-theta:
+        *theta_cut
+      qa:
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_protons_pT
+        - *axis_gen_protons_rapidity
+        - [*axis_gen_protons_rapidity, *axis_gen_protons_pT]
+  #############################################################
+    - name: pi_neg
+      type: track
+      phi:  sim_particles_extra/phi
+      weight: Ones
+      norm: m
+      axes:
+        - *axis_gen_pions_pT
+        - *axis_gen_pions_rapidity
+      cuts-pid:
+        *gen_prim_pi_neg_cut
+      qa:
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_protons_pT
+        - *axis_gen_protons_rapidity
+        - [*axis_gen_protons_rapidity, *axis_gen_protons_pT]
+  #############################################################
+    - name: pi_neg_theta
+      type: track
+      phi:  sim_particles_extra/phi
+      weight: Ones
+      norm: m
+      axes:
+        - *axis_gen_pions_pT
+        - *axis_gen_pions_rapidity
+      cuts-pid:
+        *gen_prim_pi_neg_cut
+      cuts-theta:
+        *theta_cut
+      qa:
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_protons_pT
+        - *axis_gen_protons_rapidity
+        - [*axis_gen_protons_rapidity, *axis_gen_protons_pT]
+  ###########################################################################
+    - name: psi_rp
+      type: psi
+      phi: sim_header/reaction_plane
+      weight: Ones
+      norm: mag
