@@ -78,7 +78,7 @@ hades_analysis:
       axes:
         - *axis_protons_pT
         - *axis_protons_rapidity
-        - *axis_theta
+#        - *axis_theta
       cuts-pid:
         *protons_cuts
       cuts-quality:
@@ -100,7 +100,7 @@ hades_analysis:
       axes:
         - *axis_pions_pT
         - *axis_pions_rapidity
-        - *axis_theta
+#        - *axis_theta
       cuts-quality:
         *good_particle_cuts
       cuts-pid:
@@ -119,7 +119,7 @@ hades_analysis:
       axes:
         - *axis_pions_pT
         - *axis_pions_rapidity
-        - *axis_theta
+#        - *axis_theta
       cuts-quality:
         *good_particle_cuts
       cuts-pid:
