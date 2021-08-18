@@ -70,11 +70,11 @@ _tasks_args:
     weight: ones
 
 _tasks:
-  - args: [*ta_u, *ta_qn_sp]
-    n-samples: 100
-    weights-type: observable
-    folder: "/SP/uQ"
-    axes: [ *centrality ]
+#  - args: [*ta_u, *ta_qn_sp]
+#    n-samples: 100
+#    weights-type: observable
+#    folder: "/SP/uQ"
+#    axes: [ *centrality ]
   - args: [*ta_u, *ta_mdc2, *ta_qn_sp]
     n-samples: 100
     weights-type: observable
