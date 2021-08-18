@@ -22,14 +22,14 @@ _detectors: &detectors
 
 _observables:
   - method: three-sub-event
-    QQ-directory: QQ/SP
-    uQ-directory: uQ/SP
+    QQ-directory: SP/QQ
+    uQ-directory: SP/uQ
     u-vector: {name: protons, components: [x1, y1], correction-step: RESCALED}
     EP-vectors: ep-vectors
     resolution-vectors: res-vectors
-  - method: three-sub-event
-    QQ-directory: QQ/SP
-    uQ-directory: uQ/SP
-    u-vector: {name: pions, components: [x1, y1], correction-step: RESCALED}
-    EP-vectors: ep-vectors
-    resolution-vectors: res-vectors
+#  - method: three-sub-event
+#    QQ-directory: QQ/SP
+#    uQ-directory: uQ/SP
+#    u-vector: {name: pions, components: [x1, y1], correction-step: RESCALED}
+#    EP-vectors: ep-vectors
+#    resolution-vectors: res-vectors
