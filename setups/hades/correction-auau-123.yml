@@ -50,15 +50,15 @@ _cuts:
   - &w1_cuts
     forward_wall_hits/ring: { range: [1.0, 5.0] }
     forward_wall_hits/beta: { range: [0.84, 1.0] }
-    forward_wall_hits/signal: { range: [120.0, 999.0] }
+    forward_wall_hits/signal: { range: [80.0, 999.0] }
   - &w2_cuts
     forward_wall_hits/ring: { range: [6.0, 7.0] }
     forward_wall_hits/beta: { range: [0.85, 1.0] }
-    forward_wall_hits/signal: { range: [120.0, 999.0] }
+    forward_wall_hits/signal: { range: [85.0, 999.0] }
   - &w3_cuts
     forward_wall_hits/ring: { range: [8.0, 10.0] }
     forward_wall_hits/beta: { range: [0.80, 1.0] }
-    forward_wall_hits/signal: { range: [120.0, 999.0] }
+    forward_wall_hits/signal: { range: [88.0, 999.0] }
 
 hades_analysis:
   event-variables:
