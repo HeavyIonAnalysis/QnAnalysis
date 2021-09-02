@@ -86,28 +86,28 @@ hades_analysis:
     - { name: event_header/selected_tof_rpc_hits_centrality, nb: 12, lo: 0.0, hi: 60 }
   q-vectors:
     ###########################################################################
-#    - name: pid_protons
-#      type: track
-#      phi:  mdc_vtx_tracks_extra/phi
-#      weight: mdc_vtx_tracks_extra/efficiency
-#      norm: m
-#      corrections:
-#        - recentering
-#        - twist-and-rescale
-#      axes:
-#        - *axis_protons_pT
-#        - *axis_protons_rapidity
+    - name: pid_protons
+      type: track
+      phi:  mdc_vtx_tracks_extra/phi
+      weight: mdc_vtx_tracks_extra/efficiency
+      norm: m
+      corrections:
+        - recentering
+        - twist-and-rescale
+      axes:
+        - *axis_protons_pT
+        - *axis_protons_rapidity
 #        - *axis_theta
-#      cuts-pid:
-#        *pid_protons_cut
-#      cuts-quality:
-#        *good_track_cuts
-#      qa:
-#        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
-#        - *axis_protons_pT
-#        - *axis_protons_rapidity
-#        - [*axis_protons_rapidity, *axis_protons_pT]
-    ###########################################################################
+      cuts-pid:
+        *pid_protons_cut
+      cuts-quality:
+        *good_track_cuts
+      qa:
+        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_protons_pT
+        - *axis_protons_rapidity
+        - [*axis_protons_rapidity, *axis_protons_pT]
+    ##########################################################################
     - name: pid_pi_pos
       type: track
       phi:  mdc_vtx_tracks_extra/phi
@@ -119,7 +119,7 @@ hades_analysis:
       axes:
         - *axis_pions_pT
         - *axis_pions_rapidity
-        - *axis_theta
+#        - *axis_theta
       cuts-pid:
         *pid_pi_pos_cut
       cuts-quality:
@@ -141,7 +141,7 @@ hades_analysis:
       axes:
         - *axis_pions_pT
         - *axis_pions_rapidity
-        - *axis_theta
+#        - *axis_theta
       cuts-pid:
         *pid_pi_neg_cut
       cuts-quality:
@@ -151,57 +151,57 @@ hades_analysis:
         - *axis_protons_pT
         - *axis_protons_rapidity
         - [*axis_protons_rapidity, *axis_protons_pT]
-  ###########################################################################
-    - name: Mf
-      type: track
-      phi:  mdc_vtx_tracks_extra/phi
-      weight: Ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
-      cuts-subevent:
-        *mf_cuts
-      cuts-quality:
-        *good_track_cuts
-      cuts-pid:
-        *pid_protons_cut
-      qa:
-        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
-  #############################################################
-    - name: Mb
-      type: track
-      phi:  mdc_vtx_tracks_extra/phi
-      weight: Ones
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
-      cuts-subevent:
-        *mb_cuts
-      cuts-quality:
-        *good_track_cuts
-      cuts-pid:
-        *pid_protons_cut
-      qa:
-        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
-  #############################################################
-#    - name: gen_prim_protons
+#  ###########################################################################
+#    - name: Mf
 #      type: track
-#      phi:  sim_particles_extra/phi
+#      phi:  mdc_vtx_tracks_extra/phi
 #      weight: Ones
 #      norm: m
-#      axes:
-#        - *axis_gen_protons_pT
-#        - *axis_gen_protons_rapidity
-#        - *axis_gen_theta
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
+#      cuts-subevent:
+#        *mf_cuts
+#      cuts-quality:
+#        *good_track_cuts
 #      cuts-pid:
-#        *gen_prim_protons_cut
+#        *pid_protons_cut
 #      qa:
-#        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
-#        - *axis_gen_protons_pT
-#        - *axis_gen_protons_rapidity
-#        - [*axis_gen_protons_rapidity, *axis_gen_protons_pT]
+#        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+#  #############################################################
+#    - name: Mb
+#      type: track
+#      phi:  mdc_vtx_tracks_extra/phi
+#      weight: Ones
+#      norm: m
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
+#      cuts-subevent:
+#        *mb_cuts
+#      cuts-quality:
+#        *good_track_cuts
+#      cuts-pid:
+#        *pid_protons_cut
+#      qa:
+#        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+  #############################################################
+    - name: gen_prim_protons
+      type: track
+      phi:  sim_particles_extra/phi
+      weight: Ones
+      norm: m
+      axes:
+        - *axis_gen_protons_pT
+        - *axis_gen_protons_rapidity
+#        - *axis_gen_theta
+      cuts-pid:
+        *gen_prim_protons_cut
+      qa:
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_gen_protons_pT
+        - *axis_gen_protons_rapidity
+        - [*axis_gen_protons_rapidity, *axis_gen_protons_pT]
     #############################################################
     - name: gen_prim_pi_pos
       type: track
@@ -211,7 +211,7 @@ hades_analysis:
       axes:
         - *axis_gen_pions_pT
         - *axis_gen_pions_rapidity
-        - *axis_gen_theta
+#        - *axis_gen_theta
       cuts-pid:
         *gen_prim_pi_pos_cut
       qa:
@@ -228,7 +228,7 @@ hades_analysis:
       axes:
         - *axis_gen_pions_pT
         - *axis_gen_pions_rapidity
-        - *axis_gen_theta
+#        - *axis_gen_theta
       cuts-pid:
         *gen_prim_pi_neg_cut
       qa:
@@ -237,44 +237,44 @@ hades_analysis:
         - *axis_gen_protons_rapidity
         - [*axis_gen_protons_rapidity, *axis_gen_protons_pT]
   ###########################################################################
-    - name: W1
-      type: track
-      phi:  forward_wall_hits/phi
-      weight: forward_wall_hits/signal
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
-      cuts-w1:
-        *w1_cuts
-      qa:
-        - {name: forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
-  ###########################################################################
-    - name: W2
-      type: track
-      phi:  forward_wall_hits/phi
-      weight: forward_wall_hits/signal
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
-      cuts-w2:
-        *w2_cuts
-      qa:
-        - {name: forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
-  ###########################################################################
-    - name: W3
-      type: track
-      phi:  forward_wall_hits/phi
-      weight: forward_wall_hits/signal
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
-      cuts-w3:
-        *w3_cuts
-      qa:
-        - {name: forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
+#    - name: W1
+#      type: track
+#      phi:  forward_wall_hits/phi
+#      weight: forward_wall_hits/signal
+#      norm: m
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
+#      cuts-w1:
+#        *w1_cuts
+#      qa:
+#        - {name: forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
+#  ###########################################################################
+#    - name: W2
+#      type: track
+#      phi:  forward_wall_hits/phi
+#      weight: forward_wall_hits/signal
+#      norm: m
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
+#      cuts-w2:
+#        *w2_cuts
+#      qa:
+#        - {name: forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
+#  ###########################################################################
+#    - name: W3
+#      type: track
+#      phi:  forward_wall_hits/phi
+#      weight: forward_wall_hits/signal
+#      norm: m
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
+#      cuts-w3:
+#        *w3_cuts
+#      qa:
+#        - {name: forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
   ###########################################################################
     - name: psi_rp
       type: psi

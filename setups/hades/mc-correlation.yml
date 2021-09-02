@@ -1,12 +1,12 @@
 _detectors: &detectors
-#  - name: pid_protons
-#    tags: [ un_vector ]
+  - name: pid_protons
+    tags: [ un_vector ]
   - name: pid_pi_pos
     tags: [ un_vector ]
   - name: pid_pi_neg
     tags: [ un_vector ]
-#  - name: gen_prim_protons
-#    tags: [ gen_un_vector ]
+  - name: gen_prim_protons
+    tags: [ gen_un_vector ]
   - name: gen_prim_pi_pos
     tags: [ gen_un_vector ]
   - name: gen_prim_pi_neg
@@ -86,33 +86,43 @@ _tasks:
     weights-type: observable
     folder: "/uQ/reco"
     axes: [ *centrality ]
+  - args: [*ta_reco2, *ta_psi]
+    n-samples: 100
+    weights-type: observable
+    folder: "/u2Q1/reco"
+    axes: [ *centrality ]
   - args: [*ta_reco2, *ta_psi2]
     n-samples: 100
     weights-type: observable
     folder: "/u2Q2/reco"
     axes: [ *centrality ]
-  - args: [*ta_reco, *ta_qn]
-    n-samples: 100
-    weights-type: observable
-    folder: "/uQ/reco"
-    axes: [ *centrality ]
+#  - args: [*ta_reco, *ta_qn]
+#    n-samples: 100
+#    weights-type: observable
+#    folder: "/uQ/reco"
+#    axes: [ *centrality ]
   - args: [*ta_sim, *ta_psi]
     n-samples: 100
     weights-type: observable
     folder: "/uQ/gen"
+    axes: [ *centrality ]
+  - args: [*ta_sim2, *ta_psi]
+    n-samples: 100
+    weights-type: observable
+    folder: "/u2Q1/gen"
     axes: [ *centrality ]
   - args: [*ta_sim2, *ta_psi2]
     n-samples: 100
     weights-type: observable
     folder: "/u2Q2/gen"
     axes: [ *centrality ]
-  - args: [*ta_qn, *ta_psi]
-    n-samples: 100
-    weights-type: reference
-    folder: "/QQ"
-    axes: [ *centrality ]
-  - args: [*ta_qn, *ta_qn]
-    n-samples: 100
-    weights-type: reference
-    folder: "/QQ"
-    axes: [ *centrality ]
+#  - args: [*ta_qn, *ta_psi]
+#    n-samples: 100
+#    weights-type: reference
+#    folder: "/QQ"
+#    axes: [ *centrality ]
+#  - args: [*ta_qn, *ta_qn]
+#    n-samples: 100
+#    weights-type: reference
+#    folder: "/QQ"
+#    axes: [ *centrality ]
