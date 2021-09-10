@@ -63,7 +63,7 @@ void Qn::Analysis::Correlate::CorrelationTaskRunner::Run() {
       container_meta.String() = GenCorrelationMeta(correlation);
 
       dir->WriteObject(&container, correlation.meta_key.c_str());
-      dir->WriteObject(&container_meta, (correlation.meta_key + "_meta").c_str());
+//      dir->WriteObject(&container_meta, (correlation.meta_key + "_meta").c_str());
     }
   }
 
