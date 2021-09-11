@@ -98,18 +98,18 @@ _tasks:
     folder: "/SP/Q1Q1"
     axes: [ *centrality ]
   # Event plane
-  - args: [*ta_u, *ta_qn_ep]
-    n-samples: 100
-    weights-type: observable
-    folder: "/EP/u1Q1"
-    axes: [ *centrality ]
-  - args: [*ta_u2, *ta_qn_ep, *ta_qn_ep]
-    n-samples: 100
-    weights-type: observable
-    folder: "/EP/u2Q1Q1"
-    axes: [ *centrality ]
-  - args: [*ta_qn_ep, *ta_qn_ep]
-    n-samples: 100
-    weights-type: reference
-    folder: "/EP/Q1Q1"
-    axes: [ *centrality ]
+#  - args: [*ta_u, *ta_qn_ep]
+#    n-samples: 100
+#    weights-type: observable
+#    folder: "/EP/u1Q1"
+#    axes: [ *centrality ]
+#  - args: [*ta_u2, *ta_qn_ep, *ta_qn_ep]
+#    n-samples: 100
+#    weights-type: observable
+#    folder: "/EP/u2Q1Q1"
+#    axes: [ *centrality ]
+#  - args: [*ta_qn_ep, *ta_qn_ep]
+#    n-samples: 100
+#    weights-type: reference
+#    folder: "/EP/Q1Q1"
+#    axes: [ *centrality ]
