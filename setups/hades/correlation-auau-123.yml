@@ -81,7 +81,7 @@ _tasks:
     weights-type: observable
     folder: "/checks/u2"
     axes: [ *centrality ]
-   Scalar product
+#   Scalar product
   - args: [*ta_u, *ta_qn_sp]
     n-samples: 100
     weights-type: observable
