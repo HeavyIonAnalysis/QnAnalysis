@@ -71,27 +71,27 @@ _tasks_args:
 
 _tasks:
   # Checks 
-  - args: [*ta_u]
-    n-samples: 100
-    weights-type: observable
-    folder: "/checks/u1"
-    axes: [ *centrality ]
-  - args: [*ta_u2]
-    n-samples: 100
-    weights-type: observable
-    folder: "/checks/u2"
-    axes: [ *centrality ]
+#  - args: [*ta_u]
+#    n-samples: 100
+#    weights-type: observable
+#    folder: "/checks/u1"
+#    axes: [ *centrality ]
+#  - args: [*ta_u2]
+#    n-samples: 100
+#    weights-type: observable
+#    folder: "/checks/u2"
+#    axes: [ *centrality ]
 #   Scalar product
   - args: [*ta_u, *ta_qn_sp]
     n-samples: 100
     weights-type: observable
     folder: "/SP/u1Q1"
     axes: [ *centrality ]
-  - args: [*ta_u2, *ta_qn_sp, *ta_qn_sp]
-    n-samples: 100
-    weights-type: observable
-    folder: "/SP/u2Q1Q1"
-    axes: [ *centrality ]
+#  - args: [*ta_u2, *ta_qn_sp, *ta_qn_sp]
+#    n-samples: 100
+#    weights-type: observable
+#    folder: "/SP/u2Q1Q1"
+#    axes: [ *centrality ]
   - args: [*ta_qn_sp, *ta_qn_sp]
     n-samples: 100
     weights-type: reference
