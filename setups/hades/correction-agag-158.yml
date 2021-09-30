@@ -212,8 +212,8 @@ hades_analysis:
         - twist-and-rescale
       cuts:
         *w3_cuts
-    - name: wall_plain
-      type: psi
-      phi: event_header/fw_angle_plain
-      weight: Ones
-      norm: m
+#    - name: wall_plain
+#      type: psi
+#      phi: event_header/fw_angle_plain
+#      weight: Ones
+#      norm: m
