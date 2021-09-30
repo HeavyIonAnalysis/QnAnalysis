@@ -84,7 +84,7 @@ hades_analysis:
     - name: pi_pos
       type: track
       phi:  mdc_vtx_tracks_extra/phi
-      weight: Ones
+      weight: mdc_vtx_tracks_extra/efficiency
       norm: m
       corrections:
         - recentering
@@ -104,7 +104,7 @@ hades_analysis:
     - name: pi_neg
       type: track
       phi:  mdc_vtx_tracks_extra/phi
-      weight: Ones
+      weight: mdc_vtx_tracks_extra/efficiency
       norm: m
       corrections:
         - recentering
@@ -153,26 +153,26 @@ hades_analysis:
         *protons_cuts
       qa:
         - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
-    - name: R1
-      type: track
-      phi:  forward_wall_hits/phi
-      weight: forward_wall_hits/signal
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
-      cuts:
-        *r1_cuts
-    - name: R2
-      type: track
-      phi:  forward_wall_hits/phi
-      weight: forward_wall_hits/signal
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
-      cuts:
-        *r2_cuts
+#    - name: R1
+#      type: track
+#      phi:  forward_wall_hits/phi
+#      weight: forward_wall_hits/signal
+#      norm: m
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
+#      cuts:
+#        *r1_cuts
+#    - name: R2
+#      type: track
+#      phi:  forward_wall_hits/phi
+#      weight: forward_wall_hits/signal
+#      norm: m
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
+#      cuts:
+#        *r2_cuts
     - name: W1
       type: track
       phi:  forward_wall_hits/phi
