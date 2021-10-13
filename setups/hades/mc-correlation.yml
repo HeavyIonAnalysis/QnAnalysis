@@ -95,7 +95,7 @@ _tasks:
     n-samples: 100
     weights-type: observable
     folder: "/u2Q2/reco"
-#    axes: [ *centrality ]
+    axes: [ *centrality ]
 #  - args: [*ta_reco, *ta_qn]
 #    n-samples: 100
 #    weights-type: observable
