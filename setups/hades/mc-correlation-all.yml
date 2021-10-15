@@ -3,6 +3,8 @@ _detectors: &detectors
     tags: [ rec_un_vector ]
   - name: protons
     tags: [ gen_un_vector ]
+  - name: pions
+    tags: [ gen_un_vector ]
   - name: psi_rp
     tags: [ psi_vector ]
 
@@ -58,16 +60,16 @@ _tasks_args:
     weight: ones
 
 _tasks:
-  - args: [*ta_accepted, *ta_psi]
-    n-samples: 100
-    weights-type: observable
-    folder: "/uQ/reco"
-    axes: [ *centrality ]
-  - args: [*ta_accepted2, *ta_psi2]
-    n-samples: 100
-    weights-type: observable
-    folder: "/u2Q2/reco"
-    axes: [ *centrality ]
+#  - args: [*ta_accepted, *ta_psi]
+#    n-samples: 100
+#    weights-type: observable
+#    folder: "/uQ/reco"
+#    axes: [ *centrality ]
+#  - args: [*ta_accepted2, *ta_psi2]
+#    n-samples: 100
+#    weights-type: observable
+#    folder: "/u2Q2/reco"
+#    axes: [ *centrality ]
   - args: [*ta_all, *ta_psi]
     n-samples: 100
     weights-type: observable
