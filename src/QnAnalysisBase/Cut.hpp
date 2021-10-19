@@ -3,9 +3,9 @@
 
 #include <TObject.h>
 
-#include "AnalysisTree/Variable.hpp"
-
 #include <QnAnalysisBase/Variable.hpp>
+
+#include "AnalysisTree.hpp"
 
 namespace Qn::Analysis::Base {
 
@@ -35,16 +35,16 @@ struct CutConfig : public TObject {
 
 struct Cut {
   Cut() = default;
-  Cut(AnalysisTree::Variable var, std::function<bool(double)> function, std::string description) : var_(std::move(var)),
+  Cut(ATVariable var, std::function<bool(double)> function, std::string description) : var_(std::move(var)),
                                                                                                    function_(std::move(function)),
                                                                                                    description_(std::move(description)) {}
 
-  const AnalysisTree::Variable& GetVariable() const { return var_; }
+  const ATVariable& GetVariable() const { return var_; }
   const std::function<bool(double)>& GetFunction() const { return function_; }
   const std::string& GetDescription() const { return description_; }
 
  private:
-  AnalysisTree::Variable var_{};
+  ATVariable var_{};
   std::function<bool(double)> function_{};
   std::string description_{};
 };

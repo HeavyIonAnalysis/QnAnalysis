@@ -6,22 +6,20 @@
 #define QNANALYSIS_SRC_QNANALYSISCORRECT_ATVARMANAGERTASK_H
 
 #include <at_task/Task.h>
-#include <AnalysisTree/VarManager.hpp>
+#include <QnAnalysisBase/AnalysisTree.hpp>
 
 namespace Qn::Analysis::Correction {
 
 class
 ATVarManagerTask :
-    public AnalysisTree::VarManager,
+    public ATVarManager,
     public UserTask {
 
 public:
-  FillTask *FillTaskPtr() final {
-    return this;
-  }
-  void Init(std::map<std::string, void *> &Map) override;
-  void Exec() override;
-  void Finish() override;
+  ANALYSISTREE_FILLTASK *FillTaskPtr() final { return this; }
+  void UserInit(std::map<std::string, void *> &Map) override;
+  void UserExec() override;
+  void UserFinish() override;
 
 TASK_DEF(ATVarManagerTask, 1)
 };

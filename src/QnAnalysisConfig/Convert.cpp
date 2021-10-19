@@ -13,8 +13,8 @@
 
 #include "Convert.hpp"
 
-AnalysisTree::Variable Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::VariableConfig& variable) {
-  return AnalysisTree::Variable(variable.branch, variable.field);
+ATVariable Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::VariableConfig& variable) {
+  return {variable.branch, variable.field};
 }
 
 Qn::Analysis::Base::Variable Qn::Analysis::Config::Utils::Convert1(const Qn::Analysis::Base::VariableConfig& variable) {

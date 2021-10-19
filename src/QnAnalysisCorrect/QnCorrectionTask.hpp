@@ -13,8 +13,13 @@
 
 #include <QnTools/CorrectionManager.hpp>
 
-#include <AnalysisTree/VarManager.hpp>
+#include <AnalysisTree/AnalysisTreeVersion.hpp>
 #include <AnalysisTree/DataHeader.hpp>
+#if ANALYSISTREE_VERSION_MAJOR == 1
+# include <AnalysisTree/VarManager.hpp>
+#elif ANALYSISTREE_VERSION_MAJOR == 2
+# include <AnalysisTree/infra-1.0/VarManager.hpp>
+#endif
 
 #include <QnAnalysisBase/AnalysisSetup.hpp>
 #include <QnAnalysisBase/QVector.hpp>
@@ -37,9 +42,12 @@ class QnCorrectionTask : public UserFillTask {
   }
   boost::program_options::options_description GetBoostOptions() override;
   void PreInit() override;
-  void Init(std::map<std::string, void*>&) override;
-  void Exec() override;
-  void Finish() override;
+ protected:
+  bool UseATI2() const override { return false; }
+ public:
+  void UserInit(std::map<std::string, void*>&) override;
+  void UserExec() override;
+  void UserFinish() override;
 
   void SetPointerToVarManager(AnalysisTree::VarManager* ptr) { var_manager_ = ptr; }
 
