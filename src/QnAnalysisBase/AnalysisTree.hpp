@@ -14,14 +14,18 @@
 
 using ATVariable = ::AnalysisTree::Variable;
 using ATVarManager = ::AnalysisTree::VarManager;
+using ATVarManagerEntry = ::AnalysisTree::VarManagerEntry;
 
 #elif ANALYSISTREE_VERSION_MAJOR == 2
 
+#include <AnalysisTree/infra-1.0/BranchReader.hpp>
 #include <AnalysisTree/infra-1.0/Variable.hpp>
 #include <AnalysisTree/infra-1.0/VarManager.hpp>
 
+using ATBranchReader = ::AnalysisTree::Version1::BranchReader;
 using ATVariable = ::AnalysisTree::Version1::Variable;
 using ATVarManager = ::AnalysisTree::Version1::VarManager;
+using ATVarManagerEntry = ::AnalysisTree::Version1::VarManagerEntry;
 
 #endif
 

@@ -8,12 +8,12 @@ using namespace Qn::Analysis::Correction;
 
 TASK_IMPL(ATVarManagerTask)
 
-void ATVarManagerTask::UserInit(std::map<std::string, void *> &Map) {
+void ATVarManagerTask::Init(std::map<std::string, void *> &Map) {
   ATVarManager::Init(Map);
 }
-void ATVarManagerTask::UserExec() {
+void ATVarManagerTask::Exec() {
   ATVarManager::Exec();
 }
-void ATVarManagerTask::UserFinish() {
+void ATVarManagerTask::Finish() {
   ATVarManager::Finish();
 };

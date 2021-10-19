@@ -13,13 +13,9 @@
 
 #include <QnTools/CorrectionManager.hpp>
 
-#include <AnalysisTree/AnalysisTreeVersion.hpp>
 #include <AnalysisTree/DataHeader.hpp>
-#if ANALYSISTREE_VERSION_MAJOR == 1
-# include <AnalysisTree/VarManager.hpp>
-#elif ANALYSISTREE_VERSION_MAJOR == 2
-# include <AnalysisTree/infra-1.0/VarManager.hpp>
-#endif
+#include <QnAnalysisBase/AnalysisTree.hpp>
+
 
 #include <QnAnalysisBase/AnalysisSetup.hpp>
 #include <QnAnalysisBase/QVector.hpp>
@@ -49,7 +45,7 @@ class QnCorrectionTask : public UserFillTask {
   void UserExec() override;
   void UserFinish() override;
 
-  void SetPointerToVarManager(AnalysisTree::VarManager* ptr) { var_manager_ = ptr; }
+  void SetPointerToVarManager(ATVarManager* ptr) { var_manager_ = ptr; }
 
   Base::AnalysisSetup* GetConfig() { return analysis_setup_; }
 
@@ -70,7 +66,7 @@ class QnCorrectionTask : public UserFillTask {
   Qn::CorrectionManager manager_;
 
   Base::AnalysisSetup* analysis_setup_{nullptr};
-  AnalysisTree::VarManager* var_manager_{nullptr};
+  ATVarManager* var_manager_{nullptr};
   std::vector<std::tuple<std::string, std::vector<AxisD>>> qa_histos_;
   std::map<int, int> is_filled_{};
 

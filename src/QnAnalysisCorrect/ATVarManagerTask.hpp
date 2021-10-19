@@ -17,9 +17,9 @@ ATVarManagerTask :
 
 public:
   ANALYSISTREE_FILLTASK *FillTaskPtr() final { return this; }
-  void UserInit(std::map<std::string, void *> &Map) override;
-  void UserExec() override;
-  void UserFinish() override;
+  void Init(std::map<std::string, void *> &Map) override;
+  void Exec() override;
+  void Finish() override;
 
 TASK_DEF(ATVarManagerTask, 1)
 };
