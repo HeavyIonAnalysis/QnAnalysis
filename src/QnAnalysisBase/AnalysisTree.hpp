@@ -9,9 +9,12 @@
 
 #if ANALYSISTREE_VERSION_MAJOR == 1
 
+#include <AnalysisTree/BranchReader.hpp>
 #include <AnalysisTree/Variable.hpp>
 #include <AnalysisTree/VarManager.hpp>
+#include <AnalysisTree/VarManagerEntry.hpp>
 
+using ATBranchReader = ::AnalysisTree::BranchReader;
 using ATVariable = ::AnalysisTree::Variable;
 using ATVarManager = ::AnalysisTree::VarManager;
 using ATVarManagerEntry = ::AnalysisTree::VarManagerEntry;
@@ -21,6 +24,7 @@ using ATVarManagerEntry = ::AnalysisTree::VarManagerEntry;
 #include <AnalysisTree/infra-1.0/BranchReader.hpp>
 #include <AnalysisTree/infra-1.0/Variable.hpp>
 #include <AnalysisTree/infra-1.0/VarManager.hpp>
+#include <AnalysisTree/infra-1.0/VarManagerEntry.hpp>
 
 using ATBranchReader = ::AnalysisTree::Version1::BranchReader;
 using ATVariable = ::AnalysisTree::Version1::Variable;
