@@ -3,12 +3,12 @@ _layouts:
 _axes:
   - &axis_protons_theta
     name: mdc_vtx_tracks_extra/theta
-    nb: 12
+    nb: 48
     lo: 0.3
     hi: 1.5
   - &axis_gen_protons_theta
     name: sim_particles_extra/theta
-    nb: 12
+    nb: 48
     lo: 0.3
     hi: 1.5
   - &axis_protons_pT
@@ -34,7 +34,7 @@ hades_analysis:
 #      type: track
 #      phi:  mdc_vtx_tracks_extra/phi
 #      weight: Ones
-#      norm: m
+#      norm: none
 #      corrections:
 #        - recentering
 #        - twist-and-rescale
@@ -47,23 +47,21 @@ hades_analysis:
       type: track
       phi:  sim_particles_extra/phi
       weight: Ones
-      norm: m
+#      norm: none
       cuts:
         sim_particles_extra/is_charged: {equals: 1}
       axes:
         - *axis_gen_protons_theta
-        - *axis_gen_protons_pT
   ###########################################################################
-    - name: pions
-      type: track
-      phi:  sim_particles_extra/phi
-      weight: Ones
-      norm: m
-      cuts:
-        sim_particles_extra/is_charged: {equals: 1}
-      axes:
-        - *axis_gen_protons_theta
-        - *axis_gen_pions_pT
+#    - name: pions
+#      type: track
+#      phi:  sim_particles_extra/phi
+#      weight: Ones
+#      norm: m
+#      cuts:
+#        sim_particles_extra/is_charged: {equals: 1}
+#      axes:
+#        - *axis_gen_protons_theta
   ###########################################################################
     - name: psi_rp
       type: psi

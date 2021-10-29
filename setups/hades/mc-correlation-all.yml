@@ -3,8 +3,8 @@ _detectors: &detectors
     tags: [ rec_un_vector ]
   - name: protons
     tags: [ gen_un_vector ]
-  - name: pions
-    tags: [ gen_un_vector ]
+#  - name: pions
+#    tags: [ gen_un_vector ]
   - name: psi_rp
     tags: [ psi_vector ]
 
