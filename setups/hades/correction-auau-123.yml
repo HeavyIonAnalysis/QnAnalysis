@@ -3,7 +3,7 @@ _layouts:
 _axes:
   - &axis_protons_pT
     name: mdc_vtx_tracks_extra/pT
-    bin-edges: [0.0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
+    bin-edges: [0.2, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 1.5]
   - &axis_pions_pT
     name: mdc_vtx_tracks_extra/pT
     bin-edges: [0, 0.08, 0.105, 0.13, 0.155, 0.18, 0.21, 0.25, 0.315, 0.535, 1.0]
@@ -89,43 +89,43 @@ hades_analysis:
         - *axis_protons_rapidity
         - [*axis_protons_rapidity, *axis_protons_pT]
     #############################################################
-    - name: pi_pos
-      type: track
-      phi:  mdc_vtx_tracks_extra/phi
-      weight: mdc_vtx_tracks_extra/efficiency
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
-      axes:
-        - *axis_pions_pT
-        - *axis_pions_rapidity
-#        - *axis_theta
-      cuts-quality:
-        *good_particle_cuts
-      cuts-pid:
-        *pi_pos_cuts
-      qa:
-        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
-    #############################################################
-    - name: pi_neg
-      type: track
-      phi:  mdc_vtx_tracks_extra/phi
-      weight: mdc_vtx_tracks_extra/efficiency
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
-      axes:
-        - *axis_pions_pT
-        - *axis_pions_rapidity
-#        - *axis_theta
-      cuts-quality:
-        *good_particle_cuts
-      cuts-pid:
-        *pi_neg_cuts
-      qa:
-        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+#    - name: pi_pos
+#      type: track
+#      phi:  mdc_vtx_tracks_extra/phi
+#      weight: mdc_vtx_tracks_extra/efficiency
+#      norm: m
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
+#      axes:
+#        - *axis_pions_pT
+#        - *axis_pions_rapidity
+##        - *axis_theta
+#      cuts-quality:
+#        *good_particle_cuts
+#      cuts-pid:
+#        *pi_pos_cuts
+#      qa:
+#        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+#    #############################################################
+#    - name: pi_neg
+#      type: track
+#      phi:  mdc_vtx_tracks_extra/phi
+#      weight: mdc_vtx_tracks_extra/efficiency
+#      norm: m
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
+#      axes:
+#        - *axis_pions_pT
+#        - *axis_pions_rapidity
+##        - *axis_theta
+#      cuts-quality:
+#        *good_particle_cuts
+#      cuts-pid:
+#        *pi_neg_cuts
+#      qa:
+#        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
   #############################################################
     - name: Mf
       type: track

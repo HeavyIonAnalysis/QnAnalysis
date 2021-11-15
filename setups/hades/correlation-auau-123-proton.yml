@@ -71,24 +71,24 @@ _tasks:
     weights-type: observable
     folder: "/SP/uQ"
     axes: [ *centrality ]
-#  - args: [*ta_u2, *ta_qn_sp, *ta_qn_sp]
-#    n-samples: 100
-#    weights-type: observable
-#    folder: "/SP/u2Q1Q1"
-#    axes: [ *centrality ]
-  - args: [*ta_u, *ta_qn_ep]
+  - args: [*ta_u2, *ta_qn_sp, *ta_qn_sp]
     n-samples: 100
     weights-type: observable
-    folder: "/EP/uQ"
+    folder: "/SP/u2Q1Q1"
     axes: [ *centrality ]
+#  - args: [*ta_u, *ta_qn_ep]
+#    n-samples: 100
+#    weights-type: observable
+#    folder: "/EP/uQ"
+#    axes: [ *centrality ]
   # Reference x Reference
   - args: [*ta_qn_sp, *ta_qn_sp]
     n-samples: 100
     weights-type: reference
     folder: "/SP/QQ"
     axes: [ *centrality ]
-  - args: [*ta_qn_ep, *ta_qn_ep]
-    n-samples: 100
-    weights-type: reference
-    folder: "/EP/QQ"
-    axes: [ *centrality ]
+#  - args: [*ta_qn_ep, *ta_qn_ep]
+#    n-samples: 100
+#    weights-type: reference
+#    folder: "/EP/QQ"
+#    axes: [ *centrality ]
