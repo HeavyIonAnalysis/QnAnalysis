@@ -19,6 +19,17 @@ TASK_IMPL(QnCorrectionTask)
 using std::string;
 using std::vector;
 
+std::string GetATFieldName(const AnalysisTree::Variable &v) {
+  return v.GetFields()[0].GetBranchName() + "/" + v.GetFields()[0].GetName();
+}
+
+std::string GetQnFieldName(const AnalysisTree::Variable &v) {
+  if (v.GetName() == "_Ones") {
+    return "Ones";
+  }
+  return v.GetName();
+}
+
 void QnCorrectionTask::PreInit() {
   auto at_vm_task = ATVarManagerTask::Instance();
   if (!at_vm_task->IsEnabled()) {
@@ -53,7 +64,7 @@ void QnCorrectionTask::PreInit() {
   var_manager_ = at_vm_task;
 }
 
-void QnCorrectionTask::Init(std::map<std::string, void *> &) {
+void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
   out_file_ = std::shared_ptr<TFile>(TFile::Open("correction_out.root", "recreate"));
   if (!(out_file_ && out_file_->IsOpen())) {
     throw std::runtime_error("Unable to open output file for writing");
@@ -68,6 +79,8 @@ void QnCorrectionTask::Init(std::map<std::string, void *> &) {
 
   InitVariables();
 
+
+
   for (const auto &axis : analysis_setup_->GetCorrectionAxes()) {
     manager_.AddCorrectionAxis(axis);
   }
@@ -75,34 +88,74 @@ void QnCorrectionTask::Init(std::map<std::string, void *> &) {
   for (const auto &qvec_ptr : analysis_setup_->q_vectors) {
     if (qvec_ptr->GetType() == Base::EQVectorType::TRACK) {
       auto track_qv = std::dynamic_pointer_cast<Base::QVectorTrack>(qvec_ptr);
-      const string &name = track_qv->GetName();
-      auto qn_weight = track_qv->GetWeightVar().GetName() == "_Ones" ? "Ones" : track_qv->GetWeightVar().GetName();
-      manager_.AddDetector(name,
+      const string &q_vector_name = track_qv->GetName();
+      const string target_branch_name = track_qv->GetPhiVar().GetFields()[0].GetBranchName();
+
+      auto loop_ctx_branch_it = find_if(begin(track_loop_contexts_),
+                                        end(track_loop_contexts_),
+                                        [target_branch_name](const TrackLoopContext &ctx) {
+                                          return target_branch_name == ctx.GetBranchName();
+                                        });
+      if (loop_ctx_branch_it == end(track_loop_contexts_)) {
+        auto lock_variable = AddQnVariable(target_branch_name + "_Filled")[0];
+        TrackLoopContext loop_ctx(GetInBranch(target_branch_name), lock_variable);
+        track_loop_contexts_.emplace_back(loop_ctx);
+        loop_ctx_branch_it = track_loop_contexts_.end() - 1;
+      }
+
+      for (auto &variable : track_qv->GetListOfVariables()) {
+        auto qn_field_name = GetQnFieldName(variable);
+        if (qn_field_name == "Ones")
+          continue;
+        auto qn_field = FindFirstQnVariableByName(qn_field_name);
+        if (!qn_field) {
+          qn_field = AddQnVariable(qn_field_name, 1)[0];
+        }
+        auto at_field_name = GetATFieldName(variable);
+        auto at_field = GetVar(at_field_name);
+        if (loop_ctx_branch_it->AddMapping(at_field, qn_field)) {
+          std::cout << at_field_name << " --> " << qn_field_name << std::endl;
+        }
+      }
+
+      manager_.AddDetector(q_vector_name,
                            DetectorType::TRACK,
-                           track_qv->GetPhiVar().GetName(),
-                           qn_weight,
+                           GetQnFieldName(track_qv->GetPhiVar()),
+                           GetQnFieldName(track_qv->GetWeightVar()),
                            track_qv->GetAxes(),
                            {1, 2},
                            track_qv->GetNormalization());
-      Info(__func__, "Add track detector '%s'", name.c_str());
+      Info(__func__, "Add track detector '%s'", q_vector_name.c_str());
       SetCorrectionSteps(track_qv.operator*());
+
+      manager_.AddCutOnDetector(q_vector_name,
+                                {loop_ctx_branch_it->lock_qn_variable->name.c_str()},
+                                [](const double lock) {
+                                  return lock > 0;
+                                }, "is_filled");
+
       for (const auto &cut : track_qv->GetCuts()) {//NOTE cannot apply cuts on more than 1 variable
-        manager_.AddCutOnDetector(name, {cut.GetVariable().GetName().c_str()}, cut.GetFunction(), cut.GetDescription());
+        manager_.AddCutOnDetector(q_vector_name,
+                                  {cut.GetVariable().GetName().c_str()},
+                                  cut.GetFunction(),
+                                  cut.GetDescription());
       }
+
     } else if (qvec_ptr->GetType() == Base::EQVectorType::CHANNEL) {
       auto channel_qv = std::dynamic_pointer_cast<Base::QVectorChannel>(qvec_ptr);
-      const string name = channel_qv->GetName();
-      auto qn_phi = name + "_" + channel_qv->GetPhiVar().GetName();
+      auto q_vector_name = channel_qv->GetName();
+      auto qn_phi = q_vector_name + "_" + channel_qv->GetPhiVar().GetName();
       auto qn_weight =
-          channel_qv->GetWeightVar().GetName() == "_Ones" ? "Ones" : name + "_" + channel_qv->GetWeightVar().GetName();
-      manager_.AddDetector(name,
+          channel_qv->GetWeightVar().GetName() == "_Ones" ? "Ones" : q_vector_name + "_"
+              + channel_qv->GetWeightVar().GetName();
+      manager_.AddDetector(q_vector_name,
                            DetectorType::CHANNEL,
                            qn_phi,
                            qn_weight,
                            {/* no axes to be passed */},
                            {1},
                            channel_qv->GetNormalization());
-      Info(__func__, "Add channel detector '%s'", name.c_str());
+      Info(__func__, "Add channel detector '%s'", q_vector_name.c_str());
       SetCorrectionSteps(channel_qv.operator*());
     } else if (qvec_ptr->GetType() == Base::EQVectorType::EVENT_PSI) {
       string name = qvec_ptr->GetName();
@@ -142,8 +195,8 @@ void QnCorrectionTask::InitVariables() {
 
     for (auto &var : entry.Variables()) {
       if (var.GetName() != "_Ones") {
-        var.SetId(ivar);
-        manager_.AddVariable(var.GetName(), var.GetId(), var.GetSize());
+        auto added_variables = AddQnVariable(var.GetName(), var.GetSize());
+        var.SetId(added_variables.front()->idx);
         //        var.Print();
         ivar += var.GetSize();
       }
@@ -151,9 +204,9 @@ void QnCorrectionTask::InitVariables() {
 
     auto type = entry.GetBranches()[0]->GetType();
     if (type != AnalysisTree::DetType::kEventHeader && type != AnalysisTree::DetType::kModule) {
-      manager_.AddVariable(entry.GetBranches()[0]->GetName() + "_Filled", ivar, 1);
-      is_filled_.insert(std::make_pair(ibranch, ivar));
-      ivar++;
+//      auto added_variable = AddQnVariable(entry.GetBranches()[0]->GetName() + "_Filled", 1);
+//      is_filled_.insert(std::make_pair(ibranch, added_variable.front()->idx));
+//      ivar++;
     }
 
     ibranch++;
@@ -177,9 +230,13 @@ void QnCorrectionTask::InitVariables() {
 /**
 * Main method. Executed every event
 */
-void QnCorrectionTask::Exec() {
+void QnCorrectionTask::UserExec() {
   manager_.Reset();
   double *container = manager_.GetVariableContainer();
+
+  for (auto &v : qn_variables_) {
+    v->data = container;
+  }
 
   for (const auto &entry : var_manager_->GetVarEntries()) {
     if (entry.GetBranches()[0]->GetType() == AnalysisTree::DetType::kEventHeader) {
@@ -221,29 +278,36 @@ void QnCorrectionTask::Exec() {
 * Modules. Information from EventHeaders and Modules should be filled before.
 */
 void QnCorrectionTask::FillTracksQvectors() {
-  double *container = manager_.GetVariableContainer();
-  short ibranch{0};
-  for (const auto &entry : var_manager_->GetVarEntries()) {
-    auto type = entry.GetBranches()[0]->GetType();
-    if (type == AnalysisTree::DetType::kEventHeader || type == AnalysisTree::DetType::kModule) {
-      ibranch++;
-      continue;// skip EventHeader and ModuleDetectors
-    }
-    assert(entry.GetNumberOfBranches() == 1);
-    const int n_channels = entry.GetValues().size();
-    for (int i = 0; i < n_channels; ++i) {
-      for (auto const &fill : is_filled_) {
-        container[fill.second] = fill.first == ibranch ? 1. : -1.;// 1 for current, -1 for all others
-      }
-      short ivar{0};
-      for (const auto &var : entry.GetVariables()) {
-        container[var.GetId()] = entry.GetValues()[i].at(ivar);
-        ivar++;
-      }
-      manager_.FillTrackingDetectors();
-    }
-    ibranch++;
+
+  for (auto &track_loop : track_loop_contexts_) {
+    track_loop.StartLoop(manager_);
   }
+
+//  double *container = manager_.GetVariableContainer();
+//  short ibranch{0};
+//
+//
+//  for (const auto &entry : var_manager_->GetVarEntries()) {
+//    auto type = entry.GetBranches()[0]->GetType();
+//    if (type == AnalysisTree::DetType::kEventHeader || type == AnalysisTree::DetType::kModule) {
+//      ibranch++;
+//      continue;// skip EventHeader and ModuleDetectors
+//    }
+//    assert(entry.GetNumberOfBranches() == 1);
+//    const int n_channels = entry.GetValues().size();
+//    for (int i = 0; i < n_channels; ++i) {
+//      for (auto const &fill : is_filled_) {
+//        container[fill.second] = fill.first == ibranch ? 1. : -1.;// 1 for current, -1 for all others
+//      }
+//      short ivar{0};
+//      for (const auto &var : entry.GetVariables()) {
+//        container[var.GetId()] = entry.GetValues()[i].at(ivar);
+//        ivar++;
+//      }
+//      manager_.FillTrackingDetectors();
+//    }
+//    ibranch++;
+//  }
 }
 
 boost::program_options::options_description QnCorrectionTask::GetBoostOptions() {
@@ -312,7 +376,7 @@ void QnCorrectionTask::AddQAHisto() {
   }
 }
 
-void QnCorrectionTask::Finish() {
+void QnCorrectionTask::UserFinish() {
   manager_.Finalize();
 
   out_file_->cd();

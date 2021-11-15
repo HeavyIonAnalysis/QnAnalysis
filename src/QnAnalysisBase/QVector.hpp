@@ -271,8 +271,8 @@ class QVectorTrack : public QVector {
   QVectorTrack(std::string name, AnalysisTree::Variable phi, AnalysisTree::Variable weight,
                std::vector<Axis> axes) : QVector(std::move(name), EQVectorType::TRACK, std::move(phi), std::move(weight)),
                                          axes_(std::move(axes)) {
-    auto var = AnalysisTree::Variable(*phi_.GetBranches().begin(), "Filled");
-    this->AddCut({var, [](const double is) { return is > 0.; }, "is_filled"});
+//    auto var = AnalysisTree::Variable(*phi_.GetBranches().begin(), "Filled");
+//    this->AddCut({var, [](const double is) { return is > 0.; }, "is_filled"});
   }
 
   std::vector<Qn::AxisD> GetAxes() const;
