@@ -1,10 +1,8 @@
 _detectors: &detectors
-  - name: accepted
-    tags: [ rec_un_vector ]
   - name: protons
     tags: [ gen_un_vector ]
-#  - name: pions
-#    tags: [ gen_un_vector ]
+  - name: total
+    tags: [ gen_un_vector ]
   - name: psi_rp
     tags: [ psi_vector ]
 
