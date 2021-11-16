@@ -33,30 +33,28 @@ class QnCorrectionTask : public UserFillTask {
   QnCorrectionTask() = default;
   explicit QnCorrectionTask(Base::AnalysisSetup *global_config) : analysis_setup_(global_config) {}
 
-  void AddQAHistogram(const std::string &qvec_name, const std::vector<AxisD> &axis) {
-    qa_histos_.emplace_back(qvec_name, axis);
-  }
   boost::program_options::options_description GetBoostOptions() override;
   void PreInit() override;
   void UserInit(std::map<std::string, void *> &) override;
   void UserExec() override;
   void UserFinish() override;
 
-  void SetPointerToVarManager(AnalysisTree::VarManager *ptr) { var_manager_ = ptr; }
-
   Base::AnalysisSetup *GetConfig() { return analysis_setup_; }
 
  protected:
 
-  struct ValueSource {
+  class ValueSource {
+   public:
+    virtual ~ValueSource() = default;
     virtual void Notify() {}
     virtual double Value() const = 0;
   };
 
   typedef std::shared_ptr<ValueSource> ValueSourcePtr;
 
-  struct ValueSourceRef :
+  class ValueSourceRef :
       public ValueSource {
+   public:
     explicit ValueSourceRef(ValueSourcePtr ptr) : ptr(std::move(ptr)) {}
 
     double Value() const final {
@@ -66,15 +64,16 @@ class QnCorrectionTask : public UserFillTask {
     ValueSourcePtr Ptr() const {
       return ptr;
     }
-
+   private:
     ValueSourcePtr ptr;
   };
 
-  struct FunctionValueSourceImpl
+  class FunctionValueSourceImpl
       : public ValueSource {
+   public:
     FunctionValueSourceImpl(std::function<double(void)> value, std::function<void(void)> notify) : value(std::move(
         value)), notify(std::move(notify)) {}
-    FunctionValueSourceImpl(std::function<double(void)> value) : value(std::move(value)) {}
+    explicit FunctionValueSourceImpl(std::function<double(void)> value) : value(std::move(value)) {}
 
     void Notify() override {
       if (notify) {
@@ -85,12 +84,14 @@ class QnCorrectionTask : public UserFillTask {
       return value();
     }
 
+   private:
     std::function<double (void)> value;
     std::function<void (void)> notify;
   };
 
-  struct ATI2ValueSourceImpl :
+  class ATI2ValueSourceImpl :
       public ValueSource {
+   public:
     explicit ATI2ValueSourceImpl(ATI2::Variable v) : v(std::move(v)) {}
     ATI2ValueSourceImpl(ATI2::Variable v, size_t i_channel) : v(std::move(v)), i_channel(i_channel) {}
 
@@ -123,6 +124,7 @@ class QnCorrectionTask : public UserFillTask {
       return cached_value;
     }
 
+   private:
     ATI2::Variable v;
     size_t i_channel{0ul};
 
@@ -131,14 +133,16 @@ class QnCorrectionTask : public UserFillTask {
   };
 
   struct ValueSink {
+    virtual ~ValueSink() = default;
     virtual void Reset() {};
     virtual void AssignValue(double value) = 0;
   };
 
   typedef std::shared_ptr<ValueSink> ValueSinkPtr;
 
-  struct ValueSinkRef :
+  class ValueSinkRef :
       public ValueSink {
+   public:
     explicit ValueSinkRef(std::shared_ptr<ValueSink> ptr) : ptr(std::move(ptr)) {}
 
     void AssignValue(double value) final {
@@ -151,19 +155,27 @@ class QnCorrectionTask : public UserFillTask {
       return ptr;
     }
 
+   private:
     std::shared_ptr<ValueSink> ptr;
   };
 
-  struct QnVariable :
+  class QnVariable :
       public ValueSink {
-    QnVariable(const std::string &name, size_t idx, size_t ichannel) : name(name), idx(idx), ichannel(ichannel) {}
+   public:
+    QnVariable(std::string name, size_t idx, size_t ichannel) : name(std::move(name)), idx(idx), ichannel(ichannel) {}
 
-    std::string name;
-    size_t idx;
-    size_t ichannel;
-
-    double *data{};
-    bool is_set{false};
+    size_t GetIdx() const {
+      return idx;
+    }
+    size_t GetIchannel() const {
+      return ichannel;
+    }
+    const std::string &GetName() const {
+      return name;
+    }
+    void SetData(double *data) {
+      QnVariable::data = data;
+    }
 
     void Reset() override {
       is_set = false;
@@ -175,6 +187,14 @@ class QnCorrectionTask : public UserFillTask {
       data[idx + ichannel] = value;
       is_set = true;
     }
+
+   private:
+    std::string name;
+    size_t idx;
+    size_t ichannel;
+
+    double *data{};
+    bool is_set{false};
   };
   typedef std::shared_ptr<QnVariable> QnDataPtr;
 
@@ -219,30 +239,11 @@ class QnCorrectionTask : public UserFillTask {
   void AddQAHisto();
 
 
-
-  std::vector<QnDataPtr> AddQnVariable(const std::string &name, size_t length = 1) {
-    auto new_idx = qn_variables_.empty() ?
-        0 :
-        qn_variables_.back()->idx + qn_variables_.back()->ichannel + 1;
-    manager_.AddVariable(name, new_idx, length);
-
-    std::vector<QnDataPtr> result(length);
-    for (auto ichannel = 0; ichannel < length; ichannel++) {
-      result[ichannel] = std::make_shared<QnVariable>(name, new_idx, ichannel);
-    }
-    copy(begin(result), end(result), back_inserter(qn_variables_));
-    return result;
-  }
-
-  QnDataPtr FindFirstQnVariableByName(std::string_view name) {
-    auto it = std::find_if(begin(qn_variables_), end(qn_variables_), [name](const QnDataPtr &qn_data_ptr) {
-      return qn_data_ptr->name == name;
-    });
-    if (it != end(qn_variables_)) {
-      return *it;
-    }
-    return {};
-  }
+  std::vector<QnDataPtr> AddQnVariable(const std::string &name, size_t length = 1);
+  QnDataPtr FindFirstQnVariableByName(std::string_view name);
+  static
+  std::shared_ptr<ATI2ValueSourceImpl>
+  FindATI2SourceByName(std::string_view variable_name, std::vector<std::shared_ptr<ATI2ValueSourceImpl>> collection);
 
   std::string yaml_config_file_;
   std::string yaml_config_node_;
@@ -258,9 +259,7 @@ class QnCorrectionTask : public UserFillTask {
   Qn::CorrectionManager manager_;
 
   Base::AnalysisSetup *analysis_setup_{nullptr};
-  AnalysisTree::VarManager *var_manager_{nullptr};
   std::vector<std::tuple<std::string, std::vector<AxisD>>> qa_histos_;
-  std::map<int, int> is_filled_{};
 
   std::vector<QnDataPtr> qn_variables_;
 

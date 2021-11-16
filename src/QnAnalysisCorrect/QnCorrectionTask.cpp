@@ -30,6 +30,7 @@ std::string GetQnFieldName(const AnalysisTree::Variable &v) {
   return v.GetName();
 }
 
+
 void QnCorrectionTask::PreInit() {
   auto at_vm_task = ATVarManagerTask::Instance();
   if (!at_vm_task->IsEnabled()) {
@@ -61,7 +62,6 @@ void QnCorrectionTask::PreInit() {
   at_vm_task->FillBranchNames();
 //  at_vm_task->SetCutsMap(cuts_map_); FIXME
 
-  var_manager_ = at_vm_task;
 }
 
 void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
@@ -85,14 +85,18 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
     auto at_variable = GetVar(at_variable_name);
 
     if (at_variable.GetParentBranch()->GetBranchType() != AnalysisTree::DetType::kEventHeader) {
-      throw std::runtime_error("Event variable is not from EventHeader branch");
+      throw std::runtime_error("Event variable '" + at_variable_name + "' is not from the EventHeader branch");
     }
     auto qn_variable = FindFirstQnVariableByName(qn_variable_name);
     if (!qn_variable) {
       qn_variable = AddQnVariable(qn_variable_name, 1)[0];
     }
-    auto at_field_value_source = std::make_shared<ATI2ValueSourceImpl>(at_variable);
-    event_var_mapping_.emplace_back(at_field_value_source, qn_variable);
+
+    auto at_field_value_source = FindATI2SourceByName(at_variable_name, ati2_event_sources_);
+    if (!at_field_value_source) {
+      at_field_value_source = std::make_shared<ATI2ValueSourceImpl>(at_variable);
+      event_var_mapping_.emplace_back(at_field_value_source, qn_variable);
+    }
     ati2_event_sources_.emplace_back(at_field_value_source);
     manager_.AddEventVariable(qn_variable_name);
   }
@@ -114,7 +118,14 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
                                         });
       if (loop_ctx_branch_it == end(track_loop_contexts_)) {
         auto lock_variable = AddQnVariable(target_branch_name + "_Filled")[0];
-        MappingContext loop_ctx(GetInBranch(target_branch_name), lock_variable);
+        auto target_branch = GetInBranch(target_branch_name);
+        if (!(
+            target_branch->GetBranchType() == TRACKS ||
+            target_branch->GetBranchType() == PARTICLES ||
+            target_branch->GetBranchType() == HITS)) {
+          throw std::runtime_error("Target branch of tracking detector shall be either Tracks or Particles or Hits");
+        }
+        MappingContext loop_ctx(target_branch, lock_variable);
         track_loop_contexts_.emplace_back(loop_ctx);
         loop_ctx_branch_it = track_loop_contexts_.end() - 1;
       }
@@ -144,7 +155,7 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
 
       manager_.AddCutOnDetector(
           q_vector_name,
-          {loop_ctx_branch_it->lock_qn_variable->name.c_str()},
+          {loop_ctx_branch_it->lock_qn_variable->GetName().c_str()},
           [](const double lock) {
             return lock > 0;
           }, "is_filled");
@@ -237,7 +248,7 @@ void QnCorrectionTask::UserExec() {
 
     for (auto &v : qn_variables_) {
       v->Reset();
-      v->data = container;
+      v->SetData(container);
     }
   }
 
@@ -396,6 +407,40 @@ void QnCorrectionTask::SetCorrectionSteps(const Base::QVector &qvec) {
   }
 
   manager_.SetOutputQVectors(name, correction_steps);
+}
+
+vector<QnCorrectionTask::QnDataPtr> QnCorrectionTask::AddQnVariable(const string &name, size_t length) {
+  auto new_idx = qn_variables_.empty() ?
+                 0ul :
+                 qn_variables_.back()->GetIdx() + qn_variables_.back()->GetIchannel() + 1;
+  manager_.AddVariable(name, new_idx, length);
+
+  std::vector<QnDataPtr> result(length);
+  for (size_t ichannel = 0; ichannel < length; ichannel++) {
+    result[ichannel] = std::make_shared<QnVariable>(name, new_idx, ichannel);
+  }
+  copy(begin(result), end(result), back_inserter(qn_variables_));
+  return result;
+}
+
+QnCorrectionTask::QnDataPtr QnCorrectionTask::FindFirstQnVariableByName(std::string_view name) {
+  auto it = std::find_if(begin(qn_variables_), end(qn_variables_), [name](const QnDataPtr &qn_data_ptr) {
+    return qn_data_ptr->GetName() == name;
+  });
+  if (it != end(qn_variables_)) {
+    return *it;
+  }
+  return {};
+}
+
+std::shared_ptr<QnCorrectionTask::ATI2ValueSourceImpl> QnCorrectionTask::FindATI2SourceByName(std::string_view variable_name,
+                                                                            vector<std::shared_ptr<ATI2ValueSourceImpl>> collection) {
+  for (auto & ele : collection) {
+    if (variable_name == ele->GetVariableName()) {
+      return ele;
+    }
+  }
+  return {};
 }
 
 }// namespace Qn
