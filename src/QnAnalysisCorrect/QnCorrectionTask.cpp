@@ -79,8 +79,6 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
 
   InitVariables();
 
-
-
   for (const auto &axis : analysis_setup_->GetCorrectionAxes()) {
     manager_.AddCorrectionAxis(axis);
   }
@@ -93,12 +91,12 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
 
       auto loop_ctx_branch_it = find_if(begin(track_loop_contexts_),
                                         end(track_loop_contexts_),
-                                        [target_branch_name](const TrackLoopContext &ctx) {
+                                        [target_branch_name](const MappingContext &ctx) {
                                           return target_branch_name == ctx.GetBranchName();
                                         });
       if (loop_ctx_branch_it == end(track_loop_contexts_)) {
         auto lock_variable = AddQnVariable(target_branch_name + "_Filled")[0];
-        TrackLoopContext loop_ctx(GetInBranch(target_branch_name), lock_variable);
+        MappingContext loop_ctx(GetInBranch(target_branch_name), lock_variable);
         track_loop_contexts_.emplace_back(loop_ctx);
         loop_ctx_branch_it = track_loop_contexts_.end() - 1;
       }
@@ -128,11 +126,12 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
       Info(__func__, "Add track detector '%s'", q_vector_name.c_str());
       SetCorrectionSteps(track_qv.operator*());
 
-      manager_.AddCutOnDetector(q_vector_name,
-                                {loop_ctx_branch_it->lock_qn_variable->name.c_str()},
-                                [](const double lock) {
-                                  return lock > 0;
-                                }, "is_filled");
+      manager_.AddCutOnDetector(
+          q_vector_name,
+          {loop_ctx_branch_it->lock_qn_variable->name.c_str()},
+          [](const double lock) {
+            return lock > 0;
+          }, "is_filled");
 
       for (const auto &cut : track_qv->GetCuts()) {//NOTE cannot apply cuts on more than 1 variable
         manager_.AddCutOnDetector(q_vector_name,
@@ -235,6 +234,7 @@ void QnCorrectionTask::UserExec() {
   double *container = manager_.GetVariableContainer();
 
   for (auto &v : qn_variables_) {
+    v->Reset();
     v->data = container;
   }
 
@@ -280,34 +280,28 @@ void QnCorrectionTask::UserExec() {
 void QnCorrectionTask::FillTracksQvectors() {
 
   for (auto &track_loop : track_loop_contexts_) {
-    track_loop.StartLoop(manager_);
+    if (track_loop.lock_qn_variable) {
+      track_loop.lock_qn_variable->Reset();
+      track_loop.lock_qn_variable->AssignValue(1.0);
+    }
+    for (auto &&channel : track_loop.branch_ptr->Loop()) {
+      /* renew sources */
+      for (auto &&source : track_loop.ati2_sources_) {
+        source->Update(channel);
+      }
+      for (auto &&[_, sink] : track_loop.mappings_) {
+        sink.Reset();
+      }
+      for (auto &&[source, sink] : track_loop.mappings_) {
+        sink.AssignValue(source.GetValue());
+      }
+      manager_.FillTrackingDetectors();
+    }
+    if (track_loop.lock_qn_variable) {
+      track_loop.lock_qn_variable->Reset();
+      track_loop.lock_qn_variable->AssignValue(-1.0);
+    }
   }
-
-//  double *container = manager_.GetVariableContainer();
-//  short ibranch{0};
-//
-//
-//  for (const auto &entry : var_manager_->GetVarEntries()) {
-//    auto type = entry.GetBranches()[0]->GetType();
-//    if (type == AnalysisTree::DetType::kEventHeader || type == AnalysisTree::DetType::kModule) {
-//      ibranch++;
-//      continue;// skip EventHeader and ModuleDetectors
-//    }
-//    assert(entry.GetNumberOfBranches() == 1);
-//    const int n_channels = entry.GetValues().size();
-//    for (int i = 0; i < n_channels; ++i) {
-//      for (auto const &fill : is_filled_) {
-//        container[fill.second] = fill.first == ibranch ? 1. : -1.;// 1 for current, -1 for all others
-//      }
-//      short ivar{0};
-//      for (const auto &var : entry.GetVariables()) {
-//        container[var.GetId()] = entry.GetValues()[i].at(ivar);
-//        ivar++;
-//      }
-//      manager_.FillTrackingDetectors();
-//    }
-//    ibranch++;
-//  }
 }
 
 boost::program_options::options_description QnCorrectionTask::GetBoostOptions() {

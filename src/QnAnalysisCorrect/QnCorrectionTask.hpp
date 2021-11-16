@@ -47,6 +47,7 @@ class QnCorrectionTask : public UserFillTask {
   Base::AnalysisSetup *GetConfig() { return analysis_setup_; }
 
  protected:
+
   struct ValueSource {
     virtual double GetValue() const = 0;
   };
@@ -70,27 +71,42 @@ class QnCorrectionTask : public UserFillTask {
 
   struct ATI2ValueSourceImpl :
       public ValueSource {
-    ATI2ValueSourceImpl(ATI2::Variable v) : v(std::move(v)) {}
+    explicit ATI2ValueSourceImpl(ATI2::Variable v) : v(std::move(v)) {}
+    ATI2ValueSourceImpl(ATI2::Variable v, size_t i_channel) : v(std::move(v)), i_channel(i_channel) {}
 
     std::string GetVariableName() const {
       return v.GetName();
     }
 
-    void Renew(const ATI2::BranchChannel &channel) {
+    /**
+     * @brief assigns value from specific BranchChannel (i_channel is ignored)
+     * @param channel
+     */
+    void Update(ATI2::BranchChannel &channel) {
       cached_value = channel[v];
       is_set = true;
     }
-    void Renew(const ATI2::Branch &branch) {
-      cached_value = branch[v];
+    /**
+     * @brief Assigns value from event-header-like branch or specific channel (i_channel)
+     * @param branch
+     */
+    void Update(ATI2::Branch &branch) {
+      if (branch.GetBranchType() == AnalysisTree::DetType::kEventHeader) {
+        cached_value = branch[v];
+      } else {
+        cached_value = branch[i_channel][v];
+      }
       is_set = true;
     }
     double GetValue() const override {
       return cached_value;
     }
 
+    ATI2::Variable v;
+    size_t i_channel{0ul};
+
     bool is_set{false};
     double cached_value{-999};
-    ATI2::Variable v;
   };
 
   struct ValueSink {
@@ -139,37 +155,17 @@ class QnCorrectionTask : public UserFillTask {
       is_set = true;
     }
   };
-
   typedef std::shared_ptr<QnVariable> QnDataPtr;
 
-  struct TrackLoopContext {
-    TrackLoopContext(ATI2::Branch *branch_ptr, const QnDataPtr &lock_qn_variable)
-        : branch_ptr(branch_ptr), lock_qn_variable(lock_qn_variable) {
+  struct MappingContext {
+    MappingContext(ATI2::Branch *branch_ptr, QnDataPtr lock_qn_variable)
+        : branch_ptr(branch_ptr), lock_qn_variable(std::move(lock_qn_variable)) {
     }
 
     std::string GetBranchName() const {
       return branch_ptr->GetBranchName();
     }
 
-    void StartLoop(Qn::CorrectionManager &man) {
-      lock_qn_variable->Reset();
-      lock_qn_variable->AssignValue(1.0);
-      for (auto &&channel : branch_ptr->Loop()) {
-        /* renew sources */
-        for (auto &&source : ati2_channel_sources_) {
-          source->Renew(channel);
-        }
-        for (auto &&[_, sink] : mappings_) {
-          sink.Reset();
-        }
-        for (auto &&[source, sink] : mappings_) {
-          sink.AssignValue(source.GetValue());
-        }
-        man.FillTrackingDetectors();
-      }
-      lock_qn_variable->Reset();
-      lock_qn_variable->AssignValue(-1.0);
-    }
 
     bool AddMapping(const ValueSourcePtr &source, const ValueSinkPtr &sink) {
       for (auto && [m_source, m_sink] : mappings_) {
@@ -183,7 +179,7 @@ class QnCorrectionTask : public UserFillTask {
     bool AddMapping(const ATI2::Variable &source, const ValueSinkPtr &sink) {
       std::shared_ptr<ATI2ValueSourceImpl> source_ptr{std::make_shared<ATI2ValueSourceImpl>(source)};
       if (AddMapping(source_ptr, sink)) {
-        ati2_channel_sources_.emplace_back(source_ptr);
+        ati2_sources_.emplace_back(source_ptr);
         return true;
       }
       return false;
@@ -194,7 +190,7 @@ class QnCorrectionTask : public UserFillTask {
     QnDataPtr lock_qn_variable;
 
     std::list<std::pair<ValueSourceRef, ValueSinkRef>> mappings_;
-    std::list<std::shared_ptr<ATI2ValueSourceImpl>> ati2_channel_sources_;
+    std::list<std::shared_ptr<ATI2ValueSourceImpl>> ati2_sources_;
   };
 
   void FillTracksQvectors();
@@ -202,7 +198,7 @@ class QnCorrectionTask : public UserFillTask {
   void InitVariables();
   void AddQAHisto();
 
-  std::vector<QnDataPtr> qn_variables_;
+
 
   std::vector<QnDataPtr> AddQnVariable(const std::string &name, size_t length = 1) {
     auto new_idx = qn_variables_.empty() ? 0 : qn_variables_.back()->idx + 1;
@@ -235,6 +231,8 @@ class QnCorrectionTask : public UserFillTask {
 
   TTree *out_tree_{nullptr};
 
+
+
   Qn::CorrectionManager manager_;
 
   Base::AnalysisSetup *analysis_setup_{nullptr};
@@ -242,7 +240,8 @@ class QnCorrectionTask : public UserFillTask {
   std::vector<std::tuple<std::string, std::vector<AxisD>>> qa_histos_;
   std::map<int, int> is_filled_{};
 
-  std::vector<TrackLoopContext> track_loop_contexts_;
+  std::vector<QnDataPtr> qn_variables_;
+  std::vector<MappingContext> track_loop_contexts_;
 
  TASK_DEF(QnCorrectionTask, 2)
 };
