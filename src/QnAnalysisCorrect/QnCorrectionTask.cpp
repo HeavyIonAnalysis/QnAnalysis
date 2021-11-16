@@ -143,19 +143,53 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
     } else if (qvec_ptr->GetType() == Base::EQVectorType::CHANNEL) {
       auto channel_qv = std::dynamic_pointer_cast<Base::QVectorChannel>(qvec_ptr);
       auto q_vector_name = channel_qv->GetName();
-      auto qn_phi = q_vector_name + "_" + channel_qv->GetPhiVar().GetName();
-      auto qn_weight =
-          channel_qv->GetWeightVar().GetName() == "_Ones" ? "Ones" : q_vector_name + "_"
+
+      auto qn_phi_name = q_vector_name + "_" + GetQnFieldName(channel_qv->GetPhiVar());
+
+      { /* phi variable */
+        if (FindFirstQnVariableByName(qn_phi_name)) {
+          throw std::runtime_error("Qn field '" + qn_phi_name + "' already defined");
+        }
+        auto qn_phi_fields = AddQnVariable(qn_phi_name, channel_qv->GetModuleIds().size());
+        size_t i_qn_channel = 0;
+        for (int module_id : channel_qv->GetModuleIds()) {
+          auto data_header_phi_fn = [this, module_id] () {
+            return this->data_header_->GetModulePhi(0, module_id); //TODO fix hardcoded 0
+          };
+          auto data_header_phi_vs = std::make_shared<FunctionValueSourceImpl>(data_header_phi_fn);
+          event_var_mapping_.emplace_back(data_header_phi_vs, qn_phi_fields[i_qn_channel]);
+          ++i_qn_channel;
+        }
+      }
+
+      auto qn_weight_name = channel_qv->GetWeightVar().GetName() == "_Ones" ? "Ones" : q_vector_name + "_"
               + channel_qv->GetWeightVar().GetName();
+      if (qn_weight_name != "Ones") {
+        if (FindFirstQnVariableByName(qn_weight_name)) {
+          throw std::runtime_error("Qn field '" + qn_weight_name + "' already defined");
+        }
+        auto qn_weight_fields = AddQnVariable(qn_weight_name, channel_qv->GetModuleIds().size());
+        size_t i_qn_channel = 0;
+        for (int module_id : channel_qv->GetModuleIds()) {
+          auto ati2_variable = GetVar(GetATFieldName(channel_qv->GetWeightVar()));
+          auto ati2_source = std::make_shared<ATI2ValueSourceImpl>(ati2_variable, module_id);
+          event_var_mapping_.emplace_back(ati2_source, qn_weight_fields[i_qn_channel]);
+          ati2_event_sources_.emplace_back(ati2_source);
+          ++i_qn_channel;
+        }
+
+      }
+
       manager_.AddDetector(q_vector_name,
                            DetectorType::CHANNEL,
-                           qn_phi,
-                           qn_weight,
+                           qn_phi_name,
+                           qn_weight_name,
                            {/* no axes to be passed */},
                            {1},
                            channel_qv->GetNormalization());
       Info(__func__, "Add channel detector '%s'", q_vector_name.c_str());
       SetCorrectionSteps(channel_qv.operator*());
+
     } else if (qvec_ptr->GetType() == Base::EQVectorType::EVENT_PSI) {
       string name = qvec_ptr->GetName();
       string qn_phi = qvec_ptr->GetPhiVar().GetName();
@@ -211,16 +245,16 @@ void QnCorrectionTask::InitVariables() {
     ibranch++;
   }
 
-  for (auto &qvec : analysis_setup_->channel_qvectors_) {
-    auto &phi = qvec->PhiVar();
-    phi.SetId(ivar);
-    manager_.AddVariable(qvec->GetName() + "_" + phi.GetName(), phi.GetId(), phi.GetSize());
-    ivar += phi.GetSize();
-    auto &weight = qvec->WeightVar();
-    weight.SetId(ivar);
-    manager_.AddVariable(qvec->GetName() + "_" + weight.GetName(), weight.GetId(), weight.GetSize());
-    ivar += weight.GetSize();
-  }
+//  for (auto &qvec : analysis_setup_->channel_qvectors_) {
+//    auto &phi = qvec->PhiVar();
+//    phi.SetId(ivar);
+//    manager_.AddVariable(qvec->GetName() + "_" + phi.GetName(), phi.GetId(), phi.GetSize());
+//    ivar += phi.GetSize();
+//    auto &weight = qvec->WeightVar();
+//    weight.SetId(ivar);
+//    manager_.AddVariable(qvec->GetName() + "_" + weight.GetName(), weight.GetId(), weight.GetSize());
+//    ivar += weight.GetSize();
+//  }
 
   for (const auto &event_var : analysis_setup_->GetEventVars()) {
     manager_.AddEventVariable(event_var.GetName());
@@ -238,33 +272,50 @@ void QnCorrectionTask::UserExec() {
     v->data = container;
   }
 
-  for (const auto &entry : var_manager_->GetVarEntries()) {
-    if (entry.GetBranches()[0]->GetType() == AnalysisTree::DetType::kEventHeader) {
-      short ivar{0};
-      for (const auto &var : entry.GetVariables()) {
-        container[var.GetId()] = entry.GetValues().at(0)[ivar];
-        ivar++;
-      }
-    }
+  for (auto &ati2_source : ati2_event_sources_) {
+    ati2_source->Update();
   }
-  for (const auto &qvec : analysis_setup_->channel_qvectors_) {
-    const auto &phi = qvec->GetPhiVar();
-    const auto &weight = qvec->GetWeightVar();
-    const auto &branch = var_manager_->GetVarEntries().at(qvec->GetVarEntryId());
-    int i_channel{0};
-    for (int i : qvec->GetModuleIds()) {
-      auto module_x = data_header_->GetModulePositions(0).GetChannel(i).GetX();
-      auto module_y = data_header_->GetModulePositions(0).GetChannel(i).GetY();
-      auto module_phi = data_header_->GetModulePhi(0, i); //TODO fix hardcoded 0
-      container[phi.GetId() + i_channel] = module_phi;
-      if (i < branch.GetValues().size()) {
-        container[weight.GetId() + i_channel] = branch.GetValues()[i].at(0);//TODO fix hardcoded 0
-      } else {
-        container[weight.GetId() + i_channel] = 0.;
-      }
-      i_channel++;
-    }
+
+  for (auto & [source, sink] : event_var_mapping_) {
+    source.Notify();
+    sink.Reset();
   }
+
+
+//
+//  for (const auto &entry : var_manager_->GetVarEntries()) {
+//    if (entry.GetBranches()[0]->GetType() == AnalysisTree::DetType::kEventHeader) {
+//      short ivar{0};
+//      for (const auto &var : entry.GetVariables()) {
+//        container[var.GetId()] = entry.GetValues().at(0)[ivar];
+//        ivar++;
+//      }
+//    }
+//  }
+
+  for (auto & [source, sink] : event_var_mapping_) {
+    auto value = source.Value();
+    sink.AssignValue(value);
+  }
+
+//  for (const auto &qvec : analysis_setup_->channel_qvectors_) {
+//    const auto &phi = qvec->GetPhiVar();
+//    const auto &weight = qvec->GetWeightVar();
+//    const auto &branch = var_manager_->GetVarEntries().at(qvec->GetVarEntryId());
+//    int i_channel{0};
+//    for (int i : qvec->GetModuleIds()) {
+//      auto module_x = data_header_->GetModulePositions(0).GetChannel(i).GetX();
+//      auto module_y = data_header_->GetModulePositions(0).GetChannel(i).GetY();
+//      auto module_phi = data_header_->GetModulePhi(0, i); //TODO fix hardcoded 0
+//      container[phi.GetId() + i_channel] = module_phi;
+//      if (i < branch.GetValues().size()) {
+//        container[weight.GetId() + i_channel] = branch.GetValues()[i].at(0);//TODO fix hardcoded 0
+//      } else {
+//        container[weight.GetId() + i_channel] = 0.;
+//      }
+//      i_channel++;
+//    }
+//  }
   manager_.ProcessEvent();
   manager_.FillChannelDetectors();
 
@@ -293,7 +344,8 @@ void QnCorrectionTask::FillTracksQvectors() {
         sink.Reset();
       }
       for (auto &&[source, sink] : track_loop.mappings_) {
-        sink.AssignValue(source.GetValue());
+        source.Notify();
+        sink.AssignValue(source.Value());
       }
       manager_.FillTrackingDetectors();
     }

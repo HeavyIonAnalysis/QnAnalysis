@@ -49,7 +49,8 @@ class QnCorrectionTask : public UserFillTask {
  protected:
 
   struct ValueSource {
-    virtual double GetValue() const = 0;
+    virtual void Notify() {}
+    virtual double Value() const = 0;
   };
 
   typedef std::shared_ptr<ValueSource> ValueSourcePtr;
@@ -58,8 +59,8 @@ class QnCorrectionTask : public UserFillTask {
       public ValueSource {
     explicit ValueSourceRef(ValueSourcePtr ptr) : ptr(std::move(ptr)) {}
 
-    double GetValue() const final {
-      return ptr->GetValue();
+    double Value() const final {
+      return ptr->Value();
     }
 
     ValueSourcePtr Ptr() const {
@@ -67,6 +68,25 @@ class QnCorrectionTask : public UserFillTask {
     }
 
     ValueSourcePtr ptr;
+  };
+
+  struct FunctionValueSourceImpl
+      : public ValueSource {
+    FunctionValueSourceImpl(std::function<double(void)> value, std::function<void(void)> notify) : value(std::move(
+        value)), notify(std::move(notify)) {}
+    FunctionValueSourceImpl(std::function<double(void)> value) : value(std::move(value)) {}
+
+    void Notify() override {
+      if (notify) {
+        notify();
+      }
+    }
+    double Value() const override {
+      return value();
+    }
+
+    std::function<double (void)> value;
+    std::function<void (void)> notify;
   };
 
   struct ATI2ValueSourceImpl :
@@ -90,7 +110,8 @@ class QnCorrectionTask : public UserFillTask {
      * @brief Assigns value from event-header-like branch or specific channel (i_channel)
      * @param branch
      */
-    void Update(ATI2::Branch &branch) {
+    void Update() {
+      auto &branch = *v.GetParentBranch();
       if (branch.GetBranchType() == AnalysisTree::DetType::kEventHeader) {
         cached_value = branch[v];
       } else {
@@ -98,7 +119,7 @@ class QnCorrectionTask : public UserFillTask {
       }
       is_set = true;
     }
-    double GetValue() const override {
+    double Value() const override {
       return cached_value;
     }
 
@@ -201,7 +222,9 @@ class QnCorrectionTask : public UserFillTask {
 
 
   std::vector<QnDataPtr> AddQnVariable(const std::string &name, size_t length = 1) {
-    auto new_idx = qn_variables_.empty() ? 0 : qn_variables_.back()->idx + 1;
+    auto new_idx = qn_variables_.empty() ?
+        0 :
+        qn_variables_.back()->idx + qn_variables_.back()->ichannel + 1;
     manager_.AddVariable(name, new_idx, length);
 
     std::vector<QnDataPtr> result(length);
@@ -241,7 +264,11 @@ class QnCorrectionTask : public UserFillTask {
   std::map<int, int> is_filled_{};
 
   std::vector<QnDataPtr> qn_variables_;
+
   std::vector<MappingContext> track_loop_contexts_;
+
+  std::vector<std::pair<ValueSourceRef, ValueSinkRef>> event_var_mapping_;
+  std::vector<std::shared_ptr<ATI2ValueSourceImpl>> ati2_event_sources_;
 
  TASK_DEF(QnCorrectionTask, 2)
 };
