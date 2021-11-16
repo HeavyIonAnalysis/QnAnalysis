@@ -111,9 +111,7 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
         }
         auto at_field_name = GetATFieldName(variable);
         auto at_field = GetVar(at_field_name);
-        if (loop_ctx_branch_it->AddMapping(at_field, qn_field)) {
-          std::cout << at_field_name << " --> " << qn_field_name << std::endl;
-        }
+        loop_ctx_branch_it->AddMapping(at_field, qn_field);
       }
 
       manager_.AddDetector(q_vector_name,
@@ -153,7 +151,7 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
         auto qn_phi_fields = AddQnVariable(qn_phi_name, channel_qv->GetModuleIds().size());
         size_t i_qn_channel = 0;
         for (int module_id : channel_qv->GetModuleIds()) {
-          auto data_header_phi_fn = [this, module_id] () {
+          auto data_header_phi_fn = [this, module_id]() {
             return this->data_header_->GetModulePhi(0, module_id); //TODO fix hardcoded 0
           };
           auto data_header_phi_vs = std::make_shared<FunctionValueSourceImpl>(data_header_phi_fn);
@@ -163,7 +161,7 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
       }
 
       auto qn_weight_name = channel_qv->GetWeightVar().GetName() == "_Ones" ? "Ones" : q_vector_name + "_"
-              + channel_qv->GetWeightVar().GetName();
+          + channel_qv->GetWeightVar().GetName();
       if (qn_weight_name != "Ones") {
         if (FindFirstQnVariableByName(qn_weight_name)) {
           throw std::runtime_error("Qn field '" + qn_weight_name + "' already defined");
@@ -265,85 +263,48 @@ void QnCorrectionTask::InitVariables() {
 */
 void QnCorrectionTask::UserExec() {
   manager_.Reset();
-  double *container = manager_.GetVariableContainer();
 
-  for (auto &v : qn_variables_) {
-    v->Reset();
-    v->data = container;
+  {
+    double *container = manager_.GetVariableContainer();
+
+    for (auto &v : qn_variables_) {
+      v->Reset();
+      v->data = container;
+    }
   }
+
 
   for (auto &ati2_source : ati2_event_sources_) {
     ati2_source->Update();
   }
 
-  for (auto & [source, sink] : event_var_mapping_) {
+  for (auto &[source, sink] : event_var_mapping_) {
     source.Notify();
     sink.Reset();
   }
 
-
-//
-//  for (const auto &entry : var_manager_->GetVarEntries()) {
-//    if (entry.GetBranches()[0]->GetType() == AnalysisTree::DetType::kEventHeader) {
-//      short ivar{0};
-//      for (const auto &var : entry.GetVariables()) {
-//        container[var.GetId()] = entry.GetValues().at(0)[ivar];
-//        ivar++;
-//      }
-//    }
-//  }
-
-  for (auto & [source, sink] : event_var_mapping_) {
+  for (auto &[source, sink] : event_var_mapping_) {
     auto value = source.Value();
     sink.AssignValue(value);
   }
 
-//  for (const auto &qvec : analysis_setup_->channel_qvectors_) {
-//    const auto &phi = qvec->GetPhiVar();
-//    const auto &weight = qvec->GetWeightVar();
-//    const auto &branch = var_manager_->GetVarEntries().at(qvec->GetVarEntryId());
-//    int i_channel{0};
-//    for (int i : qvec->GetModuleIds()) {
-//      auto module_x = data_header_->GetModulePositions(0).GetChannel(i).GetX();
-//      auto module_y = data_header_->GetModulePositions(0).GetChannel(i).GetY();
-//      auto module_phi = data_header_->GetModulePhi(0, i); //TODO fix hardcoded 0
-//      container[phi.GetId() + i_channel] = module_phi;
-//      if (i < branch.GetValues().size()) {
-//        container[weight.GetId() + i_channel] = branch.GetValues()[i].at(0);//TODO fix hardcoded 0
-//      } else {
-//        container[weight.GetId() + i_channel] = 0.;
-//      }
-//      i_channel++;
-//    }
-//  }
   manager_.ProcessEvent();
   manager_.FillChannelDetectors();
-
-  FillTracksQvectors();
-
-  manager_.ProcessCorrections();
-}
-
-/**
-* Fill the information from Tracks, Particles and Hits. We assume that Tracking Q-vectors are not constructed from
-* Modules. Information from EventHeaders and Modules should be filled before.
-*/
-void QnCorrectionTask::FillTracksQvectors() {
 
   for (auto &track_loop : track_loop_contexts_) {
     if (track_loop.lock_qn_variable) {
       track_loop.lock_qn_variable->Reset();
       track_loop.lock_qn_variable->AssignValue(1.0);
     }
-    for (auto &&channel : track_loop.branch_ptr->Loop()) {
-      /* renew sources */
-      for (auto &&source : track_loop.ati2_sources_) {
+    for (auto &channel : track_loop.branch_ptr->Loop()) {
+      /* renew ATI2 sources */
+      for (auto &source : track_loop.ati2_sources_) {
         source->Update(channel);
       }
-      for (auto &&[_, sink] : track_loop.mappings_) {
+      for (auto &[_, sink] : track_loop.mappings_) {
         sink.Reset();
       }
-      for (auto &&[source, sink] : track_loop.mappings_) {
+      for (auto &[source, sink] : track_loop.mappings_) {
         source.Notify();
         sink.AssignValue(source.Value());
       }
@@ -354,6 +315,8 @@ void QnCorrectionTask::FillTracksQvectors() {
       track_loop.lock_qn_variable->AssignValue(-1.0);
     }
   }
+
+  manager_.ProcessCorrections();
 }
 
 boost::program_options::options_description QnCorrectionTask::GetBoostOptions() {

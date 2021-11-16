@@ -214,7 +214,6 @@ class QnCorrectionTask : public UserFillTask {
     std::list<std::shared_ptr<ATI2ValueSourceImpl>> ati2_sources_;
   };
 
-  void FillTracksQvectors();
   void SetCorrectionSteps(const Base::QVector &qvec);
   void InitVariables();
   void AddQAHisto();
