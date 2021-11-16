@@ -79,6 +79,24 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
 
   InitVariables();
 
+  for (auto &v : GetConfig()->GetEventVars()) {
+    auto qn_variable_name = GetQnFieldName(v);
+    auto at_variable_name = GetATFieldName(v);
+    auto at_variable = GetVar(at_variable_name);
+
+    if (at_variable.GetParentBranch()->GetBranchType() != AnalysisTree::DetType::kEventHeader) {
+      throw std::runtime_error("Event variable is not from EventHeader branch");
+    }
+    auto qn_variable = FindFirstQnVariableByName(qn_variable_name);
+    if (!qn_variable) {
+      qn_variable = AddQnVariable(qn_variable_name, 1)[0];
+    }
+    auto at_field_value_source = std::make_shared<ATI2ValueSourceImpl>(at_variable);
+    event_var_mapping_.emplace_back(at_field_value_source, qn_variable);
+    ati2_event_sources_.emplace_back(at_field_value_source);
+    manager_.AddEventVariable(qn_variable_name);
+  }
+
   for (const auto &axis : analysis_setup_->GetCorrectionAxes()) {
     manager_.AddCorrectionAxis(axis);
   }
@@ -206,58 +224,8 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
 }
 
 void QnCorrectionTask::InitVariables() {
-  // Add all needed variables
-  short ivar{0}, ibranch{0};
-
-  for (auto &entry : var_manager_->VarEntries()) {
-    if (entry.GetNumberOfBranches() > 1) {
-      auto &branches = entry.GetBranches();
-      if (!std::all_of(branches.begin(), branches.end(), [](AnalysisTree::BranchReader *reader) {
-        return reader->GetType() == AnalysisTree::DetType::kEventHeader;
-      })) {
-        throw std::runtime_error("More than one branch in one entry is allowed only if ALL of them EventHeader-s");
-      }
-    }
-
-    if (entry.GetBranches()[0]->GetType() == AnalysisTree::DetType::kModule) {
-      ibranch++;
-      continue;
-    }// Should be handled separately
-
-    for (auto &var : entry.Variables()) {
-      if (var.GetName() != "_Ones") {
-        auto added_variables = AddQnVariable(var.GetName(), var.GetSize());
-        var.SetId(added_variables.front()->idx);
-        //        var.Print();
-        ivar += var.GetSize();
-      }
-    }
-
-    auto type = entry.GetBranches()[0]->GetType();
-    if (type != AnalysisTree::DetType::kEventHeader && type != AnalysisTree::DetType::kModule) {
-//      auto added_variable = AddQnVariable(entry.GetBranches()[0]->GetName() + "_Filled", 1);
-//      is_filled_.insert(std::make_pair(ibranch, added_variable.front()->idx));
-//      ivar++;
-    }
-
-    ibranch++;
-  }
-
-//  for (auto &qvec : analysis_setup_->channel_qvectors_) {
-//    auto &phi = qvec->PhiVar();
-//    phi.SetId(ivar);
-//    manager_.AddVariable(qvec->GetName() + "_" + phi.GetName(), phi.GetId(), phi.GetSize());
-//    ivar += phi.GetSize();
-//    auto &weight = qvec->WeightVar();
-//    weight.SetId(ivar);
-//    manager_.AddVariable(qvec->GetName() + "_" + weight.GetName(), weight.GetId(), weight.GetSize());
-//    ivar += weight.GetSize();
-//  }
-
-  for (const auto &event_var : analysis_setup_->GetEventVars()) {
-    manager_.AddEventVariable(event_var.GetName());
-  }
 }
+
 /**
 * Main method. Executed every event
 */
