@@ -1,6 +1,6 @@
 set(SOURCES
         QnCorrectionTask.cpp
-        ATVarManagerTask.cpp)
+        )
 
 string(REPLACE ".cpp" ".hpp" HEADERS "${SOURCES}")
 

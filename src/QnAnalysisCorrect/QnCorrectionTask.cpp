@@ -10,7 +10,6 @@
 #include <QnAnalysisBase/AnalysisSetup.hpp>
 #include <QnAnalysisConfig/Config.hpp>
 
-#include <QnAnalysisCorrect/ATVarManagerTask.hpp>
 
 namespace Qn::Analysis::Correction {
 
@@ -32,36 +31,8 @@ std::string GetQnFieldName(const AnalysisTree::Variable &v) {
 
 
 void QnCorrectionTask::PreInit() {
-  auto at_vm_task = ATVarManagerTask::Instance();
-  if (!at_vm_task->IsEnabled()) {
-    throw std::runtime_error("Keep ATVarManagerTask enabled");
-  }
-
   this->analysis_setup_ =
       new Base::AnalysisSetup(Qn::Analysis::Config::ReadSetupFromFile(yaml_config_file_, yaml_config_node_));
-
-  // Variables used by tracking Q-vectors
-  for (auto &q_tra : this->GetConfig()->track_qvectors_) {
-    const auto &vars = q_tra->GetListOfVariables();
-    q_tra->SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(vars)).first);
-  }
-  // Variables used by channelized Q-vectors
-  for (auto &q_ch : this->GetConfig()->channel_qvectors_) {
-    /* phi variable is 'virtual' and taken from the DataHeader */
-    q_ch->SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry({q_ch->GetWeightVar()})).first);
-  }
-  // Psi variable
-  for (auto &q_psi : this->GetConfig()->psi_qvectors_) {
-    q_psi->SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry({q_psi->GetPhiVar()})).first);
-  }
-  // Event Variables
-  if (!this->GetConfig()->EventVars().empty()) {
-    at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(this->GetConfig()->GetEventVars()));
-  }
-
-  at_vm_task->FillBranchNames();
-//  at_vm_task->SetCutsMap(cuts_map_); FIXME
-
 }
 
 void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
@@ -77,8 +48,6 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
   manager_.SetFillValidationQA(true);
   manager_.ConnectOutputTree(out_tree_);
 
-  InitVariables();
-
   for (auto &v : GetConfig()->GetEventVars()) {
     auto qn_variable_name = GetQnFieldName(v);
     auto at_variable_name = GetATFieldName(v);
@@ -89,7 +58,7 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
     }
     auto qn_variable = FindFirstQnVariableByName(qn_variable_name);
     if (!qn_variable) {
-      qn_variable = AddQnVariable(qn_variable_name, 1)[0];
+      qn_variable = AddQnVariable(qn_variable_name)[0];
     }
 
     auto at_field_value_source = FindATI2SourceByName(at_variable_name, ati2_event_sources_);
@@ -189,6 +158,7 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
         }
       }
 
+      /* weight */
       auto qn_weight_name = channel_qv->GetWeightVar().GetName() == "_Ones" ? "Ones" : q_vector_name + "_"
           + channel_qv->GetWeightVar().GetName();
       if (qn_weight_name != "Ones") {
@@ -218,11 +188,20 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
       SetCorrectionSteps(channel_qv.operator*());
 
     } else if (qvec_ptr->GetType() == Base::EQVectorType::EVENT_PSI) {
-      string name = qvec_ptr->GetName();
-      string qn_phi = qvec_ptr->GetPhiVar().GetName();
-      auto qn_weight = qvec_ptr->GetWeightVar().GetName() == "_Ones" ? "Ones" : qvec_ptr->GetWeightVar().GetName();
-      manager_.AddDetector(name, DetectorType::CHANNEL, qn_phi, qn_weight, {}, {1, 2}, qvec_ptr->GetNormalization());
-      Info(__func__, "Add event PSI '%s'", name.c_str());
+      auto q_vector_name = qvec_ptr->GetName();
+      auto qn_phi_name = GetQnFieldName(qvec_ptr->GetPhiVar());
+      auto qn_variable = FindFirstQnVariableByName(qn_phi_name);
+      if (!qn_variable) {
+        qn_variable = AddQnVariable(qn_phi_name)[0];
+      }
+      auto at_variable = GetVar(GetATFieldName(qvec_ptr->GetPhiVar()));
+      auto value_source = std::make_shared<ATI2ValueSourceImpl>(at_variable);
+      ati2_event_sources_.emplace_back(value_source);
+      event_var_mapping_.emplace_back(value_source, qn_variable);
+
+      auto qn_weight_name = qvec_ptr->GetWeightVar().GetName() == "_Ones" ? "Ones" : qvec_ptr->GetWeightVar().GetName();
+      manager_.AddDetector(q_vector_name, DetectorType::CHANNEL, qn_phi_name, qn_weight_name, {}, {1, 2}, qvec_ptr->GetNormalization());
+      Info(__func__, "Add event PSI '%s'", q_vector_name.c_str());
       SetCorrectionSteps(qvec_ptr.operator*());
     }
   }
@@ -232,9 +211,6 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
   //Initialization of framework
   manager_.InitializeOnNode();
   manager_.SetCurrentRunName("test");
-}
-
-void QnCorrectionTask::InitVariables() {
 }
 
 /**

@@ -34,6 +34,11 @@ class QnCorrectionTask : public UserFillTask {
   explicit QnCorrectionTask(Base::AnalysisSetup *global_config) : analysis_setup_(global_config) {}
 
   boost::program_options::options_description GetBoostOptions() override;
+ protected:
+  bool UseATI2() const override {
+    return true;
+  }
+ public:
   void PreInit() override;
   void UserInit(std::map<std::string, void *> &) override;
   void UserExec() override;
@@ -181,9 +186,9 @@ class QnCorrectionTask : public UserFillTask {
       is_set = false;
     }
     void AssignValue(double value) override {
-      if (is_set) {
-        throw std::runtime_error("Variable '" + name + "' already set");
-      }
+//      if (is_set) {
+//        throw std::runtime_error("Variable '" + name + "' already set");
+//      }
       data[idx + ichannel] = value;
       is_set = true;
     }
@@ -235,7 +240,6 @@ class QnCorrectionTask : public UserFillTask {
   };
 
   void SetCorrectionSteps(const Base::QVector &qvec);
-  void InitVariables();
   void AddQAHisto();
 
 
