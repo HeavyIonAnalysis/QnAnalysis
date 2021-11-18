@@ -35,12 +35,12 @@ _axes:
     hi: 1.05
   - &axis_theta
     name: mdc_vtx_tracks_extra/theta
-    nb: 12
+    nb: 3
     lo: 0.3
     hi: 1.5
   - &axis_gen_theta
     name: sim_particles_extra/theta
-    nb: 12
+    nb: 3
     lo: 0.3
     hi: 1.5
 _cuts:
@@ -89,8 +89,8 @@ hades_analysis:
     - name: pid_protons
       type: track
       phi:  mdc_vtx_tracks_extra/phi
-      weight: mdc_vtx_tracks_extra/efficiency
-#      weight: Ones
+#      weight: mdc_vtx_tracks_extra/efficiency
+      weight: Ones
       norm: m
       corrections:
         - recentering
@@ -98,7 +98,7 @@ hades_analysis:
       axes:
         - *axis_protons_pT
         - *axis_protons_rapidity
-#        - *axis_theta
+        - *axis_theta
       cuts-pid:
         *pid_protons_cut
       cuts-quality:
@@ -120,7 +120,7 @@ hades_analysis:
       axes:
         - *axis_pions_pT
         - *axis_pions_rapidity
-#        - *axis_theta
+        - *axis_theta
       cuts-pid:
         *pid_pi_pos_cut
       cuts-quality:
@@ -142,7 +142,7 @@ hades_analysis:
       axes:
         - *axis_pions_pT
         - *axis_pions_rapidity
-#        - *axis_theta
+        - *axis_theta
       cuts-pid:
         *pid_pi_neg_cut
       cuts-quality:
@@ -195,7 +195,7 @@ hades_analysis:
       axes:
         - *axis_gen_protons_pT
         - *axis_gen_protons_rapidity
-#        - *axis_gen_theta
+        - *axis_gen_theta
       cuts-pid:
         *gen_prim_protons_cut
       qa:
@@ -212,7 +212,7 @@ hades_analysis:
       axes:
         - *axis_gen_pions_pT
         - *axis_gen_pions_rapidity
-#        - *axis_gen_theta
+        - *axis_gen_theta
       cuts-pid:
         *gen_prim_pi_pos_cut
       qa:
@@ -229,7 +229,7 @@ hades_analysis:
       axes:
         - *axis_gen_pions_pT
         - *axis_gen_pions_rapidity
-#        - *axis_gen_theta
+        - *axis_gen_theta
       cuts-pid:
         *gen_prim_pi_neg_cut
       qa:
