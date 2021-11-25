@@ -1,9 +1,14 @@
 _layouts:
 
 _axes:
+#  - &axis_protons_pT
+#    name: mdc_vtx_tracks_extra/pT
+#    bin-edges: [0.2, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 1.5]
   - &axis_protons_pT
     name: mdc_vtx_tracks_extra/pT
-    bin-edges: [0.2, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 1.5]
+    nb: 20
+    lo: 0.0
+    hi: 2.0
   - &axis_pions_pT
     name: mdc_vtx_tracks_extra/pT
     bin-edges: [0, 0.08, 0.105, 0.13, 0.155, 0.18, 0.21, 0.25, 0.315, 0.535, 1.0]
