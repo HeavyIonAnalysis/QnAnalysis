@@ -59,7 +59,7 @@ hades_analysis:
   event-variables:
     - event_header/selected_tof_rpc_hits_centrality
   axes:
-    - { name: event_header/selected_tof_rpc_hits_centrality, nb: 12, lo: 0.0, hi: 60 }
+    - { name: event_header_extra/selected_tof_rpc_hits_centrality, nb: 12, lo: 0.0, hi: 60 }
   q-vectors:
     - name: protons
       type: track
