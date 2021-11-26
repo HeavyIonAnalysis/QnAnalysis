@@ -1,10 +1,10 @@
 _detectors: &detectors
   - name: protons
     tags: [ un_vector ]
-  - name: pi_pos
-    tags: [ un_vector ]
-  - name: pi_neg
-    tags: [ un_vector ]
+#  - name: pi_pos
+#    tags: [ un_vector ]
+#  - name: pi_neg
+#    tags: [ un_vector ]
   - name: W1
     tags: [ qn_vector ]
   - name: W2
@@ -18,7 +18,7 @@ _detectors: &detectors
 
 _axes:
   - &centrality
-    name: event_header_selected_tof_rpc_hits_centrality
+    name: event_header_extra_selected_tof_rpc_hits_centrality
     nb: 8
     lo: 0
     hi: 40

@@ -59,7 +59,7 @@ hades_analysis:
   event-variables:
     - event_header_extra/selected_tof_rpc_hits_centrality
   axes:
-    - { name: event_header_extra/selected_tof_rpc_hits_centrality, nb: 12, lo: 0.0, hi: 60 }
+    - { name: event_header_extra/selected_tof_rpc_hits_centrality, nb: 8, lo: 0.0, hi: 40 }
   q-vectors:
     - name: protons
       type: track
@@ -101,26 +101,26 @@ hades_analysis:
         - *axis_pions_pT
         - *axis_pions_rapidity
         - [*axis_pions_rapidity, *axis_pions_pT]
-    - name: pi_neg
-      type: track
-      phi:  mdc_vtx_tracks_extra/phi
-      weight: mdc_vtx_tracks_extra/efficiency
-      norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
-      axes:
-        - *axis_pions_pT
-        - *axis_pions_rapidity
-      cuts-pid:
-        *pi_neg_cuts
-      cuts-quality:
-        *good_particle_cuts
-      qa:
-        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
-        - *axis_pions_pT
-        - *axis_pions_rapidity
-        - [*axis_pions_rapidity, *axis_pions_pT]
+#    - name: pi_neg
+#      type: track
+#      phi:  mdc_vtx_tracks_extra/phi
+#      weight: mdc_vtx_tracks_extra/efficiency
+#      norm: m
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
+#      axes:
+#        - *axis_pions_pT
+#        - *axis_pions_rapidity
+#      cuts-pid:
+#        *pi_neg_cuts
+#      cuts-quality:
+#        *good_particle_cuts
+#      qa:
+#        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+#        - *axis_pions_pT
+#        - *axis_pions_rapidity
+#        - [*axis_pions_rapidity, *axis_pions_pT]
     - name: Mf
       type: track
       phi:  mdc_vtx_tracks_extra/phi
