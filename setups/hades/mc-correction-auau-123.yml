@@ -4,15 +4,35 @@ _axes:
   - &axis_protons_pT
     name: mdc_vtx_tracks_extra/pT
     bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
+  - &axis_uniform_protons_pT
+    name: mdc_vtx_tracks_extra/pT
+    nb: 15
+    lo: 0.0
+    hi: 1.5
   - &axis_pions_pT
     name: mdc_vtx_tracks_extra/pT
     bin-edges: [0, 0.08, 0.105, 0.13, 0.155, 0.18, 0.21, 0.25, 0.315, 0.535, 1.0]
+  - &axis_uniform_pions_pT
+    name: mdc_vtx_tracks_extra/pT
+    nb: 10
+    lo: 0.0
+    hi: 1.0
   - &axis_gen_protons_pT
     name: sim_particles_extra/pT
     bin-edges: [0, 0.29375, 0.35625, 0.41875, 0.48125, 0.54375, 0.61875, 0.70625, 0.81875, 1.01875, 2.0]
+  - &axis_uniform_gen_protons_pT
+    name: sim_particles_extra/pT
+    nb: 15
+    lo: 0.0
+    hi: 1.5
   - &axis_gen_pions_pT
     name: sim_particles_extra/pT
     bin-edges: [0, 0.08, 0.105, 0.13, 0.155, 0.18, 0.21, 0.25, 0.315, 0.535, 1.0]
+  - &axis_unifroms_gen_pions_pT
+    name: sim_particles_extra/pT
+    nb: 10
+    lo: 0.0
+    hi: 1.0
   - &axis_protons_rapidity
     name: mdc_vtx_tracks_extra/ycm
     nb: 15
@@ -35,12 +55,12 @@ _axes:
     hi: 1.05
   - &axis_theta
     name: mdc_vtx_tracks_extra/theta
-    nb: 3
+    nb: 12
     lo: 0.3
     hi: 1.5
   - &axis_gen_theta
     name: sim_particles_extra/theta
-    nb: 3
+    nb: 12
     lo: 0.3
     hi: 1.5
 _cuts:
@@ -96,8 +116,8 @@ hades_analysis:
         - recentering
         - twist-and-rescale
       axes:
-        - *axis_protons_pT
-        - *axis_protons_rapidity
+        - *axis_uniform_protons_pT
+#        - *axis_protons_rapidity
         - *axis_theta
       cuts-pid:
         *pid_protons_cut
@@ -118,8 +138,8 @@ hades_analysis:
         - recentering
         - twist-and-rescale
       axes:
-        - *axis_pions_pT
-        - *axis_pions_rapidity
+        - *axis_uniform_pions_pT
+#        - *axis_pions_rapidity
         - *axis_theta
       cuts-pid:
         *pid_pi_pos_cut
@@ -140,8 +160,8 @@ hades_analysis:
         - recentering
         - twist-and-rescale
       axes:
-        - *axis_pions_pT
-        - *axis_pions_rapidity
+        - *axis_uniform_pions_pT
+#        - *axis_pions_rapidity
         - *axis_theta
       cuts-pid:
         *pid_pi_neg_cut
@@ -193,8 +213,8 @@ hades_analysis:
       weight: Ones
       norm: m
       axes:
-        - *axis_gen_protons_pT
-        - *axis_gen_protons_rapidity
+        - *axis_uniform_gen_protons_pT
+#        - *axis_gen_protons_rapidity
         - *axis_gen_theta
       cuts-pid:
         *gen_prim_protons_cut
@@ -210,8 +230,8 @@ hades_analysis:
       weight: Ones
       norm: m
       axes:
-        - *axis_gen_pions_pT
-        - *axis_gen_pions_rapidity
+        - *axis_uniform_gen_pions_pT
+#        - *axis_gen_pions_rapidity
         - *axis_gen_theta
       cuts-pid:
         *gen_prim_pi_pos_cut
@@ -227,8 +247,8 @@ hades_analysis:
       weight: Ones
       norm: m
       axes:
-        - *axis_gen_pions_pT
-        - *axis_gen_pions_rapidity
+        - *axis_uniform_gen_pions_pT
+#        - *axis_gen_pions_rapidity
         - *axis_gen_theta
       cuts-pid:
         *gen_prim_pi_neg_cut
