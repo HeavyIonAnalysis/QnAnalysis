@@ -123,24 +123,22 @@ Qn::Analysis::Base::Axis Qn::Analysis::Config::Utils::Convert(const Qn::Analysis
 Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::CutConfig &config) {
   auto var = Convert(config.variable);
   std::function<bool(const double &)> function;
-  std::string description;
 
+  std::stringstream description_stream;
   if (config.type == Base::CutConfig::EQUAL) {
     auto equal_val = config.equal_val;
     auto equal_tol = config.equal_tol;
     function = [equal_val, equal_tol](const double &v) -> bool {
       return std::abs(v - equal_val) <= equal_tol;
     };
-    description = var.GetName() + " == " + std::to_string(equal_val);
+    description_stream << var.GetName() << " == " << equal_val;
   } else if (config.type == Base::CutConfig::RANGE) {
     auto range_lo = config.range_lo;
     auto range_hi = config.range_hi;
     function = [range_lo, range_hi](const double &v) -> bool {
       return range_lo <= v && v <= range_hi;
     };
-    std::stringstream description_stream;
     description_stream << var.GetName() << " in [" << range_lo << "; " << range_hi << "]";
-    description = description_stream.str();
   } else if (config.type == Base::CutConfig::ANY_OF) {
     auto allowed_values = config.any_of_values; // maybe std::set here is better
     auto tolerance = config.any_of_tolerance;
@@ -164,7 +162,6 @@ Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis:
       return false;
     };
 
-    std::stringstream description_stream;
     description_stream << var.GetName() << " any of [" << allowed_values.front();
     if (allowed_values.size() > 1) {
       for (auto it = allowed_values.begin()+1; it != allowed_values.end(); ++it) {
@@ -172,9 +169,8 @@ Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis:
       }
     }
     description_stream << "]";
-    description = description_stream.str();
   }
-  return {var, function, description};
+  return {var, function, description_stream.str()};
 }
 
 Qn::Analysis::Base::AnalysisSetup Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::AnalysisSetupConfig &config) {
