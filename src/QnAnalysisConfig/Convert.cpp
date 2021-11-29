@@ -121,41 +121,43 @@ Qn::Analysis::Base::Axis Qn::Analysis::Config::Utils::Convert(const Qn::Analysis
 }
 
 Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::CutConfig &config) {
+  using Qn::Analysis::Base::Cut;
   auto var = Convert(config.variable);
-  std::function<bool(const double &)> function;
+
+  Cut::FunctionType function;
 
   std::stringstream description_stream;
   if (config.type == Base::CutConfig::EQUAL) {
     auto equal_val = config.equal_val;
     auto equal_tol = config.equal_tol;
-    function = [equal_val, equal_tol](const double &v) -> bool {
-      return std::abs(v - equal_val) <= equal_tol;
+    function = [equal_val, equal_tol](Cut::FunctionArgType v) -> bool {
+      return std::abs(v[0] - equal_val) <= equal_tol;
     };
     description_stream << var.GetName() << " == " << equal_val;
   } else if (config.type == Base::CutConfig::RANGE) {
     auto range_lo = config.range_lo;
     auto range_hi = config.range_hi;
-    function = [range_lo, range_hi](const double &v) -> bool {
-      return range_lo <= v && v <= range_hi;
+    function = [range_lo, range_hi](Cut::FunctionArgType v) -> bool {
+      return range_lo <= v[0] && v[0] <= range_hi;
     };
     description_stream << var.GetName() << " in [" << range_lo << "; " << range_hi << "]";
   } else if (config.type == Base::CutConfig::ANY_OF) {
     auto allowed_values = config.any_of_values; // maybe std::set here is better
     auto tolerance = config.any_of_tolerance;
     sort(begin(allowed_values), end(allowed_values));
-    function = [allowed_values, tolerance] (const double &value) -> bool {
-      if (value - tolerance > allowed_values.back()) {
+    function = [allowed_values, tolerance] (Cut::FunctionArgType value) -> bool {
+      if (value[0] - tolerance > allowed_values.back()) {
         return false;
       }
-      if (value + tolerance < allowed_values.front()) {
+      if (value[0] + tolerance < allowed_values.front()) {
         return false;
       }
       for (auto allowed_value : allowed_values) {
         if (tolerance == 0) {
-          if (allowed_value == value)
+          if (allowed_value == value[0])
             return true;
         } else {
-          if (std::abs(allowed_value - value) < tolerance)
+          if (std::abs(allowed_value - value[0]) < tolerance)
             return true;
         }
       }
@@ -170,7 +172,7 @@ Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis:
     }
     description_stream << "]";
   }
-  return {var, function, description_stream.str()};
+  return {{var}, function, description_stream.str()};
 }
 
 Qn::Analysis::Base::AnalysisSetup Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::AnalysisSetupConfig &config) {

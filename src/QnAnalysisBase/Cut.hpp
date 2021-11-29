@@ -49,18 +49,22 @@ struct CutListConfig {
 };
 
 struct Cut {
-  Cut() = default;
-  Cut(AnalysisTree::Variable var, std::function<bool(double)> function, std::string description) : var_(std::move(var)),
-                                                                                                   function_(std::move(function)),
-                                                                                                   description_(std::move(description)) {}
+  typedef std::list<AnalysisTree::Variable> VariableListType;
+  typedef const std::vector<double>& FunctionArgType;
+  typedef std::function<bool (FunctionArgType)> FunctionType;
 
-  const AnalysisTree::Variable& GetVariable() const { return var_; }
-  const std::function<bool(double)>& GetFunction() const { return function_; }
-  const std::string& GetDescription() const { return description_; }
+  Cut() = default;
+  Cut(VariableListType var, FunctionType function, std::string description) : variables_list_(std::move(var)),
+                                                                                    function_(std::move(function)),
+                                                                                    description_(std::move(description)) {}
+
+  VariableListType GetListOfVariables() const { return variables_list_; }
+  FunctionType GetFunction() const { return function_; }
+  std::string GetDescription() const { return description_; }
 
  private:
-  AnalysisTree::Variable var_{};
-  std::function<bool(double)> function_{};
+  VariableListType variables_list_{};
+  FunctionType function_{};
   std::string description_{};
 };
 

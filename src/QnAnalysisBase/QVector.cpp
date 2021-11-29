@@ -7,7 +7,8 @@ ClassImp(Qn::Analysis::Base::QVectorConfig)
   std::vector<AnalysisTree::Variable> QVectorTrack::GetListOfVariables() const {
     std::vector<AnalysisTree::Variable> vars{phi_, weight_};
     for (const auto& cut : cuts_) {
-      vars.emplace_back(cut.GetVariable());
+      auto variables = cut.GetListOfVariables();
+      copy(begin(variables), end(variables), back_inserter(vars));
     }
     for (const auto& axis : axes_) {
       vars.emplace_back(axis.GetVariable());
