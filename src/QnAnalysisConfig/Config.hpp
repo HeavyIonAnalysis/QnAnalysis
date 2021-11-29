@@ -137,6 +137,29 @@ struct convert<Qn::Analysis::Base::CutConfig> {
   }
 };
 
+template<>
+struct convert<Qn::Analysis::Base::CutListConfig> {
+  static bool decode(const Node &cut_list_node,
+                     Qn::Analysis::Base::CutListConfig &cut_list_config) {
+    using Qn::Analysis::Base::CutConfig;
+    if (cut_list_node.IsMap()) {
+      for (const auto & cut_definition_config : cut_list_node) {
+        auto variable = cut_definition_config.first.as<Qn::Analysis::Base::VariableConfig>();
+        CutConfig cut_definition;
+        assert(convert<CutConfig>::decode_impl(cut_definition_config.second, cut_definition, false));
+        cut_definition.variable = variable;
+        cut_list_config.cuts.emplace_back(cut_definition);
+      }
+      return true;
+    } else if (cut_list_node.IsSequence()) {
+      cut_list_config.cuts = cut_list_node.as<std::list<CutConfig>>();
+      return true;
+    } else {
+      throw std::runtime_error("List of cuts must be either sequence or map");
+    }
+  }
+};
+
 
 template<>
 struct convert<Qn::Analysis::Base::HistogramConfig> {
@@ -288,25 +311,9 @@ struct convert<Qn::Analysis::Base::QVectorConfig> {
         for (auto &node_element : node) {
           const std::regex re_cuts("^cuts(-.+)?$");
           auto node_name = node_element.first.Scalar();
-
           if (!std::regex_match(node_name, re_cuts)) continue;
-
-          if (node_element.second.IsMap()) {
-            /* Shortcut: KEY = Variable, VALUE = Cut with empty target */
-            for (auto &map_element : node_element.second) {
-              auto cut_variable = map_element.first.as<VariableConfig>();
-              CutConfig cut_config;
-              auto decode_result = YAML::convert<CutConfig>::decode_impl(map_element.second, cut_config, false);
-              if (!decode_result) {
-                return false;
-              }
-              cut_config.variable = cut_variable;
-              config.cuts.emplace_back(std::move(cut_config));
-            }
-          } else if (node_element.second.IsSequence()) {
-            auto cuts = node_element.second.as<std::vector<CutConfig>>();
-            std::move(cuts.begin(), cuts.end(), std::back_inserter(config.cuts));
-          }
+          auto cuts_list = node_element.second.as<CutListConfig>();
+          move(begin(cuts_list.cuts), end(cuts_list.cuts), back_inserter(config.cuts));
         }
 
       } else if (config.type == EQVectorType::CHANNEL) {

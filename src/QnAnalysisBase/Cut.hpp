@@ -2,6 +2,7 @@
 #define FLOW_SRC_BASE_CUTCONFIG_H_
 
 #include <TObject.h>
+#include <list>
 
 #include "AnalysisTree/Variable.hpp"
 
@@ -14,6 +15,7 @@ struct CutConfig : public TObject {
     EQUAL,
     ANY_OF,
     RANGE,
+    EXPR,
     NAMED_FUNCTION
   };
 
@@ -32,11 +34,18 @@ struct CutConfig : public TObject {
   std::vector<double> any_of_values;
   double any_of_tolerance{0.};
 
+  /* expr */
+  std::string expr_string;
+
 
   /* named function */
   std::string named_function_name;
 
   ClassDef(Qn::Analysis::Base::CutConfig, 2)
+};
+
+struct CutListConfig {
+  std::list<CutConfig> cuts;
 };
 
 struct Cut {
