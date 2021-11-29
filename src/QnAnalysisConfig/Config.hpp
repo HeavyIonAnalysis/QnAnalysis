@@ -126,10 +126,7 @@ struct convert<Qn::Analysis::Base::CutConfig> {
       cut_config.expr_string = node["expr"].as<std::string>();
       return true;
     }
-
-    /* todo warning user */
-    return false;
-
+    throw std::runtime_error("Unknown type of the cut");
   }
 
   static bool decode(const Node &node,
