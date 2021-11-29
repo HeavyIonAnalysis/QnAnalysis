@@ -28,7 +28,7 @@ _axes:
   - &axis_gen_pions_pT
     name: sim_particles_extra/pT
     bin-edges: [0, 0.08, 0.105, 0.13, 0.155, 0.18, 0.21, 0.25, 0.315, 0.535, 1.0]
-  - &axis_unifroms_gen_pions_pT
+  - &axis_uniform_gen_pions_pT
     name: sim_particles_extra/pT
     nb: 10
     lo: 0.0
