@@ -94,22 +94,31 @@ struct convert<Qn::Analysis::Base::CutConfig> {
       if (require_variable_field) {
         cut_config.variable = node["variable"].as<VariableConfig>();
       }
-
       if (node["equals"]) {
         cut_config.type = CutConfig::EQUAL;
         cut_config.equal_val = node["equals"].as<double>();
         cut_config.equal_tol = node["tol"].as<double>(0.);
         return true;
-      } else if (node["range"]) {
+      }
+      else if (node["range"]) {
         if (node["range"].IsSequence() && node["range"].size() == 2) {
           cut_config.type = CutConfig::RANGE;
           cut_config.range_lo = node["range"][0].as<double>();
           cut_config.range_hi = node["range"][1].as<double>();
           return true;
         }
-
         return false;
-      } else if (node["function"]) {
+      }
+      else if (node["any-of"]) {
+        if (node["any-of"].IsSequence()) {
+          cut_config.type = CutConfig::ANY_OF;
+          cut_config.any_of_values = node["any-of"].as<std::vector<double>>();
+          cut_config.any_of_tolerance = node["tol"].as<double>(0.);
+          return true;
+        }
+        return false;
+      }
+      else if (node["function"]) {
         cut_config.type = CutConfig::NAMED_FUNCTION;
         cut_config.named_function_name = node["function"].Scalar();
         return true;

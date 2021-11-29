@@ -12,6 +12,7 @@ namespace Qn::Analysis::Base {
 struct CutConfig : public TObject {
   enum ECutType {
     EQUAL,
+    ANY_OF,
     RANGE,
     NAMED_FUNCTION
   };
@@ -26,6 +27,11 @@ struct CutConfig : public TObject {
   /* range */
   double range_lo{0.};
   double range_hi{0.};
+
+  /* any-of */
+  std::vector<double> any_of_values;
+  double any_of_tolerance{0.};
+
 
   /* named function */
   std::string named_function_name;
