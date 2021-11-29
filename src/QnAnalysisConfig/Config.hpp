@@ -85,54 +85,55 @@ struct convert<Qn::Analysis::Base::AxisConfig> {
 template<>
 struct convert<Qn::Analysis::Base::CutConfig> {
 
-
   static bool decode_impl(const Node &node,
-                     Qn::Analysis::Base::CutConfig &cut_config,
-                     bool require_variable_field) {
+                          Qn::Analysis::Base::CutConfig &cut_config,
+                          bool require_variable_field) {
     using namespace Qn::Analysis::Base;
-    if (node.IsMap()) {
+
+
+    if (node["equals"]) {
       if (require_variable_field) {
         cut_config.variable = node["variable"].as<VariableConfig>();
       }
-      if (node["equals"]) {
-        cut_config.type = CutConfig::EQUAL;
-        cut_config.equal_val = node["equals"].as<double>();
-        cut_config.equal_tol = node["tol"].as<double>(0.);
+      cut_config.type = CutConfig::EQUAL;
+      cut_config.equal_val = node["equals"].as<double>();
+      cut_config.equal_tol = node["tol"].as<double>(0.);
+      return true;
+    } else if (node["range"]) {
+      if (node["range"].IsSequence() && node["range"].size() == 2) {
+        if (require_variable_field) {
+          cut_config.variable = node["variable"].as<VariableConfig>();
+        }
+        cut_config.type = CutConfig::RANGE;
+        cut_config.range_lo = node["range"][0].as<double>();
+        cut_config.range_hi = node["range"][1].as<double>();
         return true;
       }
-      else if (node["range"]) {
-        if (node["range"].IsSequence() && node["range"].size() == 2) {
-          cut_config.type = CutConfig::RANGE;
-          cut_config.range_lo = node["range"][0].as<double>();
-          cut_config.range_hi = node["range"][1].as<double>();
-          return true;
-        }
-        return false;
-      }
-      else if (node["any-of"]) {
-        if (node["any-of"].IsSequence()) {
-          cut_config.type = CutConfig::ANY_OF;
-          cut_config.any_of_values = node["any-of"].as<std::vector<double>>();
-          cut_config.any_of_tolerance = node["tol"].as<double>(0.);
-          return true;
-        }
-        return false;
-      }
-      else if (node["function"]) {
-        cut_config.type = CutConfig::NAMED_FUNCTION;
-        cut_config.named_function_name = node["function"].Scalar();
-        return true;
-      }
-
-      /* todo warning user */
       return false;
+    } else if (node["any-of"]) {
+      if (require_variable_field) {
+        cut_config.variable = node["variable"].as<VariableConfig>();
+      }
+      if (node["any-of"].IsSequence()) {
+        cut_config.type = CutConfig::ANY_OF;
+        cut_config.any_of_values = node["any-of"].as<std::vector<double>>();
+        cut_config.any_of_tolerance = node["tol"].as<double>(0.);
+        return true;
+      }
+      return false;
+    } else if (node["expr"]) {
+      cut_config.type = CutConfig::EXPR;
+      cut_config.expr_string = node["expr"].as<std::string>();
+      return true;
     }
 
+    /* todo warning user */
     return false;
+
   }
 
   static bool decode(const Node &node,
-                          Qn::Analysis::Base::CutConfig &cut_config) {
+                     Qn::Analysis::Base::CutConfig &cut_config) {
     return decode_impl(node, cut_config, true);
   }
 };
@@ -143,7 +144,7 @@ struct convert<Qn::Analysis::Base::CutListConfig> {
                      Qn::Analysis::Base::CutListConfig &cut_list_config) {
     using Qn::Analysis::Base::CutConfig;
     if (cut_list_node.IsMap()) {
-      for (const auto & cut_definition_config : cut_list_node) {
+      for (const auto &cut_definition_config : cut_list_node) {
         auto variable = cut_definition_config.first.as<Qn::Analysis::Base::VariableConfig>();
         CutConfig cut_definition;
         assert(convert<CutConfig>::decode_impl(cut_definition_config.second, cut_definition, false));
@@ -159,7 +160,6 @@ struct convert<Qn::Analysis::Base::CutListConfig> {
     }
   }
 };
-
 
 template<>
 struct convert<Qn::Analysis::Base::HistogramConfig> {
