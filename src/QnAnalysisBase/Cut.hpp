@@ -36,6 +36,7 @@ struct CutConfig : public TObject {
 
   /* expr */
   std::string expr_string;
+  std::vector<double> expr_parameters;
 
 
   /* named function */

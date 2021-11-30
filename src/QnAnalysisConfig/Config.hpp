@@ -124,6 +124,7 @@ struct convert<Qn::Analysis::Base::CutConfig> {
     } else if (node["expr"]) {
       cut_config.type = CutConfig::EXPR;
       cut_config.expr_string = node["expr"].as<std::string>();
+      cut_config.expr_parameters = node["parameters"].as<std::vector<double>>(std::vector<double>());
       return true;
     }
     throw std::runtime_error("Unknown type of the cut");

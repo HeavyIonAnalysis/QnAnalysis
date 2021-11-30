@@ -207,6 +207,15 @@ Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis:
     }
 
     TFormula expression_formula("", expression_string_parsed.c_str(), false, true);
+    if (!expression_formula.IsValid()) {
+      throw std::runtime_error("Expression '" + expression_string_parsed + "' is not valid");
+    }
+    if (expression_formula.GetNpar() != config.expr_parameters.size()) {
+      throw std::runtime_error("Number of expression parameters different from number of provided parameters");
+    }
+    if (expression_formula.GetNpar() > 0) {
+      expression_formula.SetParameters(config.expr_parameters.data());
+    }
     auto formula_function = [expression_formula] (Cut::FunctionArgType arg_type) -> bool {
       return bool(expression_formula.EvalPar(arg_type.data()));
     };
