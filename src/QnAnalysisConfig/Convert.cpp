@@ -10,6 +10,7 @@
 #include <QnTools/Recentering.hpp>
 #include <QnTools/TwistAndRescale.hpp>
 #include <QnTools/Alignment.hpp>
+#include <TFormula.h>
 
 #include "Convert.hpp"
 
@@ -121,41 +122,45 @@ Qn::Analysis::Base::Axis Qn::Analysis::Config::Utils::Convert(const Qn::Analysis
 }
 
 Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::CutConfig &config) {
+  using Qn::Analysis::Base::Cut;
   auto var = Convert(config.variable);
-  std::function<bool(const double &)> function;
+
+  Cut::FunctionType function;
 
   std::stringstream description_stream;
   if (config.type == Base::CutConfig::EQUAL) {
     auto equal_val = config.equal_val;
     auto equal_tol = config.equal_tol;
-    function = [equal_val, equal_tol](const double &v) -> bool {
-      return std::abs(v - equal_val) <= equal_tol;
+    function = [equal_val, equal_tol](Cut::FunctionArgType v) -> bool {
+      return std::abs(v[0] - equal_val) <= equal_tol;
     };
     description_stream << var.GetName() << " == " << equal_val;
+    return {{var}, function, description_stream.str()};
   } else if (config.type == Base::CutConfig::RANGE) {
     auto range_lo = config.range_lo;
     auto range_hi = config.range_hi;
-    function = [range_lo, range_hi](const double &v) -> bool {
-      return range_lo <= v && v <= range_hi;
+    function = [range_lo, range_hi](Cut::FunctionArgType v) -> bool {
+      return range_lo <= v[0] && v[0] <= range_hi;
     };
     description_stream << var.GetName() << " in [" << range_lo << "; " << range_hi << "]";
+    return {{var}, function, description_stream.str()};
   } else if (config.type == Base::CutConfig::ANY_OF) {
     auto allowed_values = config.any_of_values; // maybe std::set here is better
     auto tolerance = config.any_of_tolerance;
     sort(begin(allowed_values), end(allowed_values));
-    function = [allowed_values, tolerance] (const double &value) -> bool {
-      if (value - tolerance > allowed_values.back()) {
+    function = [allowed_values, tolerance](Cut::FunctionArgType value) -> bool {
+      if (value[0] - tolerance > allowed_values.back()) {
         return false;
       }
-      if (value + tolerance < allowed_values.front()) {
+      if (value[0] + tolerance < allowed_values.front()) {
         return false;
       }
       for (auto allowed_value : allowed_values) {
         if (tolerance == 0) {
-          if (allowed_value == value)
+          if (allowed_value == value[0])
             return true;
         } else {
-          if (std::abs(allowed_value - value) < tolerance)
+          if (std::abs(allowed_value - value[0]) < tolerance)
             return true;
         }
       }
@@ -164,13 +169,71 @@ Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis:
 
     description_stream << var.GetName() << " any of [" << allowed_values.front();
     if (allowed_values.size() > 1) {
-      for (auto it = allowed_values.begin()+1; it != allowed_values.end(); ++it) {
+      for (auto it = allowed_values.begin() + 1; it != allowed_values.end(); ++it) {
         description_stream << ", " << *it;
       }
     }
     description_stream << "]";
+    return {{var}, function, description_stream.str()};
+  } else if (config.type == Base::CutConfig::EXPR) {
+
+    std::list<std::string> variables_list;
+
+    auto expression_string = config.expr_string;
+    auto expression_string_parsed = expression_string;
+    std::regex re_var(R"((\{\{[\w_]+/[\w_]+\}\}))");
+    std::smatch match_results;
+    std::string::difference_type replacement_offset{0};
+    auto expr_string_it = cbegin(expression_string);
+    while (std::regex_search(expr_string_it, cend(expression_string), match_results, re_var)) {
+      std::string var_match = match_results.str(1);
+      auto var_name = var_match.substr(2, var_match.length()-4);
+      auto var_name_it = find(cbegin(variables_list), cend(variables_list), var_name);
+      if (var_name_it == cend(variables_list)) {
+        variables_list.emplace_back(var_name);
+      }
+      auto var_id = var_name_it == cend(variables_list) ? variables_list.size() - 1 : distance(cbegin(variables_list), var_name_it);
+
+      std::string var_replacement("x[");
+      var_replacement.append(std::to_string(var_id)).append("]");
+      auto replacement_start = distance(cbegin(expression_string), expr_string_it) + match_results.position(1) + replacement_offset;
+      expression_string_parsed.replace(replacement_start, var_match.length(), var_replacement);
+      expr_string_it += var_match.length();
+      replacement_offset += var_replacement.length() - var_match.length();
+
+      if (expr_string_it == cend(expression_string)) {
+        break;
+      }
+    }
+
+    TFormula expression_formula("", expression_string_parsed.c_str(), false, true);
+    if (!expression_formula.IsValid()) {
+      throw std::runtime_error("Expression '" + expression_string_parsed + "' is not valid");
+    }
+    if (expression_formula.GetNpar() != config.expr_parameters.size()) {
+      throw std::runtime_error("Number of expression parameters different from number of provided parameters");
+    }
+    if (expression_formula.GetNpar() > 0) {
+      expression_formula.SetParameters(config.expr_parameters.data());
+    }
+    auto formula_function = [expression_formula] (Cut::FunctionArgType arg_type) -> bool {
+      return bool(expression_formula.EvalPar(arg_type.data()));
+    };
+
+    Cut::VariableListType variable_list;
+    for (auto && variable_name : variables_list) {
+      std::regex re_variable("([\\w_]+)/([\\w_]+)");
+      std::smatch match_results;
+      std::regex_search(variable_name, match_results, re_variable);
+      auto branch_name = match_results.str(1);
+      auto field_name = match_results.str(2);
+      variable_list.emplace_back(AnalysisTree::Variable(branch_name, field_name));
+    }
+
+    return {variable_list, formula_function, expression_string};
   }
-  return {var, function, description_stream.str()};
+
+  throw std::runtime_error("Unsupported type of Cut");
 }
 
 Qn::Analysis::Base::AnalysisSetup Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::AnalysisSetupConfig &config) {
