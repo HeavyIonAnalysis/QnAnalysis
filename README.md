@@ -17,7 +17,7 @@ Input data are expected to be in [AnalysisTree](https://github.com/HeavyIonAnaly
  
  ### External packages (installed automatically)
  * QnTools
- * AnalysisTree
+ * AnalysisTree (>= 1.0.11, >= 2.2.2)
  * yaml-cpp
 
 ### Building from the sources
