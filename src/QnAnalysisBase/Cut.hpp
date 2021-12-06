@@ -4,9 +4,9 @@
 #include <TObject.h>
 #include <list>
 
-#include "AnalysisTree/Variable.hpp"
-
 #include <QnAnalysisBase/Variable.hpp>
+
+#include "AnalysisTree.hpp"
 
 namespace Qn::Analysis::Base {
 
@@ -50,7 +50,7 @@ struct CutListConfig {
 };
 
 struct Cut {
-  typedef std::list<AnalysisTree::Variable> VariableListType;
+  typedef std::list<ATVariable> VariableListType;
   typedef const std::vector<double>& FunctionArgType;
   typedef std::function<bool (FunctionArgType)> FunctionType;
 

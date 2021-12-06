@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 project(QnAnalysis CXX)
 set(CMAKE_CXX_STANDARD 17)
-#set(CMAKE_BUILD_TYPE RELEASE)
 set(PROJECT_VERSION 1.0)
 
 include(ExternalProject)
@@ -10,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 message(STATUS "Using C++${CMAKE_CXX_STANDARD}")
 
 option(yaml-cpp_BUNDLED "Build bundled yaml-cpp" OFF)
+option(QnAnalysis_BUILD_TESTS "Build tests" ON)
 
 # by default build optimized code with debug symbols
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)

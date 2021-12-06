@@ -7,10 +7,11 @@
 
 #include <TObject.h>
 
-#include <AnalysisTree/Variable.hpp>
 #include <memory>
 #include <string>
 #include <utility>
+
+#include "AnalysisTree.hpp"
 
 namespace Qn::Analysis::Base {
 
@@ -53,7 +54,7 @@ struct Variable {
   std::vector<int> channel_ids;
 
   std::shared_ptr<VariableQnBinding> qn_binding;
-  std::shared_ptr<AnalysisTree::Variable> at_binding;
+  std::shared_ptr<ATVariable> at_binding;
 
   void RequestQnBinding(const std::string& qn_name) {
     if (config == VariableConfig::Ones()) {
@@ -75,7 +76,7 @@ struct Variable {
     if (at_binding) {
       throw std::logic_error("AT binding already exists");
     }
-    at_binding = std::make_shared<AnalysisTree::Variable>(config.branch, config.field);
+    at_binding = std::make_shared<ATVariable>(config.branch, config.field);
   }
 
   void MapPlain() { mapping_type = PLAIN; }

@@ -18,8 +18,7 @@
 #include <QnTools/CorrectionOnQnVector.hpp>
 #include <QnTools/Stat.hpp>
 
-#include <AnalysisTree/Constants.hpp>
-#include <AnalysisTree/Variable.hpp>
+#include "AnalysisTree.hpp"
 
 #include <QnAnalysisBase/Axis.hpp>
 #include <QnAnalysisBase/Cut.hpp>
@@ -128,8 +127,8 @@ class QVector {
   explicit QVector(EQVectorType Type) : type_(Type) {}
   QVector(std::string name,
           EQVectorType type,
-          AnalysisTree::Variable phi,
-          AnalysisTree::Variable weight) : name_(std::move(name)),
+          ATVariable phi,
+          ATVariable weight) : name_(std::move(name)),
                                            type_(type),
                                            phi_(std::move(phi)),
                                            weight_(std::move(weight)) {
@@ -141,11 +140,11 @@ class QVector {
     return type_;
   }
   void SetName(const std::string& name) { name_ = name; }
-  const AnalysisTree::Variable& GetWeightVar() const { return weight_; }
+  const ATVariable& GetWeightVar() const { return weight_; }
 
-  const AnalysisTree::Variable& GetPhiVar() const { return phi_; }
-  AnalysisTree::Variable& WeightVar() { return weight_; }
-  AnalysisTree::Variable& PhiVar() { return phi_; }
+  const ATVariable& GetPhiVar() const { return phi_; }
+  ATVariable& WeightVar() { return weight_; }
+  ATVariable& PhiVar() { return phi_; }
   void SetWeightsType(Qn::Stat::WeightType type) { weights_type_ = type; }
 
   /**
@@ -179,7 +178,7 @@ class QVector {
 
   Qn::Stat::WeightType GetWeightsType() const { return weights_type_; }
 
-  virtual std::vector<AnalysisTree::Variable> GetListOfVariables() const { return {phi_, weight_}; }
+  virtual std::vector<ATVariable> GetListOfVariables() const { return {phi_, weight_}; }
 
   int GetVarEntryId() const { return var_entry_id_; }
 
@@ -233,8 +232,8 @@ class QVector {
 protected:
   std::string name_;///<  Name of the Q-vector
   EQVectorType type_;
-  AnalysisTree::Variable phi_{};
-  AnalysisTree::Variable weight_{};
+  ATVariable phi_{};
+  ATVariable weight_{};
   std::array<bool, nSteps> corrertions_{false, false, false};
   std::list<CorrectionPtr> corrections_;
   Qn::QVector::Normalization normalization_{Qn::QVector::Normalization::NONE};
@@ -249,7 +248,7 @@ protected:
 class QVectorChannel : public QVector {
  public:
   QVectorChannel() : QVector(EQVectorType::CHANNEL) {}
-  QVectorChannel(const std::string& name, const AnalysisTree::Variable& phi, const AnalysisTree::Variable& weight,
+  QVectorChannel(const std::string& name, const ATVariable& phi, const ATVariable& weight,
                  std::vector<int> ids) : QVector(name, EQVectorType::CHANNEL, phi, weight),
                                          module_ids_(std::move(ids)) {
     phi_.SetSize(module_ids_.size());
@@ -268,10 +267,10 @@ class QVectorTrack : public QVector {
 
  public:
   QVectorTrack() : QVector(EQVectorType::TRACK) {}
-  QVectorTrack(std::string name, AnalysisTree::Variable phi, AnalysisTree::Variable weight,
+  QVectorTrack(std::string name, ATVariable phi, ATVariable weight,
                std::vector<Axis> axes) : QVector(std::move(name), EQVectorType::TRACK, std::move(phi), std::move(weight)),
                                          axes_(std::move(axes)) {
-    auto var = AnalysisTree::Variable(*phi_.GetBranches().begin(), "Filled");
+    auto var = ATVariable(*phi_.GetBranches().begin(), "Filled");
     this->AddCut({{var}, [](const std::vector<double>& is) { return is[0] > 0.; }, "is_filled"});
   }
 
@@ -281,7 +280,7 @@ class QVectorTrack : public QVector {
     cuts_.emplace_back(cut);
   }
 
-  std::vector<AnalysisTree::Variable> GetListOfVariables() const override;
+  std::vector<ATVariable> GetListOfVariables() const override;
   const std::vector<Cut>& GetCuts() const { return cuts_; };
 
  protected:
@@ -302,8 +301,8 @@ class QVectorPsi : public QVector {
  public:
   QVectorPsi() : QVector(EQVectorType::EVENT_PSI) {}
   QVectorPsi(const std::string& Name,
-             const AnalysisTree::Variable& Phi,
-             const AnalysisTree::Variable& Weight) : QVector(Name, EQVectorType::EVENT_PSI, Phi, Weight){};
+             const ATVariable& Phi,
+             const ATVariable& Weight) : QVector(Name, EQVectorType::EVENT_PSI, Phi, Weight){};
 };
 
 }// namespace Qn::Analysis::Base

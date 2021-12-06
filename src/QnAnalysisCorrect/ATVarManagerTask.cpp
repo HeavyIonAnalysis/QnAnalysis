@@ -9,11 +9,11 @@ using namespace Qn::Analysis::Correction;
 TASK_IMPL(ATVarManagerTask)
 
 void ATVarManagerTask::Init(std::map<std::string, void *> &Map) {
-  AnalysisTree::VarManager::Init(Map);
+  ATVarManager::Init(Map);
 }
 void ATVarManagerTask::Exec() {
-  AnalysisTree::VarManager::Exec();
+  ATVarManager::Exec();
 }
 void ATVarManagerTask::Finish() {
-  AnalysisTree::VarManager::Finish();
+  ATVarManager::Finish();
 };

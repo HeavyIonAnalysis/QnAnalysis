@@ -3,10 +3,10 @@
 
 #include <TObject.h>
 
-#include <AnalysisTree/Variable.hpp>
 #include <QnTools/Axis.hpp>
 
 #include <QnAnalysisBase/Variable.hpp>
+#include "AnalysisTree.hpp"
 
 namespace Qn::Analysis::Base {
 
@@ -28,16 +28,16 @@ struct AxisConfig : public TObject {
 
 struct Axis {
   Axis() = default;
-  Axis(AnalysisTree::Variable var, int nbins, float min, float max) : var_(std::move(var)),
+  Axis(ATVariable var, int nbins, float min, float max) : var_(std::move(var)),
                                                                       axis_(Qn::AxisD(var_.GetName(), nbins, min, max)) {}
 
-  Axis(AnalysisTree::Variable var, std::vector<double> bin_edges) : var_(std::move(var)),
+  Axis(ATVariable var, std::vector<double> bin_edges) : var_(std::move(var)),
                                                                     axis_(Qn::AxisD(var_.GetName(), std::move(bin_edges))) {}
 
-  const AnalysisTree::Variable& GetVariable() const { return var_; }
+  const ATVariable& GetVariable() const { return var_; }
   const Qn::AxisD& GetQnAxis() const { return axis_; }
 
-  AnalysisTree::Variable var_{};
+  ATVariable var_{};
   Qn::AxisD axis_{};
 };
 

@@ -13,8 +13,9 @@
 
 #include <QnTools/CorrectionManager.hpp>
 
-#include <AnalysisTree/VarManager.hpp>
 #include <AnalysisTree/DataHeader.hpp>
+#include <QnAnalysisBase/AnalysisTree.hpp>
+
 
 #include <QnAnalysisBase/AnalysisSetup.hpp>
 #include <QnAnalysisBase/QVector.hpp>
@@ -37,11 +38,14 @@ class QnCorrectionTask : public UserFillTask {
   }
   boost::program_options::options_description GetBoostOptions() override;
   void PreInit() override;
-  void Init(std::map<std::string, void*>&) override;
-  void Exec() override;
-  void Finish() override;
+ protected:
+  bool UseATI2() const override { return false; }
+ public:
+  void UserInit(std::map<std::string, void*>&) override;
+  void UserExec() override;
+  void UserFinish() override;
 
-  void SetPointerToVarManager(AnalysisTree::VarManager* ptr) { var_manager_ = ptr; }
+  void SetPointerToVarManager(ATVarManager* ptr) { var_manager_ = ptr; }
 
   Base::AnalysisSetup* GetConfig() { return analysis_setup_; }
 
@@ -62,7 +66,7 @@ class QnCorrectionTask : public UserFillTask {
   Qn::CorrectionManager manager_;
 
   Base::AnalysisSetup* analysis_setup_{nullptr};
-  AnalysisTree::VarManager* var_manager_{nullptr};
+  ATVarManager* var_manager_{nullptr};
   std::vector<std::tuple<std::string, std::vector<AxisD>>> qa_histos_;
   std::map<int, int> is_filled_{};
 

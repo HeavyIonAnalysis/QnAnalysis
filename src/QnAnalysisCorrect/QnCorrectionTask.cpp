@@ -4,8 +4,8 @@
 #include <memory>
 
 #include <AnalysisTree/DataHeader.hpp>
-#include <AnalysisTree/TreeReader.hpp>
 
+#include <QnAnalysisBase/AnalysisTree.hpp>
 #include <QnAnalysisBase/QVector.hpp>
 #include <QnAnalysisBase/AnalysisSetup.hpp>
 #include <QnAnalysisConfig/Config.hpp>
@@ -31,20 +31,20 @@ void QnCorrectionTask::PreInit() {
   // Variables used by tracking Q-vectors
   for (auto &q_tra : this->GetConfig()->track_qvectors_) {
     const auto &vars = q_tra->GetListOfVariables();
-    q_tra->SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(vars)).first);
+    q_tra->SetVarEntryId(at_vm_task->AddEntry(ATVarManagerEntry(vars)).first);
   }
   // Variables used by channelized Q-vectors
   for (auto &q_ch : this->GetConfig()->channel_qvectors_) {
     /* phi variable is 'virtual' and taken from the DataHeader */
-    q_ch->SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry({q_ch->GetWeightVar()})).first);
+    q_ch->SetVarEntryId(at_vm_task->AddEntry(ATVarManagerEntry({q_ch->GetWeightVar()})).first);
   }
   // Psi variable
   for (auto &q_psi : this->GetConfig()->psi_qvectors_) {
-    q_psi->SetVarEntryId(at_vm_task->AddEntry(AnalysisTree::VarManagerEntry({q_psi->GetPhiVar()})).first);
+    q_psi->SetVarEntryId(at_vm_task->AddEntry(ATVarManagerEntry({q_psi->GetPhiVar()})).first);
   }
   // Event Variables
   if (!this->GetConfig()->EventVars().empty()) {
-    at_vm_task->AddEntry(AnalysisTree::VarManagerEntry(this->GetConfig()->GetEventVars()));
+    at_vm_task->AddEntry(ATVarManagerEntry(this->GetConfig()->GetEventVars()));
   }
 
   at_vm_task->FillBranchNames();
@@ -53,7 +53,7 @@ void QnCorrectionTask::PreInit() {
   var_manager_ = at_vm_task;
 }
 
-void QnCorrectionTask::Init(std::map<std::string, void *> &) {
+void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
   out_file_ = std::shared_ptr<TFile>(TFile::Open("correction_out.root", "recreate"));
   if (!(out_file_ && out_file_->IsOpen())) {
     throw std::runtime_error("Unable to open output file for writing");
@@ -89,7 +89,7 @@ void QnCorrectionTask::Init(std::map<std::string, void *> &) {
       for (const auto &cut : track_qv->GetCuts()) {
         auto variables = cut.GetListOfVariables();
         std::vector<std::string> variable_names_list;
-        std::transform(begin(variables), end(variables),back_inserter(variable_names_list), [] (const AnalysisTree::Variable& v) {
+        std::transform(begin(variables), end(variables),back_inserter(variable_names_list), [] (const ATVariable & v) {
           return v.GetName();
         });
         manager_.AddCutOnDetector(name, variable_names_list, cut.GetFunction(), cut.GetDescription());
@@ -133,7 +133,7 @@ void QnCorrectionTask::InitVariables() {
   for (auto &entry : var_manager_->VarEntries()) {
     if (entry.GetNumberOfBranches() > 1) {
       auto &branches = entry.GetBranches();
-      if (!std::all_of(branches.begin(), branches.end(), [](AnalysisTree::BranchReader *reader) {
+      if (!std::all_of(branches.begin(), branches.end(), [](ATBranchReader *reader) {
         return reader->GetType() == AnalysisTree::DetType::kEventHeader;
       })) {
         throw std::runtime_error("More than one branch in one entry is allowed only if ALL of them EventHeader-s");
@@ -182,7 +182,7 @@ void QnCorrectionTask::InitVariables() {
 /**
 * Main method. Executed every event
 */
-void QnCorrectionTask::Exec() {
+void QnCorrectionTask::UserExec() {
   manager_.Reset();
   double *container = manager_.GetVariableContainer();
 
@@ -317,7 +317,7 @@ void QnCorrectionTask::AddQAHisto() {
   }
 }
 
-void QnCorrectionTask::Finish() {
+void QnCorrectionTask::UserFinish() {
   manager_.Finalize();
 
   out_file_->cd();

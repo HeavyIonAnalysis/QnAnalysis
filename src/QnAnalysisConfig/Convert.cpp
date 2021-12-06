@@ -14,8 +14,8 @@
 
 #include "Convert.hpp"
 
-AnalysisTree::Variable Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::VariableConfig &variable) {
-  return AnalysisTree::Variable(variable.branch, variable.field);
+ATVariable Qn::Analysis::Config::Utils::Convert(const Qn::Analysis::Base::VariableConfig& variable) {
+  return {variable.branch, variable.field};
 }
 
 Qn::Analysis::Base::Variable Qn::Analysis::Config::Utils::Convert1(const Qn::Analysis::Base::VariableConfig &variable) {
@@ -227,7 +227,7 @@ Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis:
       std::regex_search(variable_name, match_results, re_variable);
       auto branch_name = match_results.str(1);
       auto field_name = match_results.str(2);
-      variable_list.emplace_back(AnalysisTree::Variable(branch_name, field_name));
+      variable_list.emplace_back(ATVariable(branch_name, field_name));
     }
 
     return {variable_list, formula_function, expression_string};
