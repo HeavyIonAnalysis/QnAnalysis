@@ -26,7 +26,7 @@ Base::QVector* Convert(const Base::QVectorConfig& config);
 
 Base::Axis Convert(const Base::AxisConfig& axis_config);
 
-Base::Cut Convert(const Base::CutConfig& config);
+Base::Cut Convert(const Base::CutConfig& value);
 
 Base::AnalysisSetup Convert(const Base::AnalysisSetupConfig& config);
 

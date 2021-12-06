@@ -271,7 +271,7 @@ class QVectorTrack : public QVector {
                std::vector<Axis> axes) : QVector(std::move(name), EQVectorType::TRACK, std::move(phi), std::move(weight)),
                                          axes_(std::move(axes)) {
     auto var = ATVariable(*phi_.GetBranches().begin(), "Filled");
-    this->AddCut({var, [](const double is) { return is > 0.; }, "is_filled"});
+    this->AddCut({{var}, [](const std::vector<double>& is) { return is[0] > 0.; }, "is_filled"});
   }
 
   std::vector<Qn::AxisD> GetAxes() const;

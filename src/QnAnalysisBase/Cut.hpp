@@ -2,6 +2,7 @@
 #define FLOW_SRC_BASE_CUTCONFIG_H_
 
 #include <TObject.h>
+#include <list>
 
 #include <QnAnalysisBase/Variable.hpp>
 
@@ -12,7 +13,9 @@ namespace Qn::Analysis::Base {
 struct CutConfig : public TObject {
   enum ECutType {
     EQUAL,
+    ANY_OF,
     RANGE,
+    EXPR,
     NAMED_FUNCTION
   };
 
@@ -27,25 +30,42 @@ struct CutConfig : public TObject {
   double range_lo{0.};
   double range_hi{0.};
 
+  /* any-of */
+  std::vector<double> any_of_values;
+  double any_of_tolerance{0.};
+
+  /* expr */
+  std::string expr_string;
+  std::vector<double> expr_parameters;
+
+
   /* named function */
   std::string named_function_name;
 
   ClassDef(Qn::Analysis::Base::CutConfig, 2)
 };
 
-struct Cut {
-  Cut() = default;
-  Cut(ATVariable var, std::function<bool(double)> function, std::string description) : var_(std::move(var)),
-                                                                                                   function_(std::move(function)),
-                                                                                                   description_(std::move(description)) {}
+struct CutListConfig {
+  std::list<CutConfig> cuts;
+};
 
-  const ATVariable& GetVariable() const { return var_; }
-  const std::function<bool(double)>& GetFunction() const { return function_; }
-  const std::string& GetDescription() const { return description_; }
+struct Cut {
+  typedef std::list<ATVariable> VariableListType;
+  typedef const std::vector<double>& FunctionArgType;
+  typedef std::function<bool (FunctionArgType)> FunctionType;
+
+  Cut() = default;
+  Cut(VariableListType var, FunctionType function, std::string description) : variables_list_(std::move(var)),
+                                                                                    function_(std::move(function)),
+                                                                                    description_(std::move(description)) {}
+
+  VariableListType GetListOfVariables() const { return variables_list_; }
+  FunctionType GetFunction() const { return function_; }
+  std::string GetDescription() const { return description_; }
 
  private:
-  ATVariable var_{};
-  std::function<bool(double)> function_{};
+  VariableListType variables_list_{};
+  FunctionType function_{};
   std::string description_{};
 };
 

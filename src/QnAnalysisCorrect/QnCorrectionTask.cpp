@@ -86,8 +86,13 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
                            track_qv->GetNormalization());
       Info(__func__, "Add track detector '%s'", name.c_str());
       SetCorrectionSteps(track_qv.operator*());
-      for (const auto &cut : track_qv->GetCuts()) {//NOTE cannot apply cuts on more than 1 variable
-        manager_.AddCutOnDetector(name, {cut.GetVariable().GetName().c_str()}, cut.GetFunction(), cut.GetDescription());
+      for (const auto &cut : track_qv->GetCuts()) {
+        auto variables = cut.GetListOfVariables();
+        std::vector<std::string> variable_names_list;
+        std::transform(begin(variables), end(variables),back_inserter(variable_names_list), [] (const ATVariable & v) {
+          return v.GetName();
+        });
+        manager_.AddCutOnDetector(name, variable_names_list, cut.GetFunction(), cut.GetDescription());
       }
     } else if (qvec_ptr->GetType() == Base::EQVectorType::CHANNEL) {
       auto channel_qv = std::dynamic_pointer_cast<Base::QVectorChannel>(qvec_ptr);
