@@ -5,7 +5,7 @@
 #ifndef QNANALYSIS_SRC_QNANALYSISBASE_ANALYSISTREE_HPP_
 #define QNANALYSIS_SRC_QNANALYSISBASE_ANALYSISTREE_HPP_
 
-#include <AnalysisTreeVersion.hpp>
+#include <AnalysisTree/AnalysisTreeVersion.hpp>
 
 #if ANALYSISTREE_VERSION_MAJOR == 1
 
