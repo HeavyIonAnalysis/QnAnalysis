@@ -18,6 +18,7 @@ ROOT_GENERATE_DICTIONARY(G__QnAnalysisBase ${HEADERS} LINKDEF QnAnalysisBaseLink
 target_link_libraries(QnAnalysisBase
         PUBLIC
         AnalysisTreeInfra
+        $<TARGET_NAME_IF_EXISTS:AnalysisTreeInfraVersion1>
         AnalysisTreeBase
         QnToolsBase
         QnToolsCorrection

@@ -4,8 +4,8 @@
 #include <memory>
 
 #include <AnalysisTree/DataHeader.hpp>
-#include <AnalysisTree/TreeReader.hpp>
 
+#include <QnAnalysisBase/AnalysisTree.hpp>
 #include <QnAnalysisBase/QVector.hpp>
 #include <QnAnalysisBase/AnalysisSetup.hpp>
 #include <QnAnalysisConfig/Config.hpp>
@@ -18,11 +18,12 @@ TASK_IMPL(QnCorrectionTask)
 using std::string;
 using std::vector;
 
-std::string GetATFieldName(const AnalysisTree::Variable &v) {
+std::string GetATFieldName(const ATVariable &v) {
   return v.GetFields()[0].GetBranchName() + "/" + v.GetFields()[0].GetName();
 }
 
-std::string GetQnFieldName(const AnalysisTree::Variable &v) {
+
+std::string GetQnFieldName(const ATVariable &v) {
   if (v.GetName() == "_Ones") {
     return "Ones";
   }
@@ -127,13 +128,16 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
           {loop_ctx_branch_it->lock_qn_variable->GetName().c_str()},
           [](const double lock) {
             return lock > 0;
-          }, "is_filled");
+            }, "is_filled");
 
-      for (const auto &cut : track_qv->GetCuts()) {//NOTE cannot apply cuts on more than 1 variable
-        manager_.AddCutOnDetector(q_vector_name,
-                                  {cut.GetVariable().GetName().c_str()},
-                                  cut.GetFunction(),
-                                  cut.GetDescription());
+      for (const auto &cut : track_qv->GetCuts()) {
+        auto variables = cut.GetListOfVariables();
+        std::vector<std::string> variable_names_list;
+        std::transform(begin(variables), end(variables),back_inserter(variable_names_list), [] (const ATVariable & v) {
+          return GetQnFieldName(v);
+        });
+        manager_.AddCutOnDetector(q_vector_name, variable_names_list, cut.GetFunction(), cut.GetDescription());
+
       }
 
     } else if (qvec_ptr->GetType() == Base::EQVectorType::CHANNEL) {
@@ -213,6 +217,7 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
   manager_.SetCurrentRunName("test");
 }
 
+
 /**
 * Main method. Executed every event
 */
@@ -232,6 +237,7 @@ void QnCorrectionTask::UserExec() {
   for (auto &ati2_source : ati2_event_sources_) {
     ati2_source->Update();
   }
+
 
   for (auto &[source, sink] : event_var_mapping_) {
     source.Notify();

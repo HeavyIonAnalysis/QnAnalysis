@@ -13,6 +13,7 @@
 
 #include <QnAnalysisBase/QVector.hpp>
 
+
 namespace Qn::Analysis::Base {
 
 struct AnalysisSetupConfig : public TObject {
@@ -66,9 +67,9 @@ struct AnalysisSetup {
     name += type;
     return name;
   }
-  const std::vector<AnalysisTree::Variable>& GetEventVars() const { return event_vars_; }
-  std::vector<AnalysisTree::Variable>& EventVars() { return event_vars_; }
-  void AddEventVar(const AnalysisTree::Variable& var) {
+  const std::vector<ATVariable>& GetEventVars() const { return event_vars_; }
+  std::vector<ATVariable>& EventVars() { return event_vars_; }
+  void AddEventVar(const ATVariable& var) {
     event_vars_.emplace_back(var);
   }
 
@@ -82,7 +83,7 @@ struct AnalysisSetup {
   // Correction parameters
   std::vector<Qn::AxisD> correction_axes_{};// fixme it should be Qn::Analysis::Base::Axis
 
-  std::vector<AnalysisTree::Variable> event_vars_{};
+  std::vector<ATVariable> event_vars_{};
   std::vector<Histogram> qa_{};
   // Correlation parameters
   std::vector<std::string> correlation_names_{};

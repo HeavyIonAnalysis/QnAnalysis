@@ -6,7 +6,7 @@
 #define FLOW_SRC_CONFIG_CONVERT_H
 
 #include <QnAnalysisBase/AnalysisSetup.hpp>
-#include <AnalysisTree/Variable.hpp>
+#include <QnAnalysisBase/AnalysisTree.hpp>
 #include <QnAnalysisBase/Histogram.hpp>
 #include <QnAnalysisBase/QVector.hpp>
 #include <QnAnalysisBase/Variable.hpp>
@@ -16,7 +16,7 @@
 
 namespace Qn::Analysis::Config::Utils {
 
-AnalysisTree::Variable Convert(const Base::VariableConfig& variable);
+ATVariable Convert(const Base::VariableConfig& variable);
 
 Base::Variable Convert1(const Base::VariableConfig& variable);
 
@@ -26,7 +26,7 @@ Base::QVector* Convert(const Base::QVectorConfig& config);
 
 Base::Axis Convert(const Base::AxisConfig& axis_config);
 
-Base::Cut Convert(const Base::CutConfig& config);
+Base::Cut Convert(const Base::CutConfig& value);
 
 Base::AnalysisSetup Convert(const Base::AnalysisSetupConfig& config);
 

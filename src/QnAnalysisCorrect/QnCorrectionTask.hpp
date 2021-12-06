@@ -14,8 +14,9 @@
 
 #include <QnTools/CorrectionManager.hpp>
 
-#include <AnalysisTree/VarManager.hpp>
 #include <AnalysisTree/DataHeader.hpp>
+#include <QnAnalysisBase/AnalysisTree.hpp>
+
 
 #include <QnAnalysisBase/AnalysisSetup.hpp>
 #include <QnAnalysisBase/QVector.hpp>
@@ -43,6 +44,7 @@ class QnCorrectionTask : public UserFillTask {
   void UserInit(std::map<std::string, void *> &) override;
   void UserExec() override;
   void UserFinish() override;
+
 
   Base::AnalysisSetup *GetConfig() { return analysis_setup_; }
 

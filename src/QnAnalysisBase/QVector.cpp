@@ -4,10 +4,11 @@ ClassImp(Qn::Analysis::Base::QVectorConfig)
 
     namespace Qn::Analysis::Base {
 
-  std::vector<AnalysisTree::Variable> QVectorTrack::GetListOfVariables() const {
-    std::vector<AnalysisTree::Variable> vars{phi_, weight_};
+  std::vector<ATVariable> QVectorTrack::GetListOfVariables() const {
+    std::vector<ATVariable> vars{phi_, weight_};
     for (const auto& cut : cuts_) {
-      vars.emplace_back(cut.GetVariable());
+      auto variables = cut.GetListOfVariables();
+      copy(begin(variables), end(variables), back_inserter(vars));
     }
     for (const auto& axis : axes_) {
       vars.emplace_back(axis.GetVariable());
@@ -19,7 +20,7 @@ ClassImp(Qn::Analysis::Base::QVectorConfig)
     }
     // remove Ones and Filled
     auto new_end = std::remove_if(vars.begin(), vars.end(),
-                                  [](const AnalysisTree::Variable& var) {
+                                  [](const ATVariable& var) {
                                     return EndsWith(var.GetName(), "Ones") || EndsWith(var.GetName(), "Filled");
                                   });
     vars.erase(new_end, vars.end());

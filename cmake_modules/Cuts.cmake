@@ -8,7 +8,7 @@ set(Cuts_LIBRARY_DIR ${Cuts_INSTALL_DIR}/lib)
 
 ExternalProject_Add(Cuts_Ext
         GIT_REPOSITORY  "https://git.cbm.gsi.de/pwg-c2f/analysis/cuts.git"
-        GIT_TAG         "master"
+        GIT_TAG         "at-v2"
         UPDATE_DISCONNECTED ${UPDATE_DISCONNECTED}
         SOURCE_DIR      "${EXTERNAL_DIR}/Cuts_src"
         BINARY_DIR      "${EXTERNAL_DIR}/Cuts_build"

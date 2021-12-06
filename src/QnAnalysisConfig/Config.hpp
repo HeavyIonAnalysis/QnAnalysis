@@ -85,49 +85,79 @@ struct convert<Qn::Analysis::Base::AxisConfig> {
 template<>
 struct convert<Qn::Analysis::Base::CutConfig> {
 
-
   static bool decode_impl(const Node &node,
-                     Qn::Analysis::Base::CutConfig &cut_config,
-                     bool require_variable_field) {
+                          Qn::Analysis::Base::CutConfig &cut_config,
+                          bool require_variable_field) {
     using namespace Qn::Analysis::Base;
-    if (node.IsMap()) {
+
+
+    if (node["equals"]) {
       if (require_variable_field) {
         cut_config.variable = node["variable"].as<VariableConfig>();
       }
-
-      if (node["equals"]) {
-        cut_config.type = CutConfig::EQUAL;
-        cut_config.equal_val = node["equals"].as<double>();
-        cut_config.equal_tol = node["tol"].as<double>(0.);
-        return true;
-      } else if (node["range"]) {
-        if (node["range"].IsSequence() && node["range"].size() == 2) {
-          cut_config.type = CutConfig::RANGE;
-          cut_config.range_lo = node["range"][0].as<double>();
-          cut_config.range_hi = node["range"][1].as<double>();
-          return true;
+      cut_config.type = CutConfig::EQUAL;
+      cut_config.equal_val = node["equals"].as<double>();
+      cut_config.equal_tol = node["tol"].as<double>(0.);
+      return true;
+    } else if (node["range"]) {
+      if (node["range"].IsSequence() && node["range"].size() == 2) {
+        if (require_variable_field) {
+          cut_config.variable = node["variable"].as<VariableConfig>();
         }
-
-        return false;
-      } else if (node["function"]) {
-        cut_config.type = CutConfig::NAMED_FUNCTION;
-        cut_config.named_function_name = node["function"].Scalar();
+        cut_config.type = CutConfig::RANGE;
+        cut_config.range_lo = node["range"][0].as<double>();
+        cut_config.range_hi = node["range"][1].as<double>();
         return true;
       }
-
-      /* todo warning user */
       return false;
+    } else if (node["any-of"]) {
+      if (require_variable_field) {
+        cut_config.variable = node["variable"].as<VariableConfig>();
+      }
+      if (node["any-of"].IsSequence()) {
+        cut_config.type = CutConfig::ANY_OF;
+        cut_config.any_of_values = node["any-of"].as<std::vector<double>>();
+        cut_config.any_of_tolerance = node["tol"].as<double>(0.);
+        return true;
+      }
+      return false;
+    } else if (node["expr"]) {
+      cut_config.type = CutConfig::EXPR;
+      cut_config.expr_string = node["expr"].as<std::string>();
+      cut_config.expr_parameters = node["parameters"].as<std::vector<double>>(std::vector<double>());
+      return true;
     }
-
-    return false;
+    throw std::runtime_error("Unknown type of the cut");
   }
 
   static bool decode(const Node &node,
-                          Qn::Analysis::Base::CutConfig &cut_config) {
+                     Qn::Analysis::Base::CutConfig &cut_config) {
     return decode_impl(node, cut_config, true);
   }
 };
 
+template<>
+struct convert<Qn::Analysis::Base::CutListConfig> {
+  static bool decode(const Node &cut_list_node,
+                     Qn::Analysis::Base::CutListConfig &cut_list_config) {
+    using Qn::Analysis::Base::CutConfig;
+    if (cut_list_node.IsMap()) {
+      for (const auto &cut_definition_config : cut_list_node) {
+        auto variable = cut_definition_config.first.as<Qn::Analysis::Base::VariableConfig>();
+        CutConfig cut_definition;
+        assert(convert<CutConfig>::decode_impl(cut_definition_config.second, cut_definition, false));
+        cut_definition.variable = variable;
+        cut_list_config.cuts.emplace_back(cut_definition);
+      }
+      return true;
+    } else if (cut_list_node.IsSequence()) {
+      cut_list_config.cuts = cut_list_node.as<std::list<CutConfig>>();
+      return true;
+    } else {
+      throw std::runtime_error("List of cuts must be either sequence or map");
+    }
+  }
+};
 
 template<>
 struct convert<Qn::Analysis::Base::HistogramConfig> {
@@ -279,25 +309,9 @@ struct convert<Qn::Analysis::Base::QVectorConfig> {
         for (auto &node_element : node) {
           const std::regex re_cuts("^cuts(-.+)?$");
           auto node_name = node_element.first.Scalar();
-
           if (!std::regex_match(node_name, re_cuts)) continue;
-
-          if (node_element.second.IsMap()) {
-            /* Shortcut: KEY = Variable, VALUE = Cut with empty target */
-            for (auto &map_element : node_element.second) {
-              auto cut_variable = map_element.first.as<VariableConfig>();
-              CutConfig cut_config;
-              auto decode_result = YAML::convert<CutConfig>::decode_impl(map_element.second, cut_config, false);
-              if (!decode_result) {
-                return false;
-              }
-              cut_config.variable = cut_variable;
-              config.cuts.emplace_back(std::move(cut_config));
-            }
-          } else if (node_element.second.IsSequence()) {
-            auto cuts = node_element.second.as<std::vector<CutConfig>>();
-            std::move(cuts.begin(), cuts.end(), std::back_inserter(config.cuts));
-          }
+          auto cuts_list = node_element.second.as<CutListConfig>();
+          move(begin(cuts_list.cuts), end(cuts_list.cuts), back_inserter(config.cuts));
         }
 
       } else if (config.type == EQVectorType::CHANNEL) {
