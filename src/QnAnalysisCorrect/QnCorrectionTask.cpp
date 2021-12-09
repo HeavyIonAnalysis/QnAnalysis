@@ -82,7 +82,7 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
                            track_qv->GetPhiVar().GetName(),
                            qn_weight,
                            track_qv->GetAxes(),
-                           {1, 2},
+                           track_qv->GetHarmonics(),
                            track_qv->GetNormalization());
       Info(__func__, "Add track detector '%s'", name.c_str());
       SetCorrectionSteps(track_qv.operator*());
@@ -105,7 +105,7 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
                            qn_phi,
                            qn_weight,
                            {/* no axes to be passed */},
-                           {1},
+                           channel_qv->GetHarmonics(),
                            channel_qv->GetNormalization());
       Info(__func__, "Add channel detector '%s'", name.c_str());
       SetCorrectionSteps(channel_qv.operator*());
@@ -113,7 +113,12 @@ void QnCorrectionTask::UserInit(std::map<std::string, void *> &) {
       string name = qvec_ptr->GetName();
       string qn_phi = qvec_ptr->GetPhiVar().GetName();
       auto qn_weight = qvec_ptr->GetWeightVar().GetName() == "_Ones" ? "Ones" : qvec_ptr->GetWeightVar().GetName();
-      manager_.AddDetector(name, DetectorType::CHANNEL, qn_phi, qn_weight, {}, {1, 2}, qvec_ptr->GetNormalization());
+      manager_.AddDetector(name,
+                           DetectorType::CHANNEL,
+                           qn_phi,
+                           qn_weight, {},
+                           qvec_ptr->GetHarmonics(),
+                           qvec_ptr->GetNormalization());
       Info(__func__, "Add event PSI '%s'", name.c_str());
       SetCorrectionSteps(qvec_ptr.operator*());
     }

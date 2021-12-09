@@ -289,7 +289,7 @@ struct convert<Qn::Analysis::Base::QVectorConfig> {
         return false;
       }
 
-      config.harmonics = node["harmonics"].as<std::string>("00000111");
+      config.harmonics = node["harmonics"].as<std::string>(config.type == EQVectorType::CHANNEL? "1" : "11");
       config.corrections =
           node["corrections"].as<std::vector<QVectorCorrectionConfig>>(EmptyVector<QVectorCorrectionConfig>());
 
