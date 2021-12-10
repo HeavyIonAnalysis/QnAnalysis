@@ -118,7 +118,7 @@ hades_analysis:
       axes:
         - *axis_protons_pT
         - *axis_protons_rapidity
-        - *axis_theta
+#        - *axis_theta
       cuts-pid:
         *pid_protons_cut
       cuts-quality:
@@ -215,7 +215,7 @@ hades_analysis:
       axes:
         - *axis_gen_protons_pT
         - *axis_gen_protons_rapidity
-        - *axis_gen_theta
+#        - *axis_gen_theta
       cuts-pid:
         *gen_prim_protons_cut
       qa:
