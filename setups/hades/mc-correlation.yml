@@ -86,11 +86,6 @@ _tasks:
     weights-type: observable
     folder: "/uQ/reco"
     axes: [ *centrality ]
-  - args: [*ta_reco, *ta_reco, *ta_psi2]
-    n-samples: 100
-    weights-type: observable
-    folder: "/u1u1Q2/reco"
-    axes: [ *centrality ]
 #  - args: [*ta_reco2, *ta_psi]
 #    n-samples: 100
 #    weights-type: observable
@@ -110,11 +105,6 @@ _tasks:
     n-samples: 100
     weights-type: observable
     folder: "/uQ/gen"
-    axes: [ *centrality ]
-  - args: [*ta_sim, *ta_sim, *ta_psi2]
-    n-samples: 100
-    weights-type: observable
-    folder: "/u1u1Q2/gen"
     axes: [ *centrality ]
 #  - args: [*ta_sim2, *ta_psi]
 #    n-samples: 100
