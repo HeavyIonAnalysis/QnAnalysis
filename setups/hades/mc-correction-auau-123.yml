@@ -110,7 +110,7 @@ hades_analysis:
       type: track
       phi:  mdc_vtx_tracks_extra/phi
       weight: mdc_vtx_tracks_extra/occ_weight
-      weight: Ones
+#      weight: Ones
       norm: m
       corrections:
         - recentering
