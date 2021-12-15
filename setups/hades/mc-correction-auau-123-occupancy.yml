@@ -96,21 +96,21 @@ hades_analysis:
         - *axis_rec_protons_rapidity
         - [*axis_rec_protons_rapidity, *axis_rec_protons_pT]
    ###########################################################################
-   - name: occ_protons
-     type: track
-     phi:  mdc_vtx_tracks_extra/phi
-     weight: mdc_vtx_tracks_extra/occ_weight
-     norm: m
-     axes:
-      - *axis_rec_protons_pT
-      - *axis_rec_protons_rapidity
-     cuts-pid: *pid_protons_cut
-     cuts-quality: *good_track_cuts
-     qa:
-      - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
-      - *axis_rec_protons_pT
-      - *axis_rec_protons_rapidity
-      - [*axis_rec_protons_rapidity, *axis_rec_protons_pT]
+    - name: occ_protons
+      type: track
+      phi:  mdc_vtx_tracks_extra/phi
+      weight: mdc_vtx_tracks_extra/occ_weight
+      norm: m
+      axes:
+        - *axis_rec_protons_pT
+        - *axis_rec_protons_rapidity
+      cuts-pid: *pid_protons_cut
+      cuts-quality: *good_track_cuts
+      qa:
+        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_rec_protons_pT
+        - *axis_rec_protons_rapidity
+        - [*axis_rec_protons_rapidity, *axis_rec_protons_pT]
    ###########################################################################
     - name: sec_protons
       type: track
