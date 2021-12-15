@@ -109,7 +109,7 @@ hades_analysis:
     - name: pid_protons
       type: track
       phi:  mdc_vtx_tracks_extra/phi
-      weight: mdc_vtx_tracks_extra/occ_weight
+      weight: mdc_vtx_tracks_extra/sector_weight
 #      weight: Ones
       norm: m
       corrections:
