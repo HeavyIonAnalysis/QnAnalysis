@@ -1,11 +1,17 @@
 _detectors: &detectors
+  - name: rec_all
+    tags: [ rec_vector ]
   - name: rec_protons
     tags: [ rec_vector ]
-  - name: occ_protons
+  - name: rec_pi_pos
     tags: [ rec_vector ]
-  - name: sec_protons
+  - name: rec_pi_neg
     tags: [ rec_vector ]
   - name: tru_protons
+    tags: [ tru_vector ]
+  - name: tru_pi_pos
+    tags: [ tru_vector ]
+  - name: tru_pi_neg
     tags: [ tru_vector ]
   - name: psi_rp
     tags: [ psi_vector ]
@@ -62,20 +68,10 @@ _tasks:
   - args: [*ta_rec, *ta_psi]
     n-samples: 100
     weights-type: observable
-    folder: "/uQ/reco"
-    axes: [ *centrality ]
-  - args: [*ta_rec2, *ta_psi2]
-    n-samples: 100
-    weights-type: observable
-    folder: "/u2Q2/reco"
+    folder: "/u1Q1/rec"
     axes: [ *centrality ]
   - args: [*ta_tru, *ta_psi]
     n-samples: 100
     weights-type: observable
-    folder: "/uQ/gen"
-    axes: [ *centrality ]
-  - args: [*ta_tru2, *ta_psi2]
-    n-samples: 100
-    weights-type: observable
-    folder: "/u2Q2/gen"
+    folder: "/u1Q1/tru"
     axes: [ *centrality ]
