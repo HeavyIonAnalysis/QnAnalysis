@@ -35,7 +35,7 @@ _tasks_args:
     query: { tags: { any-in: [ un_vector ] } }
     query-list: *detectors
     components: *sp_components
-    correction-steps: [ rescaled ]
+    correction-steps: [ plain ]
     weight: sumw
   - &ta_u2
     query: { tags: { any-in: [ un_vector ] } }
@@ -47,7 +47,7 @@ _tasks_args:
     query: { tags: { any-in: [ qn_vector ] } }
     query-list: *detectors
     components: *sp_components
-    correction-steps: [ rescaled ]
+    correction-steps: [ recentered ]
     weight: ones
   - &ta_qn_ep
     query: { tags: { any-in: [ qn_vector ] } }

@@ -72,9 +72,9 @@ hades_analysis:
       phi:  mdc_vtx_tracks_extra/phi
       weight: Ones
       norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
       axes:
         - *axis_theta
       cuts-track-quality: { mdc_vtx_tracks_extra/chi2: {range: [0.0, 100.0]} }
@@ -86,9 +86,9 @@ hades_analysis:
       phi:  mdc_vtx_tracks_extra/phi
       weight: mdc_vtx_tracks_extra/efficiency
       norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
       axes:
         - *axis_protons_pT
         - *axis_protons_rapidity
@@ -106,9 +106,9 @@ hades_analysis:
       phi:  mdc_vtx_tracks_extra/phi
       weight: mdc_vtx_tracks_extra/efficiency
       norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
       axes:
         - *axis_pions_pT
         - *axis_pions_rapidity
@@ -123,9 +123,9 @@ hades_analysis:
       phi:  mdc_vtx_tracks_extra/phi
       weight: mdc_vtx_tracks_extra/efficiency
       norm: m
-      corrections:
-        - recentering
-        - twist-and-rescale
+#      corrections:
+#        - recentering
+#        - twist-and-rescale
       axes:
         - *axis_pions_pT
         - *axis_pions_rapidity
@@ -142,7 +142,7 @@ hades_analysis:
       norm: m
       corrections:
         - recentering
-        - twist-and-rescale
+#        - twist-and-rescale
       cuts-subevent: *mf_cuts
       cuts-quality: *good_particle_cuts
       cuts-pid: *protons_cuts
@@ -156,7 +156,7 @@ hades_analysis:
       norm: m
       corrections:
         - recentering
-        - twist-and-rescale
+#        - twist-and-rescale
       cuts-subevent: *mb_cuts
       cuts-quality: *good_particle_cuts
       cuts-pid: *protons_cuts
@@ -170,7 +170,7 @@ hades_analysis:
       norm: m
       corrections:
         - recentering
-        - twist-and-rescale
+#        - twist-and-rescale
       cuts: *w1_cuts
     #############################################################
     - name: W2
@@ -180,7 +180,7 @@ hades_analysis:
       norm: m
       corrections:
         - recentering
-        - twist-and-rescale
+#        - twist-and-rescale
       cuts: *w2_cuts
     #############################################################
     - name: W3
@@ -190,5 +190,5 @@ hades_analysis:
       norm: m
       corrections:
         - recentering
-        - twist-and-rescale
+#        - twist-and-rescale
       cuts: *w3_cuts
