@@ -102,6 +102,7 @@ Qn::Analysis::Base::QVector *Qn::Analysis::Config::Utils::Convert(const Qn::Anal
       result->AddQAHistogram(Convert(qa_histogram));
     }
     result->SetNormalization(config.normalization);
+    result->SetHarmonics(harmonics);
     return result;
   }
 
