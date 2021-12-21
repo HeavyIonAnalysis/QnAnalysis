@@ -56,12 +56,13 @@ void Qn::Analysis::Correlate::CorrelationTaskRunner::Run() {
 
     for (auto &correlation : task->correlations) {
       Info(__func__, "Processing '%s'... ", correlation.result_ptr->GetName().c_str());
-      auto &container = correlation.result_ptr.GetValue().GetDataContainer();
 
-      container_meta.String() = GenCorrelationMeta(correlation);
-
-      dir->WriteObject(&container, correlation.meta_key.c_str());
-      dir->WriteObject(&container_meta, (correlation.meta_key + "_meta").c_str());
+      try {
+        auto &container = correlation.result_ptr.GetValue().GetDataContainer();
+        dir->WriteObject(&container, correlation.meta_key.c_str());
+      } catch (std::runtime_error& e) {
+        Error(__func__, "%s", e.what());
+      }
     }
   }
 

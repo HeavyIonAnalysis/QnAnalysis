@@ -2,7 +2,7 @@
 #include "CutsRegistry.hpp"
 
 
-int CutsL() {
+int CutsMC() {
     using namespace AnalysisTree;
 
     SimpleCut vtx_z(Variable("RecEventHeaderProc","vtx_z"), -594., -590.);
