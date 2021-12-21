@@ -616,7 +616,7 @@ pbpb_13agev_mc:
       tags: [ observable, reco ]
       _from: *tpc-base-detector
       axes:
-        - *ax-pt
+        - &ax-y-cm { name: *var-vtx-y-cm, bin-edges: *common-y-cm-bin-edges }
         - *ax-pt-corr-protons
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-proton
@@ -633,7 +633,7 @@ pbpb_13agev_mc:
       tags: [ observable, reco ]
       _from: *tpc-base-detector
       axes:
-        - &ax-y-cm { name: *var-vtx-y-cm, bin-edges: *common-y-cm-bin-edges }
+        - *ax-y-cm
         - *ax-pt-corr-pion-neg
       cuts-quality: *cuts-rec-particles-quality-preliminary
       cuts: *cuts-pion-neg
@@ -739,7 +739,7 @@ pbpb_13agev_mc:
       cuts: *cuts-proton
     # 4 subevents method TPC references
     - name: 4sub_ref_preliminary
-      tags: [ observable, reco ]
+      tags: [ reference, reco ]
       _from: *tpc-base-detector
       axes: [ ]
       cuts-quality: *cuts-rec-particles-quality-preliminary
@@ -748,7 +748,7 @@ pbpb_13agev_mc:
         - { variable: *var-vtx-y-cm, range: [ 1.0, 1.4 ] }
         - { variable: *var-vtx-pt,   range: [ 0.0, 2.0 ] }
     - name: 4sub_ref_opt1
-      tags: [ observable, reco ]
+      tags: [ reference, reco ]
       _from: *tpc-base-detector
       axes: [ ]
       cuts-quality: *cuts-rec-particles-quality-preliminary
@@ -756,8 +756,8 @@ pbpb_13agev_mc:
       cuts-kinematics:
         - { variable: *var-vtx-y-cm, range: [ 0.8, 1.8 ] }
         - { variable: *var-vtx-pt,  range: [ 0.2, 1.0 ] }
-    - name: 4sub_ref_opt2e
-      tags: [ observable, reco ]
+    - name: 4sub_ref_opt2
+      tags: [ reference, reco ]
       _from: *tpc-base-detector
       axes: [ ]
       cuts-quality: *cuts-rec-particles-quality-preliminary
@@ -816,27 +816,6 @@ pbpb_13agev_mc:
       tags: [ reference, reco ]
       _from: *reference-base-detector
       channel-ids: *layout-na61-psd3
-    # Removed 1st section
-    - name: psd1_90
-      tags: [ reference, reco ]
-      _from: &psd-90-base
-        type: channel
-        phi: PsdModules90/phi
-        weight: PsdModules90/signal
-        norm: m
-        corrections: [ recentering ]
-        qa:
-          - { name: PsdModules90/phi, nb: 100, lo: -4., hi: 4. }
-          - { name: PsdModules90/signal, nb: 100, lo: 0., hi: 100. }
-      channel-ids: *layout-na61-psd1
-    - name: psd2_90
-      tags: [ reference, reco ]
-      _from: *psd-90-base
-      channel-ids: *layout-na61-psd2
-    - name: psd3_90
-      tags: [ reference, reco ]
-      _from: *psd-90-base
-      channel-ids: *layout-na61-psd3
     # PSI RP
     - name: psi_rp
       tags: [ reference, mc ]
@@ -844,6 +823,7 @@ pbpb_13agev_mc:
       phi: *var-sim-psi-rp
       norm: mag
       correction-steps: [ ]
+      harmonics: "11"
       qa:
         - *ax-psi-rp-qa
 
