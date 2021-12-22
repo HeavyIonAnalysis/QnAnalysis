@@ -739,7 +739,7 @@ pbpb_13agev_mc:
       cuts: *cuts-proton
     # 4 subevents method TPC references
     - name: 4sub_ref_preliminary
-      tags: [ reference, reco ]
+      tags: [ tpc-reference, reco ]
       _from: *tpc-base-detector
       axes: [ ]
       cuts-quality: *cuts-rec-particles-quality-preliminary
@@ -748,7 +748,7 @@ pbpb_13agev_mc:
         - { variable: *var-vtx-y-cm, range: [ 1.0, 1.4 ] }
         - { variable: *var-vtx-pt,   range: [ 0.0, 2.0 ] }
     - name: 4sub_ref_opt1
-      tags: [ reference, reco ]
+      tags: [ tpc-reference, reco ]
       _from: *tpc-base-detector
       axes: [ ]
       cuts-quality: *cuts-rec-particles-quality-preliminary
@@ -757,7 +757,7 @@ pbpb_13agev_mc:
         - { variable: *var-vtx-y-cm, range: [ 0.8, 1.8 ] }
         - { variable: *var-vtx-pt,  range: [ 0.2, 1.0 ] }
     - name: 4sub_ref_opt2
-      tags: [ reference, reco ]
+      tags: [ tpc-reference, reco ]
       _from: *tpc-base-detector
       axes: [ ]
       cuts-quality: *cuts-rec-particles-quality-preliminary
@@ -852,6 +852,21 @@ correlations_mc:
         query-list: *q-vectors-list-mc
         components: *x1y1
         correction-steps: [ recentered ]
+        weight: ones
+      - query: { tags: { all-in: [ reference, reco ] } }
+        query-list: *q-vectors-list-mc
+        components: *x1y1
+        correction-steps: [ recentered ]
+        weight: ones
+    n-samples: 50
+    weights-type: reference
+    folder: "/QQ"
+    axes: [ *ax-centrality-correlation ]
+  - args:
+      - query: { tags: { all-in: [ tpc-reference, reco ] } }
+        query-list: *q-vectors-list-mc
+        components: *x1y1
+        correction-steps: [ rescaled ]
         weight: ones
       - query: { tags: { all-in: [ reference, reco ] } }
         query-list: *q-vectors-list-mc
