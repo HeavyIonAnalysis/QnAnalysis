@@ -71,7 +71,7 @@ setups-definitions:
         {{RecParticles/nhits_total}}/{{RecParticles/nhits_pot_total}} < 1.1
     - { variable: *var-vtx-dcax,                 range: [ -2., 2. ] }
     - { variable: *var-vtx-dcay,                 range: [ -1., 1. ] }
-    - { variable: *var-vtx-chi2-ndf,                 range: [ 0., 10. ] }
+#    - { variable: *var-vtx-chi2-ndf,                 range: [ 0., 10. ] }
   ########################################################
   # v1(pT) of PROTONS
   ########################################################
