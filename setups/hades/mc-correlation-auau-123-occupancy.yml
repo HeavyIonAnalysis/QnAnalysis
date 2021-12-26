@@ -1,5 +1,5 @@
 _detectors: &detectors
-  - name: rec_all
+  - name: rec_charged
     tags: [ rec_vector ]
   - name: rec_protons
     tags: [ rec_vector ]

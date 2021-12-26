@@ -19,9 +19,9 @@ _axes:
     hi: 1.05
   - &axis_theta
     name: mdc_vtx_tracks_extra/theta
-    nb: 52
+    nb: 14
     lo: 0.2
-    hi: 1.5
+    hi: 1.6
 _cuts:
   - &protons_cuts
     mdc_vtx_tracks_extra/pid: { equals: 2212 }
@@ -71,13 +71,15 @@ hades_analysis:
       type: track
       phi:  mdc_vtx_tracks_extra/phi
       weight: Ones
-      norm: m
+      norm: none
 #      corrections:
 #        - recentering
 #        - twist-and-rescale
       axes:
         - *axis_theta
-#      cuts-track-quality: { mdc_vtx_tracks_extra/chi2: {range: [0.0, 100.0]} }
+        - *axis_protons_pT
+
+      cuts-track-quality: { mdc_vtx_tracks_extra/chi2: {range: [0.0, 100.0]} }
       qa:
         - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
    #############################################################
