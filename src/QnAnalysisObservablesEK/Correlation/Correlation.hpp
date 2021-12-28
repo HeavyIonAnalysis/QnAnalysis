@@ -23,6 +23,32 @@ typedef std::map<std::string, size_t> TensorAxes;
 typedef std::map<std::string, size_t> TensorIndex;
 typedef std::size_t TensorLinearIndex;
 
+inline
+TensorAxes
+mergeAxes(const TensorAxes &lhs, const TensorAxes &rhs) {
+  auto result = lhs;
+  for (auto &&[axis_name, axis_size] : rhs) {
+    auto emplace_result = result.emplace(axis_name, axis_size);
+    if (!emplace_result.second) { /* common axis */
+      if (emplace_result.first->second != axis_size) {
+        throw std::runtime_error("Common axis '" + axis_name + "' must have the same size");
+      }
+    }
+  }
+  return result;
+}
+
+template <typename ... Rest>
+TensorAxes
+mergeAxes(const TensorAxes &lhs, const Rest & ... rest) {
+  return mergeAxes(lhs, mergeAxes(rest...));
+}
+
+
+/**
+ * @brief
+ * @tparam T
+ */
 template<typename T>
 struct Tensor {
   typedef T value_type;
@@ -99,14 +125,14 @@ struct Tensor {
   template<typename OT, typename BinaryFunction>
   auto
   applyBinary(BinaryFunction &&binary_function, const Tensor<OT> &other_tensor) const {
-    auto new_axis = mergeAxes(axes_, other_tensor.axes_);
+    auto new_axes = mergeAxes(axes_, other_tensor.axes_);
     auto new_factory_function = [
         lhs = factory_function_,
         rhs = other_tensor.factory_function_,
         outer = std::forward<BinaryFunction>(binary_function)](const TensorIndex &index) {
       return outer(lhs(index), rhs(index));
     };
-    return Tensor{new_axis, new_factory_function};
+    return Tensor{new_axes, new_factory_function};
   }
 
   template<typename OT>
@@ -136,20 +162,7 @@ struct Tensor {
     }
   }
 
-  static inline
-  TensorAxes
-  mergeAxes(const TensorAxes &lhs, const TensorAxes &rhs) {
-    TensorAxes result = lhs;
-    for (auto &&[axis_name, axis_size] : rhs) {
-      auto emplace_result = result.emplace(axis_name, axis_size);
-      if (!emplace_result.second) { /* common axis */
-        if (emplace_result.first->second != axis_size) {
-          throw std::runtime_error("Common axis '" + axis_name + "' must have the same size");
-        }
-      }
-    }
-    return result;
-  }
+
 
   std::vector<std::string> ax_names_;
   TensorAxes axes_;
@@ -165,6 +178,11 @@ auto operator * (const Left& l, const Tensor<Right> & r) {
   return r.operator*(l);
 }
 
+
+/**
+ * @brief
+ * @tparam T
+ */
 template<typename T>
 struct Enumeration {
 
@@ -196,9 +214,38 @@ struct Enumeration {
 template<typename Container> Enumeration(std::string name,
                                          Container &&c) -> Enumeration<typename Container::value_type>;
 
+
 template<typename T>
 auto enumerate(std::string name, std::initializer_list<T> args) {
   return Enumeration(name, std::vector<T>(args));
+}
+
+template <typename T>
+TensorAxes getAxes(const T& t) {
+  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  return {};
+}
+template <typename T>
+TensorAxes getAxes(const Enumeration<T>& r) { return {{r.name_, r.size()}}; }
+template<typename T>
+TensorAxes getAxes(const Tensor<T>& t) { return t.axes_; }
+
+template <typename T>
+auto eval(const T& t, const TensorIndex& /* */) { return t; }
+template <typename T>
+auto eval(const Enumeration<T> &e, const TensorIndex& index) { return e.tensor().at(index); }
+template <typename T>
+auto eval(const Tensor<T> &t, const TensorIndex& index) { return t.at(index); }
+
+
+template <typename Function, typename ... Args>
+auto tensorize_f_args(Function && f, Args && ... args) {
+  static_assert(sizeof...(Args) > 0);
+  std::cout << __PRETTY_FUNCTION__ << std::endl;
+  auto axes = mergeAxes(getAxes(std::forward<Args>(args))...);
+  return Tensor(axes, [=] (const TensorIndex& index) {
+    return f(eval(args, index)...);
+  });
 }
 
 } // namespace TensorOps
@@ -339,9 +386,25 @@ QVec q(std::string name, unsigned int harmonic, EComponent component) {
   return {std::move(name), harmonic, component};
 }
 
+template <typename ... Args>
+TensorOps::Tensor<QVec> qt(Args ... args) {
+  return TensorOps::tensorize_f_args(
+      q,
+      std::forward<Args>(args)...);
+}
+
 template<typename ... QVs>
-Correlation c(QVs ... qvs) {
+Correlation c(QVs && ... qvs) {
+  static_assert(sizeof...(QVs) > 1);
   return Correlation({qvs...});
+}
+
+template <typename ... Args>
+TensorOps::Tensor<Correlation> ct(Args ... args) {
+  std::cout << __PRETTY_FUNCTION__  << std::endl;
+  return TensorOps::tensorize_f_args(
+      c<typename Args::value_type...>,
+      args...);
 }
 
 }

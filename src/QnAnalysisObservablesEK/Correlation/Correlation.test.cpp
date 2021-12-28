@@ -48,6 +48,34 @@ TEST(Tensor, Indexing) {
   }
 
 }
+TEST(Tensor, MergeAxes) {
+  using namespace ::C4::TensorOps;
+
+  TensorAxes ax1{{"ax1", 10}};
+  TensorAxes ax2{{"ax2", 20}};
+  TensorAxes ax3{{"ax3", 30}};
+  EXPECT_EQ(mergeAxes(ax1, ax2, ax3).size(), 3);
+  EXPECT_EQ(mergeAxes(ax1, ax2, ax1).size(), 2);
+}
+
+TEST(Tensor, Tensorize) {
+  using namespace ::C4::Correlations;
+  using namespace ::C4::TensorOps;
+  auto q_obs = qt(
+      enumerate("obs",{"protons_RESCALED", "pion_neg_RESCALED","pion_pos_RESCALED"}),
+      1,
+      enumerate("component", {EComponent::X, EComponent::Y}));
+  auto q_ref = qt(
+      enumerate("ref", {"psd1_RECENTERED", "psd2_RECENTERED", "psd3_RECENTERED"}), 1,
+      enumerate("component", {EComponent::X, EComponent::Y})
+      );
+
+  auto obs_c = ct(q_ref, q_obs);
+
+  EXPECT_EQ(q_obs.size(), 6);
+  EXPECT_EQ(q_ref.size(), 6);
+  EXPECT_EQ(obs_c.size(), 18);
+}
 
 TEST(Tensor, BinaryOps) {
   using namespace C4::TensorOps;

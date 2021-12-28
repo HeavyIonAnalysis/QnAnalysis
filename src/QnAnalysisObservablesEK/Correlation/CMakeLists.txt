@@ -5,3 +5,4 @@ target_compile_options(Correlation PUBLIC -g -ggdb -O0)
 
 add_executable(CorrelationTests Correlation.test.cpp)
 target_link_libraries(CorrelationTests PRIVATE Correlation gtest_main)
+target_compile_options(CorrelationTests PUBLIC -g -ggdb -O0)
