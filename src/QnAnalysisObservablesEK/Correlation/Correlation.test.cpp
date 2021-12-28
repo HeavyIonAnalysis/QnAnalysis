@@ -6,9 +6,10 @@
 
 #include "Correlation.hpp"
 
+using namespace std;
 
 TEST(Correlation, Basics) {
-  using namespace ::C4::Correlations;
+  using namespace ::C4::CorrelationOps;
 
   auto q1 = q("psd1_RECENTERED", 1, EComponent::X);
   auto q2 = q("psd2_RECENTERED", 1, EComponent::X);
@@ -58,17 +59,21 @@ TEST(Tensor, MergeAxes) {
   EXPECT_EQ(mergeAxes(ax1, ax2, ax1).size(), 2);
 }
 
+
+
+
 TEST(Tensor, Tensorize) {
-  using namespace ::C4::Correlations;
   using namespace ::C4::TensorOps;
+  using namespace ::C4::CorrelationOps;
 
   auto en_obs = enumerate("obs",{"protons_RESCALED", "pion_neg_RESCALED","pion_pos_RESCALED"});
   auto en_comp = enumerate("component", {EComponent::X, EComponent::Y});
   auto en_comp_inv = enumerate("component", {EComponent::Y, EComponent::X});
   auto en_ref = enumerate("ref", {"psd1_RECENTERED", "psd2_RECENTERED", "psd3_RECENTERED"});
 
-  auto obs_v1 = ct(qt(en_obs, 1, en_comp), qt(en_ref, 1, en_comp));
-  auto obs_c1 = ct(qt(en_obs, 1, en_comp), qt(en_ref, 1, en_comp_inv));
+  auto resolution_psi = ct(qt(en_ref, 1, en_comp), qt("psi_RP", 1, en_comp));
+  auto obs_v1 = Value(2.) * ct(qt(en_obs, 1, en_comp), qt(en_ref, 1, en_comp))  / resolution_psi;
+  auto obs_c1 = Value(2.) * ct(qt(en_obs, 1, en_comp), qt(en_ref, 1, en_comp_inv)) / resolution_psi;
 
   EXPECT_EQ(obs_v1.size(), 18);
   EXPECT_EQ(obs_c1.size(), 18);
@@ -76,16 +81,12 @@ TEST(Tensor, Tensorize) {
   for (TensorLinearIndex li = 0ul; li < obs_v1.size(); ++li) {
     auto index = obs_v1.getIndex(li);
     auto correlation = obs_v1.at(li);
-    EXPECT_EQ(correlation.q_vectors_.back().name_, en_ref.index_.at(index["ref"]));
-    EXPECT_EQ(correlation.q_vectors_.front().name_, en_obs.index_.at(index["obs"]));
+    cout << correlation << endl;
   }
 
   for (TensorLinearIndex li = 0ul; li < obs_c1.size(); ++li) {
     auto correlation = obs_c1.at(li);
-    std::cout << correlation.nameInFile() << std::endl;
   }
-
-
 }
 
 TEST(Tensor, BinaryOps) {
@@ -100,4 +101,37 @@ TEST(Tensor, BinaryOps) {
   auto result1 = t3 * t1 / t2;
   EXPECT_EQ(result1.size(), t1.size()*t2.size());
   EXPECT_EQ(result1.getAxNames(), std::vector<std::string>({"component", "ref"}));
+}
+
+TEST(Tensor, Resolution) {
+  using namespace C4::TensorOps;
+  using namespace C4::CorrelationOps;
+
+  auto ref1 = enumerate("r1", {"psd1_RECENTERED", "psd2_RECENTERED", "psd3_RECENTERED"});
+  auto ref2 = ref1.clone("r2");
+  auto ref3 = ref1.clone("r3");
+  auto comp = enumerate("component", {EComponent::X, EComponent::Y});
+
+  auto r1t = Value(2.) * ct(qt(ref1, 1, comp), qt(ref2, 1, comp)) *
+      ct(qt(ref1, 1, comp), qt(ref3, 1, comp)) / ct(qt(ref2, 1, comp), qt(ref3, 1, comp));
+
+  auto r1 = Tensor{
+    {
+      {comp.name_, comp.size()},
+      {ref1.name_, ref1.size()}}, [=] (const TensorIndex& ind) {
+        auto component_id = ind.at(comp.name_);
+        auto ref_id = ind.at(ref1.name_);
+
+        return r1t.at({
+          {comp.name_, component_id},
+          {ref1.name_, ref_id},
+          {ref2.name_, ref_id == 0? 1 : (ref_id == 1? 2 : 0)},
+          {ref3.name_, ref_id == 0? 2 : (ref_id == 1? 0 : 1)}
+        });
+    }};
+
+  for (TensorLinearIndex li = 0ul; li < r1.size(); ++li) {
+    cout << r1.at(li) << endl;
+  }
+
 }

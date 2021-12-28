@@ -14,6 +14,7 @@
 
 #include <QnTools/DataContainer.hpp>
 #include <QnTools/StatCalculate.hpp>
+#include <ostream>
 
 namespace C4 {
 
@@ -109,15 +110,19 @@ struct Tensor {
 
   template<typename OT, typename BinaryFunction>
   auto
-  applyBinary(BinaryFunction &&binary_function, const OT &other_arg) const {
-    auto new_factory_function = [
+  applyBinary(BinaryFunction &&binary_function, OT && other_arg) const {
+    using result_type = std::decay_t<std::invoke_result_t<
+        BinaryFunction,
+        value_type,
+        std::decay_t<OT>>>;
+    auto new_factory_function = std::function{[
         lhs = factory_function_,
-        rhs = other_arg,
-        outer = binary_function
+        rhs = std::forward<OT>(other_arg),
+        outer = std::forward<BinaryFunction>(binary_function)
     ](const TensorIndex &index) {
-      return outer(lhs(index), rhs);
-    };
-    return Tensor{axes_, new_factory_function};
+      return std::apply(outer, std::make_tuple(lhs.operator()(index), rhs));
+    }};
+    return Tensor<result_type>{axes_, new_factory_function};
   }
 
   template<typename OT, typename BinaryFunction>
@@ -130,10 +135,10 @@ struct Tensor {
 
     auto new_axes = mergeAxes(axes_, other_tensor.axes_);
     auto new_factory_function = std::function{[
-        lhs = factory_function_,
-        rhs = other_tensor.factory_function_,
-        outer = std::forward<BinaryFunction>(binary_function)
-            ](const TensorIndex &index) {
+                                                  lhs = factory_function_,
+                                                  rhs = other_tensor.factory_function_,
+                                                  outer = std::forward<BinaryFunction>(binary_function)
+                                              ](const TensorIndex &index) {
       return std::apply(outer, std::make_tuple(lhs.operator()(index), rhs.operator()(index)));
     }};
     return Tensor<result_type>{new_axes, new_factory_function};
@@ -211,6 +216,12 @@ struct Enumeration {
     return index_.size();
   }
 
+  auto clone(const std::string& new_name) const {
+    Enumeration<T> result = *this;
+    result.name_ = new_name;
+    return result;
+  }
+
   std::string name_;
   std::map<TensorLinearIndex, T> index_;
 };
@@ -248,11 +259,13 @@ auto tensorize_f_args(Function &&f, Args &&... args) {
 
 } // namespace TensorOps
 
-namespace Correlations {
+namespace CorrelationOps {
 
 enum class EComponent {
   X, Y
 };
+
+struct LazyArithmetics {};
 
 struct QVec {
   std::string name_;
@@ -270,9 +283,19 @@ struct QVec {
   bool operator!=(const QVec &rhs) const {
     return !(rhs == *this);
   }
+  friend std::ostream &operator<<(std::ostream &os, const QVec &vec);
 };
 
-struct Correlation {
+std::ostream &operator<<(std::ostream &os, const QVec &vec) {
+  static const std::map<EComponent, std::string> map_component{
+      {EComponent::X, "X"},
+      {EComponent::Y, "Y"}};
+  os << "Q_{" << vec.harmonic_ << "," << map_component.at(vec.component_) << "} (" << vec.name_ << ")";
+  return os;
+}
+
+struct Correlation
+    : public LazyArithmetics {
   typedef Qn::DataContainerStatCalculate result_type;
 
   explicit Correlation(std::vector<QVec> q_vectors) : q_vectors_(std::move(q_vectors)) {}
@@ -298,12 +321,23 @@ struct Correlation {
     }
     return stream.str();
   }
+  friend std::ostream &operator<<(std::ostream &os, const Correlation &correlation);
 
   std::vector<QVec> q_vectors_;
 };
 
+std::ostream &operator<<(std::ostream &os, const Correlation &correlation) {
+  os << "< ";
+  for (auto &q : correlation.q_vectors_) {
+    os << q << " ";
+  }
+  os << ">";
+  return os;
+}
+
 template<typename Left, typename Right, typename Function>
-struct BinaryOp {
+struct BinaryOp :
+    public LazyArithmetics {
   typedef std::decay_t<
       std::invoke_result_t<
           Function,
@@ -312,18 +346,27 @@ struct BinaryOp {
   > result_type;
 
   BinaryOp(Left lhs, Right rhs, Function function) : lhs(lhs), rhs(rhs), function_(function) {}
+  BinaryOp(Left lhs, Right rhs, Function function, std::string op_symbol)
+      : lhs(lhs), rhs(rhs), function_(function), symbol_(std::move(op_symbol)) {}
 
   result_type value() const {
     return function_(lhs.value(), rhs.value());
   }
 
+  friend std::ostream &operator<<(std::ostream &os, const BinaryOp &op) {
+    os << op.lhs << op.symbol_ << op.rhs;
+    return os;
+  }
+
   Left lhs;
   Right rhs;
   Function function_;
+  std::string symbol_{" "};
 };
 
 template<typename Arg, typename Function>
-struct UnaryOp {
+struct UnaryOp :
+    public LazyArithmetics {
   typedef std::decay_t<
       std::invoke_result_t<
           Function,
@@ -346,7 +389,8 @@ struct UnaryOp {
 };
 
 template<typename T>
-struct Value {
+struct Value :
+    public LazyArithmetics {
   typedef T result_type;
 
   Value(T value) : value_(value) {}
@@ -355,25 +399,42 @@ struct Value {
     return value_;
   }
 
+  friend std::ostream &operator<<(std::ostream &os, const Value &value) {
+    os << value.value_;
+    return os;
+  }
+
   T value_;
 };
 
-template<typename L, typename R>
-auto operator*(const L &cl, const R &cr) {
-  return BinaryOp(cl, cr, [](const auto &l, const auto &r) {
+template<typename ... Args>
+constexpr bool have_lazy_arithmetics_v = (... && std::is_base_of_v<LazyArithmetics, std::decay_t<Args>>);
+
+template<
+    typename LeftArg,
+    typename RightArg,
+    typename Dummy = std::enable_if_t<have_lazy_arithmetics_v<LeftArg, RightArg>, void>>
+auto
+operator*(LeftArg && cl, RightArg && cr) {
+  return BinaryOp(cl, cr, [](auto &&l, auto &&r) {
     return l * r;
   });
 }
 
-template<typename L, typename R>
-auto operator/(const L &cl, const R &cr) {
-  return BinaryOp(cl, cr, [](const auto &l, const auto &r) {
-    return l / r;
-  });
+
+template<
+    typename LeftArg,
+    typename RightArg,
+    typename Dummy = std::enable_if_t<have_lazy_arithmetics_v<LeftArg, RightArg>, void>>
+auto operator/(LeftArg && cl, RightArg && cr) {
+  return BinaryOp(cl, cr, [](auto && l, auto && r) { return l / r; }, "/");
 }
 
-template<typename V>
-auto sqrt(const V &v) {
+template<
+    typename Arg,
+    typename Dummy = std::enable_if_t<have_lazy_arithmetics_v<Arg>,void>
+    >
+auto sqrt(Arg && v) {
   return UnaryOp(v, [](const auto &v) {
     return Sqrt(v);
   });
@@ -385,7 +446,7 @@ QVec q(std::string name, unsigned int harmonic, EComponent component) {
 }
 
 template<typename ... Args>
-TensorOps::Tensor<QVec> qt(Args ... args) {
+TensorOps::Tensor<QVec> qt(Args && ... args) {
   return TensorOps::tensorize_f_args(
       q,
       std::forward<Args>(args)...);
@@ -399,7 +460,6 @@ Correlation c(QVs &&... qvs) {
 
 template<typename ... Args>
 TensorOps::Tensor<Correlation> ct(Args ... args) {
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
   return TensorOps::tensorize_f_args(
       c<typename Args::value_type...>,
       args...);
