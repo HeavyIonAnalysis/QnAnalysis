@@ -38,12 +38,11 @@ mergeAxes(const TensorAxes &lhs, const TensorAxes &rhs) {
   return result;
 }
 
-template <typename ... Rest>
+template<typename ... Rest>
 TensorAxes
-mergeAxes(const TensorAxes &lhs, const Rest & ... rest) {
+mergeAxes(const TensorAxes &lhs, const Rest &... rest) {
   return mergeAxes(lhs, mergeAxes(rest...));
 }
-
 
 /**
  * @brief
@@ -57,15 +56,14 @@ struct Tensor {
 
   Tensor(TensorAxes axes, factory_function_type factory_function)
       : axes_(std::move(axes)), factory_function_(factory_function) {
-    for (auto && [axis_name, _] : axes_) {
+    for (auto &&[axis_name, _] : axes_) {
       ax_names_.emplace_back(axis_name);
     }
   }
 
-
   TensorIndex getIndex(TensorLinearIndex idx) const {
     TensorIndex result;
-    for (auto && axis_name : ax_names_) {
+    for (auto &&axis_name : ax_names_) {
       auto axis_size = axes_.at(axis_name);
       auto axis_id = idx % axis_size;
       result.template emplace(axis_name, axis_id);
@@ -78,7 +76,7 @@ struct Tensor {
     TensorLinearIndex result = 0ul;
 
     std::vector<std::string> r_ax_names(ax_names_.rbegin(), ax_names_.rend());
-    for (auto && axis_name : r_ax_names) {
+    for (auto &&axis_name : r_ax_names) {
       auto ax_idx = idx.at(axis_name);
       result *= axes_.at(axis_name);
       result += ax_idx;
@@ -125,33 +123,43 @@ struct Tensor {
   template<typename OT, typename BinaryFunction>
   auto
   applyBinary(BinaryFunction &&binary_function, const Tensor<OT> &other_tensor) const {
+    using result_type = std::decay_t<std::invoke_result_t<
+        BinaryFunction,
+        value_type,
+        typename Tensor<OT>::value_type>>;
+
     auto new_axes = mergeAxes(axes_, other_tensor.axes_);
-    auto new_factory_function = [
+    auto new_factory_function = std::function{[
         lhs = factory_function_,
         rhs = other_tensor.factory_function_,
-        outer = std::forward<BinaryFunction>(binary_function)](const TensorIndex &index) {
-      return outer(lhs(index), rhs(index));
-    };
-    return Tensor{new_axes, new_factory_function};
+        outer = std::forward<BinaryFunction>(binary_function)
+            ](const TensorIndex &index) {
+      return std::apply(outer, std::make_tuple(lhs.operator()(index), rhs.operator()(index)));
+    }};
+    return Tensor<result_type>{new_axes, new_factory_function};
   }
 
   template<typename OT>
-  auto operator * (const OT& other) const {
-    return applyBinary([] (auto && l, auto && r) { return l*r; }, other);
+  auto operator*(const OT &other) const {
+    return applyBinary([](auto &&l, auto &&r) { return l * r; }, other);
   }
   template<typename OT>
-  auto operator / (const OT& other) const {
-    return applyBinary([] (auto && l, auto && r) { return l / r; }, other);
+  auto operator/(const OT &other) const {
+    return applyBinary([](auto &&l, auto &&r) { return l / r; }, other);
   }
 
   template<typename UnaryFunction>
   auto applyUnary(UnaryFunction &&unary_function) const {
+    using result_type = std::decay_t<std::invoke_result_t<
+        UnaryFunction,
+        value_type>>;
+
     auto new_factory_function = [
         inner = factory_function_,
         outer = unary_function](const TensorIndex &ind) {
       return outer(inner(ind));
     };
-    return Tensor(axes_, factory_function_);
+    return Tensor<result_type>{axes_, factory_function_};
   }
 
   void checkIndex(const TensorIndex &ind) const {
@@ -162,22 +170,18 @@ struct Tensor {
     }
   }
 
-
-
   std::vector<std::string> ax_names_;
   TensorAxes axes_;
   factory_function_type factory_function_;
 };
 
-
 template<typename Function> Tensor(TensorAxes, Function &&) ->
 Tensor<std::decay_t<std::invoke_result_t<Function, const TensorIndex &>>>;
 
 template<typename Left, typename Right>
-auto operator * (const Left& l, const Tensor<Right> & r) {
+auto operator*(const Left &l, const Tensor<Right> &r) {
   return r.operator*(l);
 }
-
 
 /**
  * @brief
@@ -214,32 +218,30 @@ struct Enumeration {
 template<typename Container> Enumeration(std::string name,
                                          Container &&c) -> Enumeration<typename Container::value_type>;
 
-
 template<typename T>
 auto enumerate(std::string name, std::initializer_list<T> args) {
   return Enumeration(name, std::vector<T>(args));
 }
 
-template <typename T>
-TensorAxes getAxes(const T& t) { return {}; }
-template <typename T>
-TensorAxes getAxes(const Enumeration<T>& r) { return {{r.name_, r.size()}}; }
 template<typename T>
-TensorAxes getAxes(const Tensor<T>& t) { return t.axes_; }
+TensorAxes getAxes(const T &t) { return {}; }
+template<typename T>
+TensorAxes getAxes(const Enumeration<T> &r) { return {{r.name_, r.size()}}; }
+template<typename T>
+TensorAxes getAxes(const Tensor<T> &t) { return t.axes_; }
 
-template <typename T>
-auto eval(const T& t, const TensorIndex& /* */) { return t; }
-template <typename T>
-auto eval(const Enumeration<T> &e, const TensorIndex& index) { return e.tensor().at(index); }
-template <typename T>
-auto eval(const Tensor<T> &t, const TensorIndex& index) { return t.at(index); }
+template<typename T>
+auto eval(const T &t, const TensorIndex & /* */) { return t; }
+template<typename T>
+auto eval(const Enumeration<T> &e, const TensorIndex &index) { return e.tensor().at(index); }
+template<typename T>
+auto eval(const Tensor<T> &t, const TensorIndex &index) { return t.at(index); }
 
-
-template <typename Function, typename ... Args>
-auto tensorize_f_args(Function && f, Args && ... args) {
+template<typename Function, typename ... Args>
+auto tensorize_f_args(Function &&f, Args &&... args) {
   static_assert(sizeof...(Args) > 0);
   auto axes = mergeAxes(getAxes(std::forward<Args>(args))...);
-  return Tensor(axes, [=] (const TensorIndex& index) {
+  return Tensor(axes, [=](const TensorIndex &index) {
     return f(eval(args, index)...);
   });
 }
@@ -382,7 +384,7 @@ QVec q(std::string name, unsigned int harmonic, EComponent component) {
   return {std::move(name), harmonic, component};
 }
 
-template <typename ... Args>
+template<typename ... Args>
 TensorOps::Tensor<QVec> qt(Args ... args) {
   return TensorOps::tensorize_f_args(
       q,
@@ -390,14 +392,14 @@ TensorOps::Tensor<QVec> qt(Args ... args) {
 }
 
 template<typename ... QVs>
-Correlation c(QVs && ... qvs) {
+Correlation c(QVs &&... qvs) {
   static_assert(sizeof...(QVs) > 1);
   return Correlation({qvs...});
 }
 
-template <typename ... Args>
+template<typename ... Args>
 TensorOps::Tensor<Correlation> ct(Args ... args) {
-  std::cout << __PRETTY_FUNCTION__  << std::endl;
+  std::cout << __PRETTY_FUNCTION__ << std::endl;
   return TensorOps::tensorize_f_args(
       c<typename Args::value_type...>,
       args...);
