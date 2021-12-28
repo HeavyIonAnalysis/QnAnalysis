@@ -80,6 +80,9 @@ struct Tensor {
     return result;
   }
 
+  auto begin();
+  auto end();
+
   template<typename OT, typename BinaryFunction>
   auto
   applyBinary(BinaryFunction &&binary_function, const OT &other_arg) const {
@@ -178,8 +181,8 @@ struct Enumeration {
     return index_.at(ind.at(name_));
   }
 
-  explicit operator Tensor<T>() const {
-    return Tensor({{name_, std::size(index_)}}, *this);
+  Tensor<T> tensor() const {
+    return {{{name_, index_.size()}}, *this};
   }
 
   TensorLinearIndex size() const {
@@ -337,7 +340,7 @@ QVec q(std::string name, unsigned int harmonic, EComponent component) {
 }
 
 template<typename ... QVs>
-Correlation C(QVs ... qvs) {
+Correlation c(QVs ... qvs) {
   return Correlation({qvs...});
 }
 

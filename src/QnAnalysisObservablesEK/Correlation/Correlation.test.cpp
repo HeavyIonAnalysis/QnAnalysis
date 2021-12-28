@@ -15,14 +15,14 @@ TEST(Correlation, Basics) {
   auto q3 = q("psd3_RECENTERED", 1, EComponent::X);
   auto protons = q("protons_RESCALED", 1, EComponent::X);
 
-  auto r1 = C(protons, q1)*sqrt(Value(2.0)*C(q1, q2)*C(q1, q3)/C(q2, q3));
+  auto r1 = c(protons, q1)*sqrt(Value(2.0)* c(q1, q2)* c(q1, q3)/ c(q2, q3));
   r1.value().Print();
 }
 
 TEST(Tensor, Basics) {
   using namespace C4::TensorOps;
 
-  auto t1 = Tensor<std::string>(Enumeration("ref",std::vector<std::string>({"psd1", "psd2", "psd3"})));
+  auto t1 = enumerate("ref",{"psd1", "psd2", "psd3"}).tensor();
   EXPECT_EQ(t1.size(), 3);
   EXPECT_NO_THROW(t1.at({{"ref", 2}}));
   EXPECT_THROW(t1.at({{"ref1", 1}}), std::out_of_range);
@@ -31,9 +31,9 @@ TEST(Tensor, Basics) {
 
 TEST(Tensor, Indexing) {
   using namespace C4::TensorOps;
-  auto t1 = Tensor<double>(enumerate("ref", {1.,2.,3.}));
-  auto t2 = Tensor<double>(enumerate("component", {10.,20.,30.}));
-  auto t3 = Tensor<double>(enumerate("qwerty", {100.,200.,300.}));
+  auto t1 = enumerate("ref", {1.,2.,3.}).tensor();
+  auto t2 = enumerate("component", {10.,20.,30.}).tensor();
+  auto t3 = enumerate("qwerty", {100.,200.,300.}).tensor();
 
   for (TensorLinearIndex li = 0ul; li < t1.size(); ++li) {
     auto ind = t1.getIndex(li);
@@ -51,8 +51,8 @@ TEST(Tensor, Indexing) {
 
 TEST(Tensor, BinaryOps) {
   using namespace C4::TensorOps;
-  auto t1 = Tensor<double>(enumerate("ref", {1.,2.,3.}));
-  auto t2 = Tensor<double>(enumerate("component", {10.,20.}));
+  auto t1 = enumerate("ref", {1.,2.,3.}).tensor();
+  auto t2 = enumerate("component", {10.,20.}).tensor();
   double t3 = 11;
   auto result = t1 * t2 / t3;
   EXPECT_EQ(result.size(), t1.size()*t2.size());
