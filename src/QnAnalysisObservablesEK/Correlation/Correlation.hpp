@@ -221,10 +221,7 @@ auto enumerate(std::string name, std::initializer_list<T> args) {
 }
 
 template <typename T>
-TensorAxes getAxes(const T& t) {
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
-  return {};
-}
+TensorAxes getAxes(const T& t) { return {}; }
 template <typename T>
 TensorAxes getAxes(const Enumeration<T>& r) { return {{r.name_, r.size()}}; }
 template<typename T>
@@ -241,7 +238,6 @@ auto eval(const Tensor<T> &t, const TensorIndex& index) { return t.at(index); }
 template <typename Function, typename ... Args>
 auto tensorize_f_args(Function && f, Args && ... args) {
   static_assert(sizeof...(Args) > 0);
-  std::cout << __PRETTY_FUNCTION__ << std::endl;
   auto axes = mergeAxes(getAxes(std::forward<Args>(args))...);
   return Tensor(axes, [=] (const TensorIndex& index) {
     return f(eval(args, index)...);

@@ -61,20 +61,25 @@ TEST(Tensor, MergeAxes) {
 TEST(Tensor, Tensorize) {
   using namespace ::C4::Correlations;
   using namespace ::C4::TensorOps;
-  auto q_obs = qt(
-      enumerate("obs",{"protons_RESCALED", "pion_neg_RESCALED","pion_pos_RESCALED"}),
-      1,
-      enumerate("component", {EComponent::X, EComponent::Y}));
-  auto q_ref = qt(
-      enumerate("ref", {"psd1_RECENTERED", "psd2_RECENTERED", "psd3_RECENTERED"}), 1,
-      enumerate("component", {EComponent::X, EComponent::Y})
-      );
 
-  auto obs_c = ct(q_ref, q_obs);
+  auto en_obs = enumerate("obs",{"protons_RESCALED", "pion_neg_RESCALED","pion_pos_RESCALED"});
+  auto en_comp = enumerate("component", {EComponent::X, EComponent::Y});
+  auto en_ref = enumerate("ref", {"psd1_RECENTERED", "psd2_RECENTERED", "psd3_RECENTERED"});
+
+  auto q_obs = qt(en_obs, 1, en_comp);
+  auto q_ref = qt(en_ref, 1, en_comp);
+  auto obs_c = ct(q_obs, q_ref);
 
   EXPECT_EQ(q_obs.size(), 6);
   EXPECT_EQ(q_ref.size(), 6);
   EXPECT_EQ(obs_c.size(), 18);
+
+  for (TensorLinearIndex li = 0ul; li < obs_c.size(); ++li) {
+    auto index = obs_c.getIndex(li);
+    auto correlation = obs_c.at(li);
+    EXPECT_EQ(correlation.q_vectors_.back().name_, en_ref.index_.at(index["ref"]));
+    EXPECT_EQ(correlation.q_vectors_.front().name_, en_obs.index_.at(index["obs"]));
+  }
 }
 
 TEST(Tensor, BinaryOps) {
