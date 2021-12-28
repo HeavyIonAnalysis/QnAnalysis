@@ -134,8 +134,16 @@ TEST(Tensor, v2) {
       qt(en_ref1, 1, en_comp1),
       qt(en_ref2, 1, en_comp2)) / r1_ref1 / r1_ref2;
 
-  for (TensorLinearIndex li = 0ul; li < v2.size(); ++li) {
-    cout << v2.at(li) << endl;
+  auto v2_xy = ct(
+      qt(en_obs, 2, en_comp0),
+      qt(en_ref1, 1, en_comp1),
+      qt(en_ref2, 1, en_comp2)
+      ) / ct(
+          qt(en_ref1, 1, en_comp1),
+          qt(en_ref2, 1, en_comp2));
+
+  for (TensorLinearIndex li = 0ul; li < v2_xy.size(); ++li) {
+    cout << v2_xy.at(li) << endl;
     cout << endl;
   }
 
