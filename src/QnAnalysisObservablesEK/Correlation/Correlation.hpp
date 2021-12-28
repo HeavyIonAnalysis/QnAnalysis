@@ -354,7 +354,7 @@ struct BinaryOp :
   }
 
   friend std::ostream &operator<<(std::ostream &os, const BinaryOp &op) {
-    os << op.lhs << op.symbol_ << op.rhs;
+    os << "( " << op.lhs << op.symbol_ << op.rhs << " )";
     return os;
   }
 
