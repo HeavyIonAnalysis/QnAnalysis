@@ -129,15 +129,29 @@ struct Tensor
         value_type,
         typename std::decay_t<decltype(other_tensor)>::value_type>>;
 
-    auto new_axes = mergeAxes(axes_, other_tensor.axes_);
+    auto new_axes = mergeAxes(this->getAxes(), other_tensor.getAxes());
     auto new_factory_function = std::function{[
                                                   lhs = factory_function_,
-                                                  rhs = other_tensor.factory_function_,
+                                                  rhs = other_tensor.getFactoryFunction(),
                                                   outer = std::forward<BinaryFunction>(binary_function)
                                               ](const TensorIndex &index) {
       return std::apply(outer, std::make_tuple(lhs.operator()(index), rhs.operator()(index)));
     }};
     return Tensor<result_type>{new_axes, new_factory_function};
+  }
+
+  template <typename Left>
+  friend
+  auto
+  operator + (Left lhs, const Tensor<T> &t) {
+    return t.applyBinary([] (auto && r, auto && l) { return l+r; }, lhs);
+  }
+
+  template <typename Left>
+  friend
+  auto
+  operator - (Left lhs, const Tensor<T> &t) {
+    return t.applyBinary([] (auto && r, auto && l) { return l-r; }, lhs);
   }
 
   template <typename Left>
@@ -176,6 +190,14 @@ struct Tensor
     }
   }
 
+  const TensorAxes &getAxes() const {
+    return axes_;
+  }
+  const factory_function_type &getFactoryFunction() const {
+    return factory_function_;
+  }
+
+ private:
   std::vector<std::string> ax_names_;
   TensorAxes axes_;
   factory_function_type factory_function_;
@@ -264,7 +286,7 @@ TensorAxes getAxes(const T &t) { return {}; }
 template<typename T>
 TensorAxes getAxes(const Enumeration<T> &r) { return {{r.getName(), r.size()}}; }
 template<typename T>
-TensorAxes getAxes(const Tensor<T> &t) { return t.axes_; }
+TensorAxes getAxes(const Tensor<T> &t) { return t.getAxes(); }
 
 template<typename T>
 auto eval(const T &t, const TensorIndex & /* */) { return t; }
