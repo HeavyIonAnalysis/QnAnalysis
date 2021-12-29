@@ -69,8 +69,9 @@ auto r1_3sub(
   auto ref2 = ref1.clone("r2");
   auto ref3 = ref1.clone("r3");
 
-  auto r1t = Value(2.) * ct(qt(ref1, 1, comp), qt(ref2, 1, comp)) *
-      ct(qt(ref1, 1, comp), qt(ref3, 1, comp)) / ct(qt(ref2, 1, comp), qt(ref3, 1, comp));
+  auto r1t =sqrt(
+      Value(2.) * ct(qt(ref1, 1, comp), qt(ref2, 1, comp)) *
+      ct(qt(ref1, 1, comp), qt(ref3, 1, comp)) / ct(qt(ref2, 1, comp), qt(ref3, 1, comp)));
 
   return Tensor{
       {
@@ -88,9 +89,18 @@ auto r1_3sub(
       }};
 }
 
+
 TEST(Tensor, Tensorize) {
   using namespace ::C4::TensorOps;
   using namespace ::C4::CorrelationOps;
+
+  /* assertions if `tensorize()` transparently forwards Tensor<T> substances */
+  static_assert(std::is_same_v<decltype(tensorize(std::declval<Tensor<double>&&>())), Tensor<double>&&>);
+  static_assert(std::is_same_v<decltype(tensorize(std::declval<const Tensor<double>&>())), const Tensor<double>&>);
+
+  static_assert(std::is_same_v<decltype(tensorize(std::declval<double>())), Tensor<double>>);
+  static_assert(std::is_same_v<decltype(tensorize(std::declval<double&>())), Tensor<double>>);
+  static_assert(std::is_same_v<decltype(tensorize(std::declval<const double>())), Tensor<double>>);
 
   auto en_obs = enumerate("obs", {"protons_RESCALED", "pion_neg_RESCALED", "pion_pos_RESCALED"});
   auto en_comp = enumerate("component", {EComponent::X, EComponent::Y});

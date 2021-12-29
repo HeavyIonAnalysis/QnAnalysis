@@ -26,13 +26,11 @@ typedef std::size_t TensorLinearIndex;
 
 struct TensorTag {};
 
-template <typename T>
+template<typename T>
 struct Tensor;
 
-template <typename T>
-decltype(auto) tensorize(T && t);
-
-
+template<typename T>
+decltype(auto) tensorize(T &&t);
 
 inline
 TensorAxes
@@ -119,11 +117,10 @@ struct Tensor
   auto begin();
   auto end();
 
-
   template<typename BinaryFunction, typename OtherArg>
   auto
-  applyBinary(BinaryFunction &&binary_function, const OtherArg& other_arg) const {
-    auto && other_tensor = tensorize(other_arg);
+  applyBinary(BinaryFunction &&binary_function, const OtherArg &other_arg) const {
+    auto &&other_tensor = tensorize(other_arg);
     using result_type = std::decay_t<std::invoke_result_t<
         BinaryFunction,
         value_type,
@@ -135,37 +132,37 @@ struct Tensor
                                                   rhs = other_tensor.getFactoryFunction(),
                                                   outer = std::forward<BinaryFunction>(binary_function)
                                               ](const TensorIndex &index) {
-      return std::apply(outer, std::make_tuple(lhs.operator()(index), rhs.operator()(index)));
+      return outer(lhs.operator()(index), rhs.operator()(index));
     }};
-    return Tensor<result_type>{new_axes, new_factory_function};
+    return Tensor<result_type>{std::move(new_axes), std::move(new_factory_function)};
   }
 
-  template <typename Left>
+  template<typename Left>
   friend
   auto
-  operator + (Left lhs, const Tensor<T> &t) {
-    return t.applyBinary([] (auto && r, auto && l) { return l+r; }, lhs);
+  operator+(Left lhs, const Tensor<T> &t) {
+    return t.applyBinary([](auto &&r, auto &&l) { return l + r; }, lhs);
   }
 
-  template <typename Left>
+  template<typename Left>
   friend
   auto
-  operator - (Left lhs, const Tensor<T> &t) {
-    return t.applyBinary([] (auto && r, auto && l) { return l-r; }, lhs);
+  operator-(Left lhs, const Tensor<T> &t) {
+    return t.applyBinary([](auto &&r, auto &&l) { return l - r; }, lhs);
   }
 
-  template <typename Left>
+  template<typename Left>
   friend
   auto
-  operator * (Left lhs, const Tensor<T> &t) {
-    return t.applyBinary([] (auto && r, auto && l) { return l*r; }, lhs);
+  operator*(Left lhs, const Tensor<T> &t) {
+    return t.applyBinary([](auto &&r, auto &&l) { return l * r; }, lhs);
   }
 
-  template <typename Left>
+  template<typename Left>
   friend
   auto
-  operator / (Left lhs, const Tensor<T> &t) {
-    return t.applyBinary([] (auto && r, auto && l) { return l/r; }, lhs);
+  operator/(Left lhs, const Tensor<T> &t) {
+    return t.applyBinary([](auto &&r, auto &&l) { return l / r; }, lhs);
   }
 
   template<typename UnaryFunction>
@@ -173,13 +170,12 @@ struct Tensor
     using result_type = std::decay_t<std::invoke_result_t<
         UnaryFunction,
         value_type>>;
-
     auto new_factory_function = [
         inner = factory_function_,
         outer = unary_function](const TensorIndex &ind) {
       return outer(inner(ind));
     };
-    return Tensor<result_type>{axes_, factory_function_};
+    return Tensor<result_type>{axes_, std::move(new_factory_function)};
   }
 
   void checkIndex(const TensorIndex &ind) const {
@@ -203,16 +199,21 @@ struct Tensor
   factory_function_type factory_function_;
 };
 
-template<typename Function> Tensor(TensorAxes, Function &&) ->
-Tensor<std::decay_t<std::invoke_result_t<Function, const TensorIndex &>>>;
+template<typename Function>
+Tensor(TensorAxes, Function &&) -> Tensor<std::decay_t<std::invoke_result_t<Function, const TensorIndex &>>>;
 
-template <typename T>
-decltype(auto) tensorize(T && t) {
+template<typename T>
+decltype(auto) tensorize(T &&t) {
   if constexpr(!std::is_base_of_v<TensorTag, std::decay_t<T>>) {
-    return Tensor{{}, [value = std::forward<T>(t)] (const TensorIndex&) { return value; }};
+    return Tensor{{}, [value = std::forward<T>(t)](const TensorIndex &) { return value; }};
   } else {
     return std::forward<T>(t);
   }
+}
+
+template <typename T>
+auto sqrt(const Tensor<T>& t) {
+  return t.applyUnary([] (auto && v) { return sqrt(v); });
 }
 
 /**
@@ -223,9 +224,9 @@ template<typename T>
 struct Enumeration {
 
   template<typename Container>
-  Enumeration(std::string name, Container &&c) : name_(std::move(name)) {
+  Enumeration(std::string name, const Container &c) : name_(std::move(name)) {
     TensorLinearIndex value_index = 0ul;
-    for (T &v : c) {
+    for (const T &v : c) {
       index_.emplace(value_index, v);
       inverse_index_.emplace(v, value_index);
       ++value_index;
@@ -248,15 +249,15 @@ struct Enumeration {
     return index_.size();
   }
 
-  T& at(const TensorIndex& index) {
+  T &at(const TensorIndex &index) {
     return index_.at(index.at(name_));
   }
 
-  TensorIndex index(const T& v) {
+  TensorIndex index(const T &v) {
     return {{name_, inverse_index_.at(v)}};
   }
 
-  auto clone(const std::string& new_name) const {
+  auto clone(const std::string &new_name) const {
     Enumeration<T> result = *this;
     result.name_ = new_name;
     return result;
@@ -277,7 +278,7 @@ auto enumerate(std::string name, std::initializer_list<T> args) {
 }
 
 template<typename ... Args>
-TensorIndex makeIndex(Args && ... args) {
+TensorIndex makeIndex(Args &&... args) {
   return mergeAxes(std::forward<Args>(args)...);
 }
 
@@ -312,7 +313,7 @@ enum class EComponent {
   X, Y
 };
 
-struct LazyArithmetics {};
+struct LazyArithmeticsTag {};
 
 struct QVec {
   std::string name_;
@@ -342,7 +343,7 @@ std::ostream &operator<<(std::ostream &os, const QVec &vec) {
 }
 
 struct Correlation
-    : public LazyArithmetics {
+    : public LazyArithmeticsTag {
   typedef Qn::DataContainerStatCalculate result_type;
 
   explicit Correlation(std::vector<QVec> q_vectors) : q_vectors_(std::move(q_vectors)) {}
@@ -384,7 +385,7 @@ std::ostream &operator<<(std::ostream &os, const Correlation &correlation) {
 
 template<typename Left, typename Right, typename Function>
 struct BinaryOp :
-    public LazyArithmetics {
+    public LazyArithmeticsTag {
   typedef std::decay_t<
       std::invoke_result_t<
           Function,
@@ -413,7 +414,7 @@ struct BinaryOp :
 
 template<typename Arg, typename Function>
 struct UnaryOp :
-    public LazyArithmetics {
+    public LazyArithmeticsTag {
   typedef std::decay_t<
       std::invoke_result_t<
           Function,
@@ -421,6 +422,8 @@ struct UnaryOp :
   > result_type;
 
   UnaryOp(Arg value, Function function) : arg_(value), function_(function) {}
+  UnaryOp(Arg arg, Function function, std::string display_name)
+      : arg_(arg), function_(function), display_name_(std::move(display_name)) {}
 
   result_type value() const {
     return function_(arg_.value());
@@ -431,13 +434,20 @@ struct UnaryOp :
     return UnaryOp(*this, std::forward<Function1>(f));
   }
 
+  friend std::ostream &operator<<(std::ostream &os, const UnaryOp &op) {
+    os << op.display_name_ << "(" << op.arg_ << ")";
+  }
+
   Arg arg_;
   Function function_;
+  std::string display_name_{};
 };
+
+
 
 template<typename T>
 struct Value :
-    public LazyArithmetics {
+    public LazyArithmeticsTag {
   typedef T result_type;
 
   Value(T value) : value_(value) {}
@@ -455,36 +465,35 @@ struct Value :
 };
 
 template<typename ... Args>
-constexpr bool have_lazy_arithmetics_v = (... && std::is_base_of_v<LazyArithmetics, std::decay_t<Args>>);
+constexpr bool have_lazy_arithmetics_v = (... && std::is_base_of_v<LazyArithmeticsTag, std::decay_t<Args>>);
 
 template<
     typename LeftArg,
     typename RightArg,
     typename Dummy = std::enable_if_t<have_lazy_arithmetics_v<LeftArg, RightArg>, void>>
 auto
-operator*(LeftArg && cl, RightArg && cr) {
+operator*(LeftArg &&cl, RightArg &&cr) {
   return BinaryOp(cl, cr, [](auto &&l, auto &&r) {
     return l * r;
   });
 }
 
-
 template<
     typename LeftArg,
     typename RightArg,
     typename Dummy = std::enable_if_t<have_lazy_arithmetics_v<LeftArg, RightArg>, void>>
-auto operator/(LeftArg && cl, RightArg && cr) {
-  return BinaryOp(cl, cr, [](auto && l, auto && r) { return l / r; }, "/");
+auto operator/(LeftArg &&cl, RightArg &&cr) {
+  return BinaryOp(cl, cr, [](auto &&l, auto &&r) { return l / r; }, "/");
 }
 
 template<
     typename Arg,
-    typename Dummy = std::enable_if_t<have_lazy_arithmetics_v<Arg>,void>
-    >
-auto sqrt(Arg && v) {
+    typename Dummy = std::enable_if_t<have_lazy_arithmetics_v<Arg>, void>
+>
+auto sqrt(Arg &&v) {
   return UnaryOp(v, [](const auto &v) {
     return Sqrt(v);
-  });
+  },"sqrt");
 }
 
 /* functions to simplify code */
@@ -493,7 +502,7 @@ QVec q(std::string name, unsigned int harmonic, EComponent component) {
 }
 
 template<typename ... Args>
-TensorOps::Tensor<QVec> qt(Args && ... args) {
+TensorOps::Tensor<QVec> qt(Args &&... args) {
   return TensorOps::tensorize_f_args(
       q,
       std::forward<Args>(args)...);
