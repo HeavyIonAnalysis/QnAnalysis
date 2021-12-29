@@ -168,7 +168,7 @@ TEST(Tensor, BinaryOps) {
   auto t1 = enumerate("ref", {1., 2., 3.}).tensor();
   auto t2 = enumerate("component", {10., 20.}).tensor();
   double t3 = 11;
-  auto result = t1 * t2 / t3;
+  auto result = 1.0/t3 * t1 * t2;
   EXPECT_EQ(result.size(), t1.size() * t2.size());
   EXPECT_EQ(result.getAxNames(), std::vector<std::string>({"component", "ref"}));
 

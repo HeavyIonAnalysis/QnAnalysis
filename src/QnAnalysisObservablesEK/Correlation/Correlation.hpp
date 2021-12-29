@@ -24,6 +24,16 @@ typedef std::map<std::string, size_t> TensorAxes;
 typedef std::map<std::string, size_t> TensorIndex;
 typedef std::size_t TensorLinearIndex;
 
+struct TensorTag {};
+
+template <typename T>
+struct Tensor;
+
+template <typename T>
+decltype(auto) tensorize(T && t);
+
+
+
 inline
 TensorAxes
 mergeAxes(const TensorAxes &lhs, const TensorAxes &rhs) {
@@ -50,7 +60,8 @@ mergeAxes(const TensorAxes &lhs, const Rest &... rest) {
  * @tparam T
  */
 template<typename T>
-struct Tensor {
+struct Tensor
+    : public TensorTag {
   typedef T value_type;
 
   typedef std::function<value_type(const TensorIndex &)> factory_function_type;
@@ -108,30 +119,15 @@ struct Tensor {
   auto begin();
   auto end();
 
-  template<typename OT, typename BinaryFunction>
-  auto
-  applyBinary(BinaryFunction &&binary_function, OT && other_arg) const {
-    using result_type = std::decay_t<std::invoke_result_t<
-        BinaryFunction,
-        value_type,
-        std::decay_t<OT>>>;
-    auto new_factory_function = std::function{[
-        lhs = factory_function_,
-        rhs = std::forward<OT>(other_arg),
-        outer = std::forward<BinaryFunction>(binary_function)
-    ](const TensorIndex &index) {
-      return std::apply(outer, std::make_tuple(lhs.operator()(index), rhs));
-    }};
-    return Tensor<result_type>{axes_, new_factory_function};
-  }
 
-  template<typename OT, typename BinaryFunction>
+  template<typename BinaryFunction, typename OtherArg>
   auto
-  applyBinary(BinaryFunction &&binary_function, const Tensor<OT> &other_tensor) const {
+  applyBinary(BinaryFunction &&binary_function, const OtherArg& other_arg) const {
+    auto && other_tensor = tensorize(other_arg);
     using result_type = std::decay_t<std::invoke_result_t<
         BinaryFunction,
         value_type,
-        typename Tensor<OT>::value_type>>;
+        typename std::decay_t<decltype(other_tensor)>::value_type>>;
 
     auto new_axes = mergeAxes(axes_, other_tensor.axes_);
     auto new_factory_function = std::function{[
@@ -144,13 +140,18 @@ struct Tensor {
     return Tensor<result_type>{new_axes, new_factory_function};
   }
 
-  template<typename OT>
-  auto operator*(const OT &other) const {
-    return applyBinary([](auto &&l, auto &&r) { return l * r; }, other);
+  template <typename Left>
+  friend
+  auto
+  operator * (Left lhs, const Tensor<T> &t) {
+    return t.applyBinary([] (auto && r, auto && l) { return l*r; }, lhs);
   }
-  template<typename OT>
-  auto operator/(const OT &other) const {
-    return applyBinary([](auto &&l, auto &&r) { return l / r; }, other);
+
+  template <typename Left>
+  friend
+  auto
+  operator / (Left lhs, const Tensor<T> &t) {
+    return t.applyBinary([] (auto && r, auto && l) { return l/r; }, lhs);
   }
 
   template<typename UnaryFunction>
@@ -183,9 +184,13 @@ struct Tensor {
 template<typename Function> Tensor(TensorAxes, Function &&) ->
 Tensor<std::decay_t<std::invoke_result_t<Function, const TensorIndex &>>>;
 
-template<typename Left, typename Right>
-auto operator*(const Left &l, const Tensor<Right> &r) {
-  return r.operator*(l);
+template <typename T>
+decltype(auto) tensorize(T && t) {
+  if constexpr(!std::is_base_of_v<TensorTag, std::decay_t<T>>) {
+    return Tensor{{}, [value = std::forward<T>(t)] (const TensorIndex&) { return value; }};
+  } else {
+    return std::forward<T>(t);
+  }
 }
 
 /**
