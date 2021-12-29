@@ -200,8 +200,13 @@ struct Enumeration {
     TensorLinearIndex value_index = 0ul;
     for (T &v : c) {
       index_.emplace(value_index, v);
+      inverse_index_.emplace(v, value_index);
       ++value_index;
     }
+  }
+
+  const std::string &getName() const {
+    return name_;
   }
 
   T operator()(const TensorIndex &ind) const {
@@ -216,14 +221,24 @@ struct Enumeration {
     return index_.size();
   }
 
+  T& at(const TensorIndex& index) {
+    return index_.at(index.at(name_));
+  }
+
+  TensorIndex index(const T& v) {
+    return {{name_, inverse_index_.at(v)}};
+  }
+
   auto clone(const std::string& new_name) const {
     Enumeration<T> result = *this;
     result.name_ = new_name;
     return result;
   }
 
+ private:
   std::string name_;
   std::map<TensorLinearIndex, T> index_;
+  std::unordered_map<T, TensorLinearIndex> inverse_index_;
 };
 
 template<typename Container> Enumeration(std::string name,
@@ -234,10 +249,15 @@ auto enumerate(std::string name, std::initializer_list<T> args) {
   return Enumeration(name, std::vector<T>(args));
 }
 
+template<typename ... Args>
+TensorIndex makeIndex(Args && ... args) {
+  return mergeAxes(std::forward<Args>(args)...);
+}
+
 template<typename T>
 TensorAxes getAxes(const T &t) { return {}; }
 template<typename T>
-TensorAxes getAxes(const Enumeration<T> &r) { return {{r.name_, r.size()}}; }
+TensorAxes getAxes(const Enumeration<T> &r) { return {{r.getName(), r.size()}}; }
 template<typename T>
 TensorAxes getAxes(const Tensor<T> &t) { return t.axes_; }
 
@@ -290,7 +310,7 @@ std::ostream &operator<<(std::ostream &os, const QVec &vec) {
   static const std::map<EComponent, std::string> map_component{
       {EComponent::X, "X"},
       {EComponent::Y, "Y"}};
-  os << "Q_{" << vec.harmonic_ << "," << map_component.at(vec.component_) << "} (" << vec.name_ << ")";
+  os << "Q_{" << vec.harmonic_ << "," << map_component.at(vec.component_) << "}(" << vec.name_ << ")";
   return os;
 }
 

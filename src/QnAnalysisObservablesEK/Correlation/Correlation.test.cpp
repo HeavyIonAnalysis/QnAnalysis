@@ -74,16 +74,16 @@ auto r1_3sub(
 
   return Tensor{
       {
-          {comp.name_, comp.size()},
-          {ref1.name_, ref1.size()}}, [=](const TensorIndex &ind) {
-        auto component_id = ind.at(comp.name_);
-        auto ref_id = ind.at(ref1.name_);
+          {comp.getName(), comp.size()},
+          {ref1.getName(), ref1.size()}}, [=](const TensorIndex &ind) {
+        auto component_id = ind.at(comp.getName());
+        auto ref_id = ind.at(ref1.getName());
 
         return r1t.at({
-                          {comp.name_, component_id},
-                          {ref1.name_, ref_id},
-                          {ref2.name_, ref_id == 0 ? 1 : (ref_id == 1 ? 2 : 0)},
-                          {ref3.name_, ref_id == 0 ? 2 : (ref_id == 1 ? 0 : 1)}
+                          {comp.getName(), component_id},
+                          {ref1.getName(), ref_id},
+                          {ref2.getName(), ref_id == 0 ? 1 : (ref_id == 1 ? 2 : 0)},
+                          {ref3.getName(), ref_id == 0 ? 2 : (ref_id == 1 ? 0 : 1)}
                       });
       }};
 }
@@ -138,15 +138,28 @@ TEST(Tensor, v2) {
       qt(en_obs, 2, en_comp0),
       qt(en_ref1, 1, en_comp1),
       qt(en_ref2, 1, en_comp2)
-      ) / ct(
-          qt(en_ref1, 1, en_comp1),
-          qt(en_ref2, 1, en_comp2));
+  ) / ct(
+      qt(en_ref1, 1, en_comp1),
+      qt(en_ref2, 1, en_comp2));
 
   for (TensorLinearIndex li = 0ul; li < v2_xy.size(); ++li) {
+    auto comp0 = en_comp0.at(v2_xy.getIndex(li));
+    auto obs = en_obs.at(v2_xy.getIndex(li));
     cout << v2_xy.at(li) << endl;
+    v2_xy.at(li).value();
     cout << endl;
   }
 
+  auto value = v2_xy.at(makeIndex(
+      en_obs.index("protons_RESCALED"),
+      en_comp0.index(EComponent::Y),
+      en_comp1.index(EComponent::X),
+      en_comp2.index(EComponent::Y),
+      en_ref1.index("psd1_RECENTERED"),
+      en_ref2.index("psd2_RECENTERED")
+      ));
+  cout << value;
+  cout << endl;
 
 }
 
