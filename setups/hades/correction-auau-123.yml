@@ -131,11 +131,38 @@ hades_analysis:
       cuts-pid: *pi_neg_cuts
       qa:
         - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+    #############################################################
+    - name: pi2
+      type: track
+      phi:  mdc_vtx_tracks_extra/phi
+      weight: mdc_vtx_tracks_extra/efficiency
+      norm: m
+      corrections:
+        - recentering
+#        - twist-and-rescale
+      cuts-quality: *good_particle_cuts
+      cuts-pid: { mdc_vtx_tracks_extra/abs_pid: {equals: 211} }
+      qa:
+        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+    #############################################################
+    - name: D2
+      type: track
+      phi:  mdc_vtx_tracks_extra/phi
+      weight: Ones
+      norm: m
+      corrections:
+        - recentering
+#        - twist-and-rescale
+      cuts-quality: *good_particle_cuts
+      cuts-pid: { mdc_vtx_tracks_extra/geant_pid: {equals: 45} }
+      cuts-kinematics: { mdc_vtx_tracks_extra/ycm: {range: [-0.25, 0.25]} }
+      qa:
+        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
   #############################################################
     - name: Mf
       type: track
       phi:  mdc_vtx_tracks_extra/phi
-      weight: Ones
+      weight: mdc_vtx_tracks_extra/efficiency
       norm: m
       corrections:
         - recentering
@@ -149,7 +176,7 @@ hades_analysis:
     - name: Mb
       type: track
       phi:  mdc_vtx_tracks_extra/phi
-      weight: Ones
+      weight: mdc_vtx_tracks_extra/efficiency
       norm: m
       corrections:
         - recentering
