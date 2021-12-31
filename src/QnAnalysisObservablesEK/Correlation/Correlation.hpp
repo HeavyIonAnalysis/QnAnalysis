@@ -11,10 +11,12 @@
 #include <sstream>
 #include <map>
 #include <tuple>
+#include <ostream>
 
 #include <QnTools/DataContainer.hpp>
 #include <QnTools/StatCalculate.hpp>
-#include <ostream>
+
+#include <TDirectory.h>
 
 namespace C4 {
 
@@ -23,8 +25,6 @@ namespace TensorOps {
 typedef std::map<std::string, size_t> TensorAxes;
 typedef std::map<std::string, size_t> TensorIndex;
 typedef std::size_t TensorLinearIndex;
-
-struct TensorTag {};
 
 template<typename T>
 struct Tensor;
@@ -58,8 +58,7 @@ merge_axes(const TensorAxes &lhs, const Rest &... rest) {
  * @tparam T
  */
 template<typename T>
-struct Tensor
-    : public TensorTag {
+struct Tensor {
   typedef T value_type;
 
   typedef std::function<value_type(const TensorIndex &)> factory_function_type;
@@ -202,9 +201,9 @@ struct Tensor
 template<typename Function>
 Tensor(TensorAxes, Function &&) -> Tensor<std::decay_t<std::invoke_result_t<Function, const TensorIndex &>>>;
 
-template <typename T>
-auto sqrt(const Tensor<T>& t) {
-  return t.applyUnary([] (auto && v) { return sqrt(v); });
+template<typename T>
+auto sqrt(const Tensor<T> &t) {
+  return t.applyUnary([](auto &&v) { return sqrt(v); });
 }
 
 /**
@@ -275,31 +274,31 @@ TensorIndex make_index(Args &&... args) {
 
 namespace Details {
 
-template <typename T>
-struct tag{};
+template<typename T>
+struct tag {};
 
-template <typename T>
+template<typename T>
 auto tensor_cast(tag<T>) {
-  return [] (auto && t) -> decltype(auto) {
-    return Tensor{ {}, [value = std::forward<decltype(t)>(t)](const TensorIndex &) { return value; }};
+  return [](auto &&t) -> decltype(auto) {
+    return Tensor{{}, [value = std::forward<decltype(t)>(t)](const TensorIndex &) { return value; }};
   };
 }
 
-template <typename T>
+template<typename T>
 auto tensor_cast(tag<Tensor<T>>) {
-  return [] (auto && t) -> decltype(auto) { return std::forward<decltype(t)>(t); };
+  return [](auto &&t) -> decltype(auto) { return std::forward<decltype(t)>(t); };
 }
 
-template <typename T>
+template<typename T>
 auto tensor_cast(tag<Enumeration<T>>) {
-  return [] (auto && t) -> decltype(auto) { return t.tensor(); };
+  return [](auto &&t) -> decltype(auto) { return t.tensor(); };
 }
 
 } // namespace Details
 
 
 template<typename T>
-decltype(auto) tensorize(T && t) {
+decltype(auto) tensorize(T &&t) {
   auto cast = Details::tensor_cast(Details::tag<std::decay_t<T>>());
   return cast(std::forward<T>(t));
 }
@@ -307,13 +306,13 @@ decltype(auto) tensorize(T && t) {
 template<typename Function, typename ... Args>
 auto tensorize_f_args(Function &&f, Args &&... args) {
   static_assert(sizeof...(Args) > 0);
-  auto get_axes = [] (const auto &t) { return t.getAxes(); };
+  auto get_axes = [](const auto &t) { return t.getAxes(); };
   auto result_axes = merge_axes(get_axes(tensorize(args))...);
   auto tensors_tuple = std::make_tuple(tensorize(args)...);
   return Tensor(result_axes, [
       function = std::forward<Function>(f),
       tensors_tuple = std::move(tensors_tuple)](const TensorIndex &index) {
-    auto args_tuple = std::apply([index] (auto && ... tensors) { return std::make_tuple(tensors.at(index)...); },
+    auto args_tuple = std::apply([index](auto &&... tensors) { return std::make_tuple(tensors.at(index)...); },
                                  tensors_tuple);
     return std::apply(function, std::move(args_tuple));
   });
@@ -360,7 +359,8 @@ struct Correlation
     : public LazyArithmeticsTag {
   typedef Qn::DataContainerStatCalculate result_type;
 
-  explicit Correlation(std::vector<QVec> q_vectors) : q_vectors_(std::move(q_vectors)) {}
+  Correlation(TDirectory *directory, std::vector<QVec> q_vectors)
+      : directory_(directory), q_vectors_(std::move(q_vectors)) {}
 
   result_type value() const {
     std::cout << nameInFile() << std::endl;
@@ -385,6 +385,7 @@ struct Correlation
   }
   friend std::ostream &operator<<(std::ostream &os, const Correlation &correlation);
 
+  TDirectory *directory_{nullptr};
   std::vector<QVec> q_vectors_;
 };
 
@@ -458,8 +459,6 @@ struct UnaryOp :
   std::string display_name_{};
 };
 
-
-
 template<typename T>
 struct Value :
     public LazyArithmeticsTag {
@@ -508,7 +507,7 @@ template<
 auto sqrt(Arg &&v) {
   return UnaryOp(v, [](const auto &v) {
     return Sqrt(v);
-  },"sqrt");
+  }, "sqrt");
 }
 
 /* functions to simplify code */
@@ -524,16 +523,17 @@ TensorOps::Tensor<QVec> qt(Args &&... args) {
 }
 
 template<typename ... QVs>
-Correlation c(QVs &&... qvs) {
+Correlation c(TDirectory *folder, QVs &&... qvs) {
   static_assert(sizeof...(QVs) > 1);
-  return Correlation({qvs...});
+  return Correlation(folder, {qvs...});
 }
 
 template<typename ... Args>
-TensorOps::Tensor<Correlation> ct(Args ... args) {
-  return TensorOps::tensorize_f_args(
-      c<typename Args::value_type...>,
-      args...);
+TensorOps::Tensor<Correlation> ct(TDirectory *folder, Args && ... args) {
+  auto function = [folder] (auto && ... args) {
+    return c(folder, args...);
+  };
+  return TensorOps::tensorize_f_args(function, std::forward<Args>(args)...);
 }
 
 }

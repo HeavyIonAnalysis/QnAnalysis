@@ -17,7 +17,9 @@ TEST(Correlation, Basics) {
   auto q3 = q("psd3_RECENTERED", 1, EComponent::X);
   auto protons = q("protons_RESCALED", 1, EComponent::X);
 
-  auto r1 = c(protons, q1) * sqrt(Value(2.0) * c(q1, q2) * c(q1, q3) / c(q2, q3));
+  auto r1 = c(gDirectory, protons, q1) * sqrt(Value(2.0) *
+      c(gDirectory, q1, q2) *
+      c(gDirectory,q1, q3) / c(gDirectory, q2, q3));
   r1.value().Print();
 }
 
@@ -70,8 +72,8 @@ auto r1_3sub(
   auto ref3 = ref1.clone("r3");
 
   auto r1t =sqrt(
-      Value(2.) * ct(qt(ref1, 1, comp), qt(ref2, 1, comp)) *
-      ct(qt(ref1, 1, comp), qt(ref3, 1, comp)) / ct(qt(ref2, 1, comp), qt(ref3, 1, comp)));
+      Value(2.) * ct(gDirectory, qt(ref1, 1, comp), qt(ref2, 1, comp)) *
+      ct(gDirectory, qt(ref1, 1, comp), qt(ref3, 1, comp)) / ct(gDirectory, qt(ref2, 1, comp), qt(ref3, 1, comp)));
 
   return Tensor{
       {
@@ -107,11 +109,11 @@ TEST(Tensor, Tensorize) {
   auto en_comp_inv = enumerate("component", {EComponent::Y, EComponent::X});
   auto en_ref = enumerate("ref", {"psd1_RECENTERED", "psd2_RECENTERED", "psd3_RECENTERED"});
 
-  auto resolution_psi = ct(qt(en_ref, 1, en_comp), qt("psi_RP", 1, en_comp));
+  auto resolution_psi = ct(gDirectory, qt(en_ref, 1, en_comp), qt("psi_RP", 1, en_comp));
 
   auto resolution_3sub = r1_3sub(en_ref, en_comp);
-  auto obs_v1 = Value(2.) * ct(qt(en_obs, 1, en_comp), qt(en_ref, 1, en_comp)) / resolution_3sub;
-  auto obs_c1 = Value(2.) * ct(qt(en_obs, 1, en_comp), qt(en_ref, 1, en_comp_inv)) / resolution_3sub;
+  auto obs_v1 = Value(2.) * ct(gDirectory, qt(en_obs, 1, en_comp), qt(en_ref, 1, en_comp)) / resolution_3sub;
+  auto obs_c1 = Value(2.) * ct(gDirectory, qt(en_obs, 1, en_comp), qt(en_ref, 1, en_comp_inv)) / resolution_3sub;
 
   EXPECT_EQ(obs_v1.size(), 18);
   EXPECT_EQ(obs_c1.size(), 18);
@@ -139,16 +141,16 @@ TEST(Tensor, v2) {
   auto r1_ref1 = r1_3sub(en_ref1, en_comp1);
   auto r1_ref2 = r1_3sub(en_ref2, en_comp2);
 
-  auto v2 = ct(
+  auto v2 = ct(gDirectory,
       qt(en_obs, 2, en_comp0),
       qt(en_ref1, 1, en_comp1),
       qt(en_ref2, 1, en_comp2)) / r1_ref1 / r1_ref2;
 
-  auto v2_xy = ct(
+  auto v2_xy = ct(gDirectory,
       qt(en_obs, 2, en_comp0),
       qt(en_ref1, 1, en_comp1),
       qt(en_ref2, 1, en_comp2)
-  ) / ct(
+      ) / ct(gDirectory,
       qt(en_ref1, 1, en_comp1),
       qt(en_ref2, 1, en_comp2));
 
