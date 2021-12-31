@@ -34,7 +34,7 @@ decltype(auto) tensorize(T &&t);
 
 inline
 TensorAxes
-mergeAxes(const TensorAxes &lhs, const TensorAxes &rhs) {
+merge_axes(const TensorAxes &lhs, const TensorAxes &rhs) {
   auto result = lhs;
   for (auto &&[axis_name, axis_size] : rhs) {
     auto emplace_result = result.emplace(axis_name, axis_size);
@@ -49,8 +49,8 @@ mergeAxes(const TensorAxes &lhs, const TensorAxes &rhs) {
 
 template<typename ... Rest>
 TensorAxes
-mergeAxes(const TensorAxes &lhs, const Rest &... rest) {
-  return mergeAxes(lhs, mergeAxes(rest...));
+merge_axes(const TensorAxes &lhs, const Rest &... rest) {
+  return merge_axes(lhs, merge_axes(rest...));
 }
 
 /**
@@ -126,7 +126,7 @@ struct Tensor
         value_type,
         typename std::decay_t<decltype(other_tensor)>::value_type>>;
 
-    auto new_axes = mergeAxes(this->getAxes(), other_tensor.getAxes());
+    auto new_axes = merge_axes(this->getAxes(), other_tensor.getAxes());
     auto new_factory_function = std::function{[
                                                   lhs = factory_function_,
                                                   rhs = other_tensor.getFactoryFunction(),
@@ -202,15 +202,6 @@ struct Tensor
 template<typename Function>
 Tensor(TensorAxes, Function &&) -> Tensor<std::decay_t<std::invoke_result_t<Function, const TensorIndex &>>>;
 
-template<typename T>
-decltype(auto) tensorize(T &&t) {
-  if constexpr(!std::is_base_of_v<TensorTag, std::decay_t<T>>) {
-    return Tensor{{}, [value = std::forward<T>(t)](const TensorIndex &) { return value; }};
-  } else {
-    return std::forward<T>(t);
-  }
-}
-
 template <typename T>
 auto sqrt(const Tensor<T>& t) {
   return t.applyUnary([] (auto && v) { return sqrt(v); });
@@ -269,39 +260,62 @@ struct Enumeration {
   std::unordered_map<T, TensorLinearIndex> inverse_index_;
 };
 
-template<typename Container> Enumeration(std::string name,
-                                         Container &&c) -> Enumeration<typename Container::value_type>;
-
 template<typename T>
 auto enumerate(std::string name, std::initializer_list<T> args) {
   return Enumeration(name, std::vector<T>(args));
 }
 
+template<typename Container> Enumeration(std::string name,
+                                         Container &&c) -> Enumeration<typename Container::value_type>;
+
 template<typename ... Args>
-TensorIndex makeIndex(Args &&... args) {
-  return mergeAxes(std::forward<Args>(args)...);
+TensorIndex make_index(Args &&... args) {
+  return merge_axes(std::forward<Args>(args)...);
 }
 
-template<typename T>
-TensorAxes getAxes(const T &t) { return {}; }
-template<typename T>
-TensorAxes getAxes(const Enumeration<T> &r) { return {{r.getName(), r.size()}}; }
-template<typename T>
-TensorAxes getAxes(const Tensor<T> &t) { return t.getAxes(); }
+namespace Details {
+
+template <typename T>
+struct tag{};
+
+template <typename T>
+auto tensor_cast(tag<T>) {
+  return [] (auto && t) -> decltype(auto) {
+    return Tensor{ {}, [value = std::forward<decltype(t)>(t)](const TensorIndex &) { return value; }};
+  };
+}
+
+template <typename T>
+auto tensor_cast(tag<Tensor<T>>) {
+  return [] (auto && t) -> decltype(auto) { return std::forward<decltype(t)>(t); };
+}
+
+template <typename T>
+auto tensor_cast(tag<Enumeration<T>>) {
+  return [] (auto && t) -> decltype(auto) { return t.tensor(); };
+}
+
+} // namespace Details
+
 
 template<typename T>
-auto eval(const T &t, const TensorIndex & /* */) { return t; }
-template<typename T>
-auto eval(const Enumeration<T> &e, const TensorIndex &index) { return e.tensor().at(index); }
-template<typename T>
-auto eval(const Tensor<T> &t, const TensorIndex &index) { return t.at(index); }
+decltype(auto) tensorize(T && t) {
+  auto cast = Details::tensor_cast(Details::tag<std::decay_t<T>>());
+  return cast(std::forward<T>(t));
+}
 
 template<typename Function, typename ... Args>
 auto tensorize_f_args(Function &&f, Args &&... args) {
   static_assert(sizeof...(Args) > 0);
-  auto axes = mergeAxes(getAxes(std::forward<Args>(args))...);
-  return Tensor(axes, [=](const TensorIndex &index) {
-    return f(eval(args, index)...);
+  auto get_axes = [] (const auto &t) { return t.getAxes(); };
+  auto result_axes = merge_axes(get_axes(tensorize(args))...);
+  auto tensors_tuple = std::make_tuple(tensorize(args)...);
+  return Tensor(result_axes, [
+      function = std::forward<Function>(f),
+      tensors_tuple = std::move(tensors_tuple)](const TensorIndex &index) {
+    auto args_tuple = std::apply([index] (auto && ... tensors) { return std::make_tuple(tensors.at(index)...); },
+                                 tensors_tuple);
+    return std::apply(function, std::move(args_tuple));
   });
 }
 
@@ -436,6 +450,7 @@ struct UnaryOp :
 
   friend std::ostream &operator<<(std::ostream &os, const UnaryOp &op) {
     os << op.display_name_ << "(" << op.arg_ << ")";
+    return os;
   }
 
   Arg arg_;

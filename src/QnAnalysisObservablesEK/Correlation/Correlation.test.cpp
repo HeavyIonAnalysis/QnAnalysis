@@ -56,8 +56,8 @@ TEST(Tensor, MergeAxes) {
   TensorAxes ax1{{"ax1", 10}};
   TensorAxes ax2{{"ax2", 20}};
   TensorAxes ax3{{"ax3", 30}};
-  EXPECT_EQ(mergeAxes(ax1, ax2, ax3).size(), 3);
-  EXPECT_EQ(mergeAxes(ax1, ax2, ax1).size(), 2);
+  EXPECT_EQ(merge_axes(ax1, ax2, ax3).size(), 3);
+  EXPECT_EQ(merge_axes(ax1, ax2, ax1).size(), 2);
 }
 
 auto r1_3sub(
@@ -160,14 +160,14 @@ TEST(Tensor, v2) {
     cout << endl;
   }
 
-  auto value = v2_xy.at(makeIndex(
+  auto value = v2_xy.at(make_index(
       en_obs.index("protons_RESCALED"),
       en_comp0.index(EComponent::Y),
       en_comp1.index(EComponent::X),
       en_comp2.index(EComponent::Y),
       en_ref1.index("psd1_RECENTERED"),
       en_ref2.index("psd2_RECENTERED")
-      ));
+  ));
   cout << value;
   cout << endl;
 
