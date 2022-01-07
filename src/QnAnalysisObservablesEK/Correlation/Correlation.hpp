@@ -12,6 +12,7 @@
 #include <map>
 #include <tuple>
 #include <ostream>
+#include <list>
 
 #include <QnTools/DataContainer.hpp>
 #include <QnTools/StatCalculate.hpp>
@@ -62,6 +63,14 @@ struct Tensor {
   typedef T value_type;
 
   typedef std::function<value_type(const TensorIndex &)> factory_function_type;
+
+  struct Element {
+    TensorLinearIndex linear_index{0ul};
+    TensorIndex index;
+    std::function<T ()> factory_function;
+  };
+
+
 
   Tensor(TensorAxes axes, factory_function_type factory_function)
       : axes_(std::move(axes)), factory_function_(factory_function) {
@@ -194,6 +203,7 @@ struct Tensor {
 
  private:
   std::vector<std::string> ax_names_;
+
   TensorAxes axes_;
   factory_function_type factory_function_;
 };
@@ -359,12 +369,17 @@ struct Correlation
     : public LazyArithmeticsTag {
   typedef Qn::DataContainerStatCalculate result_type;
 
+  struct CorrelationNotFoundException : public std::exception {};
+
   Correlation(TDirectory *directory, std::vector<QVec> q_vectors)
       : directory_(directory), q_vectors_(std::move(q_vectors)) {}
 
   result_type value() const {
-    std::cout << nameInFile() << std::endl;
-    return {};
+    auto collect = directory_->Get<Qn::DataContainerStatCollect>(nameInFile().c_str());
+    if (!collect) {
+      throw CorrelationNotFoundException();
+    }
+    return Qn::DataContainerStatCalculate(*collect);
   }
 
   std::string nameInFile() const {

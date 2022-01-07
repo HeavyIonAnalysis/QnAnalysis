@@ -20,7 +20,7 @@ TEST(Correlation, Basics) {
   auto r1 = c(gDirectory, protons, q1) * sqrt(Value(2.0) *
       c(gDirectory, q1, q2) *
       c(gDirectory,q1, q3) / c(gDirectory, q2, q3));
-  r1.value().Print();
+  EXPECT_THROW(r1.value(), Correlation::CorrelationNotFoundException);
 }
 
 TEST(Tensor, Basics) {
@@ -158,7 +158,7 @@ TEST(Tensor, v2) {
     auto comp0 = en_comp0.at(v2_xy.getIndex(li));
     auto obs = en_obs.at(v2_xy.getIndex(li));
     cout << v2_xy.at(li) << endl;
-    v2_xy.at(li).value();
+    EXPECT_THROW(v2_xy.at(li).value(), Correlation::CorrelationNotFoundException);
     cout << endl;
   }
 
