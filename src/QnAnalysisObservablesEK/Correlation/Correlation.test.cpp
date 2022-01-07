@@ -118,11 +118,10 @@ TEST(Tensor, Tensorize) {
   EXPECT_EQ(obs_v1.size(), 18);
   EXPECT_EQ(obs_c1.size(), 18);
 
-  for (TensorLinearIndex li = 0ul; li < obs_v1.size(); ++li) {
-    auto index = obs_v1.getIndex(li);
-    auto correlation = obs_v1.at(li);
-    cout << correlation << endl;
+  for (auto &element : obs_v1) {
+    cout << element() << endl;
   }
+
 
 }
 
@@ -196,8 +195,8 @@ TEST(Tensor, Resolution) {
   auto r1 = r1_3sub(
       enumerate("ref", {"psd1", "psd2", "psd3"}),
       enumerate("comp", {EComponent::X, EComponent::Y}));
-  for (TensorLinearIndex li = 0ul; li < r1.size(); ++li) {
-    cout << r1.at(li) << endl;
+  for (auto && li : r1) {
+    cout << li() << endl;
   }
 
 }

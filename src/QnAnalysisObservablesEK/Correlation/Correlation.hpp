@@ -67,10 +67,71 @@ struct Tensor {
   struct Element {
     TensorLinearIndex linear_index{0ul};
     TensorIndex index;
-    std::function<T ()> factory_function;
+    std::function<T()> element_factory;
+
+    T operator()() const {
+      return element_factory();
+    }
   };
 
+  struct Iterator {
+    using iterator_category = std::bidirectional_iterator_tag;
+    using value_type = const Element;
+    using difference_type = long int;
+    using pointer = value_type*;
+    using reference = value_type&;
 
+
+    Iterator(TensorLinearIndex linear_index, const Tensor<T> *tensor_ptr)
+        : linear_index_(linear_index), tensor_ptr_(tensor_ptr) {
+      updateElement();
+    }
+
+    Iterator &operator++() {
+      ++linear_index_;
+      updateElement();
+      return *this;
+    }
+    Iterator &operator--() {
+      --linear_index_;
+      updateElement();
+      return *this;
+    }
+    reference operator*() const {
+      return element_;
+    }
+    explicit operator bool() const {
+      return bool(tensor_ptr_);
+    }
+
+    bool operator==(const Iterator &rhs) const {
+      return linear_index_ == rhs.linear_index_ &&
+          tensor_ptr_ == rhs.tensor_ptr_;
+    }
+    bool operator!=(const Iterator &rhs) const {
+      return !(rhs == *this);
+    }
+
+   private:
+    void updateElement() {
+      if (linear_index_ < tensor_ptr_->size()) {
+        element_.linear_index = linear_index_;
+        element_.index = tensor_ptr_->getIndex(linear_index_);
+        element_.element_factory = [
+            tensor_ptr = tensor_ptr_,
+            linear_index = linear_index_]() {
+          return tensor_ptr->at(linear_index);
+        };
+      } else {
+        element_.linear_index = tensor_ptr_->size();
+        element_.element_factory = nullptr;
+      }
+    }
+
+    Element element_;
+    TensorLinearIndex linear_index_{0ul};
+    const Tensor<T> *tensor_ptr_;
+  };
 
   Tensor(TensorAxes axes, factory_function_type factory_function)
       : axes_(std::move(axes)), factory_function_(factory_function) {
@@ -122,8 +183,12 @@ struct Tensor {
     return result;
   }
 
-  auto begin();
-  auto end();
+  Iterator begin() const {
+    return {0ul, this};
+  }
+  Iterator end() const {
+    return {size(), this};
+  }
 
   template<typename BinaryFunction, typename OtherArg>
   auto
@@ -544,8 +609,8 @@ Correlation c(TDirectory *folder, QVs &&... qvs) {
 }
 
 template<typename ... Args>
-TensorOps::Tensor<Correlation> ct(TDirectory *folder, Args && ... args) {
-  auto function = [folder] (auto && ... args) {
+TensorOps::Tensor<Correlation> ct(TDirectory *folder, Args &&... args) {
+  auto function = [folder](auto &&... args) {
     return c(folder, args...);
   };
   return TensorOps::tensorize_f_args(function, std::forward<Args>(args)...);
