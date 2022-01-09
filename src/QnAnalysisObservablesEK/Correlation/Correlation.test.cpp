@@ -120,6 +120,7 @@ TEST(Tensor, Tensorize) {
 
   for (auto &element : obs_v1) {
     cout << element() << endl;
+    EXPECT_THROW(element().value(), Correlation::CorrelationNotFoundException);
   }
 
 
@@ -195,8 +196,9 @@ TEST(Tensor, Resolution) {
   auto r1 = r1_3sub(
       enumerate("ref", {"psd1", "psd2", "psd3"}),
       enumerate("comp", {EComponent::X, EComponent::Y}));
-  for (auto && li : r1) {
-    cout << li() << endl;
+  auto r11 = r1.applyUnary([] (auto &&ele) { return ele.value(); });
+  for (auto && li : r11) {
+    EXPECT_THROW(li(), Correlation::CorrelationNotFoundException);
   }
 
 }

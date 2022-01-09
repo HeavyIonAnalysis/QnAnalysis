@@ -13,10 +13,13 @@
 #include <tuple>
 #include <ostream>
 #include <list>
+#include <iterator>
+
 
 #include <QnTools/DataContainer.hpp>
 #include <QnTools/StatCalculate.hpp>
 
+#include <Rtypes.h>
 #include <TDirectory.h>
 
 namespace C4 {
@@ -54,6 +57,85 @@ merge_axes(const TensorAxes &lhs, const Rest &... rest) {
   return merge_axes(lhs, merge_axes(rest...));
 }
 
+template <typename T>
+struct TensorElement {
+  TensorLinearIndex linear_index{0ul};
+  TensorIndex index;
+  std::function<T()> element_factory;
+
+  T operator()() const {
+    return element_factory();
+  }
+
+  ClassDefT2(TensorElement, T)
+};
+
+template<typename T>
+struct TensorIterator {
+
+#ifndef __ROOTCLING__
+  /* see https://sft.its.cern.ch/jira/si/jira.issueviews:issue-html/ROOT-9113/ROOT-9113.html */
+  using iterator_category = std::bidirectional_iterator_tag;
+#endif
+  using value_type = const TensorElement<T>;
+  using difference_type = long int;
+  using pointer = value_type*;
+  using reference = value_type&;
+
+
+  TensorIterator(TensorLinearIndex linear_index, const Tensor<T> *tensor_ptr)
+  : linear_index_(linear_index), tensor_ptr_(tensor_ptr) {
+    updateElement();
+  }
+
+  TensorIterator &operator++() {
+    ++linear_index_;
+    updateElement();
+    return *this;
+  }
+  TensorIterator &operator--() {
+    --linear_index_;
+    updateElement();
+    return *this;
+  }
+  reference operator*() const {
+    return element_;
+  }
+  explicit operator bool() const {
+    return bool(tensor_ptr_);
+  }
+
+  bool operator==(const TensorIterator &rhs) const {
+    return linear_index_ == rhs.linear_index_ &&
+    tensor_ptr_ == rhs.tensor_ptr_;
+  }
+  bool operator!=(const TensorIterator &rhs) const {
+    return !(rhs == *this);
+  }
+
+ private:
+  void updateElement() {
+    if (linear_index_ < tensor_ptr_->size()) {
+      element_.linear_index = linear_index_;
+      element_.index = tensor_ptr_->getIndex(linear_index_);
+      element_.element_factory = [
+          tensor_ptr = tensor_ptr_,
+          linear_index = linear_index_]() {
+        return tensor_ptr->at(linear_index);
+      };
+    } else {
+      element_.linear_index = tensor_ptr_->size();
+      element_.element_factory = nullptr;
+    }
+  }
+
+  TensorElement<T> element_;
+  TensorLinearIndex linear_index_{0ul};
+  const Tensor<T> *tensor_ptr_;
+
+  ClassDefT2(TensorIterator, T)
+};
+
 /**
  * @brief
  * @tparam T
@@ -64,74 +146,6 @@ struct Tensor {
 
   typedef std::function<value_type(const TensorIndex &)> factory_function_type;
 
-  struct Element {
-    TensorLinearIndex linear_index{0ul};
-    TensorIndex index;
-    std::function<T()> element_factory;
-
-    T operator()() const {
-      return element_factory();
-    }
-  };
-
-  struct Iterator {
-    using iterator_category = std::bidirectional_iterator_tag;
-    using value_type = const Element;
-    using difference_type = long int;
-    using pointer = value_type*;
-    using reference = value_type&;
-
-
-    Iterator(TensorLinearIndex linear_index, const Tensor<T> *tensor_ptr)
-        : linear_index_(linear_index), tensor_ptr_(tensor_ptr) {
-      updateElement();
-    }
-
-    Iterator &operator++() {
-      ++linear_index_;
-      updateElement();
-      return *this;
-    }
-    Iterator &operator--() {
-      --linear_index_;
-      updateElement();
-      return *this;
-    }
-    reference operator*() const {
-      return element_;
-    }
-    explicit operator bool() const {
-      return bool(tensor_ptr_);
-    }
-
-    bool operator==(const Iterator &rhs) const {
-      return linear_index_ == rhs.linear_index_ &&
-          tensor_ptr_ == rhs.tensor_ptr_;
-    }
-    bool operator!=(const Iterator &rhs) const {
-      return !(rhs == *this);
-    }
-
-   private:
-    void updateElement() {
-      if (linear_index_ < tensor_ptr_->size()) {
-        element_.linear_index = linear_index_;
-        element_.index = tensor_ptr_->getIndex(linear_index_);
-        element_.element_factory = [
-            tensor_ptr = tensor_ptr_,
-            linear_index = linear_index_]() {
-          return tensor_ptr->at(linear_index);
-        };
-      } else {
-        element_.linear_index = tensor_ptr_->size();
-        element_.element_factory = nullptr;
-      }
-    }
-
-    Element element_;
-    TensorLinearIndex linear_index_{0ul};
-    const Tensor<T> *tensor_ptr_;
-  };
 
   Tensor(TensorAxes axes, factory_function_type factory_function)
       : axes_(std::move(axes)), factory_function_(factory_function) {
@@ -183,10 +197,10 @@ struct Tensor {
     return result;
   }
 
-  Iterator begin() const {
+  TensorIterator<value_type> begin() const {
     return {0ul, this};
   }
-  Iterator end() const {
+  TensorIterator<value_type> end() const {
     return {size(), this};
   }
 
@@ -271,6 +285,8 @@ struct Tensor {
 
   TensorAxes axes_;
   factory_function_type factory_function_;
+
+  ClassDefT2(Tensor, T)
 };
 
 template<typename Function>
@@ -332,6 +348,8 @@ struct Enumeration {
   std::string name_;
   std::map<TensorLinearIndex, T> index_;
   std::unordered_map<T, TensorLinearIndex> inverse_index_;
+
+  ClassDefT2(Enumeration, T)
 };
 
 template<typename T>
@@ -420,8 +438,11 @@ struct QVec {
     return !(rhs == *this);
   }
   friend std::ostream &operator<<(std::ostream &os, const QVec &vec);
+
+  ClassDef(QVec, 0)
 };
 
+inline
 std::ostream &operator<<(std::ostream &os, const QVec &vec) {
   static const std::map<EComponent, std::string> map_component{
       {EComponent::X, "X"},
@@ -467,8 +488,11 @@ struct Correlation
 
   TDirectory *directory_{nullptr};
   std::vector<QVec> q_vectors_;
+
+  ClassDef(Correlation, 0)
 };
 
+inline
 std::ostream &operator<<(std::ostream &os, const Correlation &correlation) {
   os << "< ";
   for (auto &q : correlation.q_vectors_) {
@@ -505,6 +529,8 @@ struct BinaryOp :
   Right rhs;
   Function function_;
   std::string symbol_{" "};
+
+  ClassDef3T2(BinaryOp, Left, Right, Function)
 };
 
 template<typename Arg, typename Function>
@@ -537,6 +563,8 @@ struct UnaryOp :
   Arg arg_;
   Function function_;
   std::string display_name_{};
+
+  ClassDef2T2(UnaryOp, Arg, Function)
 };
 
 template<typename T>
@@ -544,7 +572,7 @@ struct Value :
     public LazyArithmeticsTag {
   typedef T result_type;
 
-  Value(T value) : value_(value) {}
+  explicit Value(T value) : value_(value) {}
 
   T value() const {
     return value_;
@@ -556,6 +584,8 @@ struct Value :
   }
 
   T value_;
+
+  ClassDefT2(Value, T);
 };
 
 template<typename ... Args>
@@ -591,6 +621,7 @@ auto sqrt(Arg &&v) {
 }
 
 /* functions to simplify code */
+inline
 QVec q(std::string name, unsigned int harmonic, EComponent component) {
   return {std::move(name), harmonic, component};
 }
@@ -615,6 +646,7 @@ TensorOps::Tensor<Correlation> ct(TDirectory *folder, Args &&... args) {
   };
   return TensorOps::tensorize_f_args(function, std::forward<Args>(args)...);
 }
+
 
 }
 

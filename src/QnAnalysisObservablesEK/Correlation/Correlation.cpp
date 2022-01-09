@@ -3,3 +3,8 @@
 //
 
 #include "Correlation.hpp"
+
+using namespace C4::CorrelationOps;
+
+ClassImp(QVec)
+ClassImp(Correlation)
