@@ -16,7 +16,9 @@ target_link_libraries(Correlation PUBLIC
         QnToolsBase
         ROOT::Core
         ROOT::RIO)
-target_compile_options(Correlation PUBLIC -g -ggdb -O0)
+target_compile_options(Correlation PRIVATE
+        $<$<CONFIG:DEBUG>:-g -ggdb -O0>
+        $<$<CONFIG:RELEASE>:-O2>)
 target_include_directories(Correlation
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -140,8 +140,7 @@ struct TensorIterator {
  */
 template<typename T>
 struct Tensor {
-  typedef T value_type;
-
+  typedef std::decay_t<T> value_type;
   typedef std::function<value_type(const TensorIndex &)> factory_function_type;
 
 
@@ -300,11 +299,12 @@ auto sqrt(const Tensor<T> &t) {
  */
 template<typename T>
 struct Enumeration {
+  typedef std::decay_t<T> value_type;
 
   template<typename Container>
   Enumeration(std::string name, const Container &c) : name_(std::move(name)) {
     TensorLinearIndex value_index = 0ul;
-    for (const T &v : c) {
+    for (auto && v : c) {
       index_.emplace(value_index, v);
       inverse_index_.emplace(v, value_index);
       ++value_index;
@@ -327,7 +327,7 @@ struct Enumeration {
     return index_.size();
   }
 
-  T &at(const TensorIndex &index) {
+  auto at(const TensorIndex &index) {
     return index_.at(index.at(name_));
   }
 
@@ -343,8 +343,8 @@ struct Enumeration {
 
  private:
   std::string name_;
-  std::map<TensorLinearIndex, T> index_;
-  std::unordered_map<T, TensorLinearIndex> inverse_index_;
+  std::map<TensorLinearIndex, value_type> index_;
+  std::unordered_map<value_type , TensorLinearIndex> inverse_index_;
 
 };
 
@@ -409,6 +409,11 @@ auto tensorize_f_args(Function &&f, Args &&... args) {
 
 } // namespace TensorOps
 
+namespace LazyOps {
+
+} // namespace LazyOps
+
+
 namespace CorrelationOps {
 
 enum class EComponent {
@@ -421,9 +426,6 @@ struct QVec {
   std::string name_;
   QVec(std::string name, unsigned int harmonic, EComponent component)
       : name_(std::move(name)), harmonic_(harmonic), component_(component) {}
-  unsigned int harmonic_;
-  EComponent component_;
-
   bool operator==(const QVec &rhs) const {
     return name_ == rhs.name_ &&
         harmonic_ == rhs.harmonic_ &&
@@ -433,7 +435,11 @@ struct QVec {
   bool operator!=(const QVec &rhs) const {
     return !(rhs == *this);
   }
+
   friend std::ostream &operator<<(std::ostream &os, const QVec &vec);
+
+  unsigned int harmonic_;
+  EComponent component_;
 
 };
 
@@ -496,6 +502,27 @@ std::ostream &operator<<(std::ostream &os, const Correlation &correlation) {
   return os;
 }
 
+template<typename T>
+struct Value :
+    public LazyArithmeticsTag {
+  typedef T result_type;
+
+  explicit Value(T value) : value_(value) {}
+
+  T value() const {
+    return value_;
+  }
+
+  friend std::ostream &operator<<(std::ostream &os, const Value &value) {
+    os << value.value_;
+    return os;
+  }
+
+ private:
+  T value_;
+
+};
+
 template<typename Left, typename Right, typename Function>
 struct BinaryOp :
     public LazyArithmeticsTag {
@@ -519,6 +546,7 @@ struct BinaryOp :
     return os;
   }
 
+ private:
   Left lhs;
   Right rhs;
   Function function_;
@@ -553,31 +581,14 @@ struct UnaryOp :
     return os;
   }
 
+ private:
   Arg arg_;
   Function function_;
   std::string display_name_{};
 
 };
 
-template<typename T>
-struct Value :
-    public LazyArithmeticsTag {
-  typedef T result_type;
 
-  explicit Value(T value) : value_(value) {}
-
-  T value() const {
-    return value_;
-  }
-
-  friend std::ostream &operator<<(std::ostream &os, const Value &value) {
-    os << value.value_;
-    return os;
-  }
-
-  T value_;
-
-};
 
 template<typename ... Args>
 constexpr bool have_lazy_arithmetics_v = (... && std::is_base_of_v<LazyArithmeticsTag, std::decay_t<Args>>);
@@ -639,7 +650,7 @@ TensorOps::Tensor<Correlation> ct(TDirectory *folder, Args &&... args) {
 }
 
 
-}
+} // namespace CorrelationOps
 
 }
 
