@@ -67,7 +67,6 @@ struct TensorElement {
     return element_factory();
   }
 
-  ClassDefT2(TensorElement, T)
 };
 
 template<typename T>
@@ -133,7 +132,6 @@ struct TensorIterator {
   TensorLinearIndex linear_index_{0ul};
   const Tensor<T> *tensor_ptr_;
 
-  ClassDefT2(TensorIterator, T)
 };
 
 /**
@@ -286,7 +284,6 @@ struct Tensor {
   TensorAxes axes_;
   factory_function_type factory_function_;
 
-  ClassDefT2(Tensor, T)
 };
 
 template<typename Function>
@@ -349,7 +346,6 @@ struct Enumeration {
   std::map<TensorLinearIndex, T> index_;
   std::unordered_map<T, TensorLinearIndex> inverse_index_;
 
-  ClassDefT2(Enumeration, T)
 };
 
 template<typename T>
@@ -439,7 +435,6 @@ struct QVec {
   }
   friend std::ostream &operator<<(std::ostream &os, const QVec &vec);
 
-  ClassDef(QVec, 0)
 };
 
 inline
@@ -489,7 +484,6 @@ struct Correlation
   TDirectory *directory_{nullptr};
   std::vector<QVec> q_vectors_;
 
-  ClassDef(Correlation, 0)
 };
 
 inline
@@ -530,7 +524,6 @@ struct BinaryOp :
   Function function_;
   std::string symbol_{" "};
 
-  ClassDef3T2(BinaryOp, Left, Right, Function)
 };
 
 template<typename Arg, typename Function>
@@ -564,7 +557,6 @@ struct UnaryOp :
   Function function_;
   std::string display_name_{};
 
-  ClassDef2T2(UnaryOp, Arg, Function)
 };
 
 template<typename T>
@@ -585,7 +577,6 @@ struct Value :
 
   T value_;
 
-  ClassDefT2(Value, T);
 };
 
 template<typename ... Args>

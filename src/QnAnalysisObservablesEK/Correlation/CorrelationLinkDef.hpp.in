@@ -10,6 +10,6 @@
 #pragma link off all global;
 #pragma link off all typedef;
 
-#pragma link C++ defined_in /home/eugene/CLionProjects/QnAnalysis/src/QnAnalysisObservablesEK/Correlation/Correlation.hpp;
+#pragma link C++ defined_in "@Correlation_HEADER@";
 
 #endif
