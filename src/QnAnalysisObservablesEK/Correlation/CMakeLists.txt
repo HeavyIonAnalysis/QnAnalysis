@@ -8,7 +8,8 @@ ROOT_GENERATE_DICTIONARY(G__Correlation
         LINKDEF ${Correlation_LINKDEF}
         OPTIONS
             -I${CMAKE_CURRENT_SOURCE_DIR}
-            -interpreteronly)
+            -interpreteronly
+            -noIncludePaths)
 add_library(Correlation SHARED
         Correlation.cpp
         G__Correlation.cxx)
