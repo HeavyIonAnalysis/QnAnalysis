@@ -291,9 +291,9 @@ pbpb_13agev_16_025_default:
         qa-kinematics: *rec-particle-qa-kinematics
         qa-weight: *rec-particle-qa-kinematics-weighted
         cuts-quality: *cuts-rec-particles-quality-default
-      axes:
-        - {name: *var-vtx-pt, bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0 ]}
-        - {name: *var-vtx-y-cm, nb: 15, lo: -0.6, hi: 2.4}
+        axes:
+          - {name: *var-vtx-pt, bin-edges: [ 0., 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0 ]}
+          - {name: *var-vtx-y-cm, nb: 15, lo: -0.6, hi: 2.4}
       cuts-pid:
         RecParticles/pid: { equals: 2212 }
     # v1(pT, y) for pi- (STANDARD SET)
