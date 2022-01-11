@@ -126,6 +126,15 @@ TEST(Tensor, Tensorize) {
 
 }
 
+TEST(Tensor, accumulate) {
+  using namespace ::C4::TensorOps;
+
+  auto tensor = tensorize(enumerate("test", {1.0, 2.0, 3.0})) * tensorize(enumerate("test2", {1.0, 2.0, 3.0}));
+  auto accumulated = tensor.accumulate(0., [] (double accum, double val) { return accum + val; });
+  EXPECT_EQ(accumulated.size(), 1);
+  EXPECT_FLOAT_EQ(accumulated.at(0), 36.0);
+}
+
 TEST(Tensor, v2) {
   using namespace ::C4::TensorOps;
   using namespace ::C4::CorrelationOps;

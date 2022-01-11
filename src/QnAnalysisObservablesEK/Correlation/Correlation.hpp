@@ -260,6 +260,22 @@ struct Tensor {
     return Tensor<result_type>{axes_, std::move(new_factory_function)};
   }
 
+  template <typename InitialValue, typename BinaryFunction>
+  Tensor<InitialValue> accumulate(InitialValue && initial_value, BinaryFunction && binary_function) {
+    return {
+      {}, [
+          initial_value = std::forward<InitialValue>(initial_value),
+          binary_function = std::forward<BinaryFunction>(binary_function),
+          tensor = *this] (const TensorIndex&) {
+        auto result = initial_value;
+        for (auto && element : tensor) {
+          result = binary_function(result, element());
+        }
+        return result;
+      }
+    };
+  }
+
   void checkIndex(const TensorIndex &ind) const {
     for (auto &&[ax_name, size] : axes_) {
       if (ind.at(ax_name) >= size) {
