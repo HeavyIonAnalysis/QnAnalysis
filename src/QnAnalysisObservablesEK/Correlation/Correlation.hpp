@@ -317,6 +317,14 @@ struct Enumeration {
     return index_.at(ind.at(name_));
   }
 
+  T operator[](const TensorIndex &ind) const {
+    return at(ind);
+  }
+
+  T operator[](const TensorLinearIndex &ind) const {
+    return at(ind);
+  }
+
   Tensor<T> tensor() const {
     return {{{name_, index_.size()}}, *this};
   }
@@ -325,11 +333,15 @@ struct Enumeration {
     return index_.size();
   }
 
-  auto at(const TensorIndex &index) {
+  auto at(const TensorIndex &index) const {
     return index_.at(index.at(name_));
   }
 
-  TensorIndex index(const T &v) {
+  auto at(const TensorLinearIndex& index) const {
+    return index_.at(index);
+  }
+
+  TensorIndex index(const T &v) const {
     return {{name_, inverse_index_.at(v)}};
   }
 
@@ -484,6 +496,14 @@ namespace CorrelationOps {
 enum class EComponent {
   X, Y
 };
+
+inline std::ostream& operator<<(std::ostream& os, EComponent value) {
+  if (value == EComponent::X)
+    return os << "X";
+  else if (value == EComponent::Y)
+    return os << "Y";
+  __builtin_unreachable();
+}
 
 struct QVec {
   std::string name_;
