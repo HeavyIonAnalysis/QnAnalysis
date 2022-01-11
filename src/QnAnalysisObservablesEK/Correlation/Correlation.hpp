@@ -15,7 +15,6 @@
 #include <list>
 #include <iterator>
 
-
 #include <QnTools/DataContainer.hpp>
 #include <QnTools/StatCalculate.hpp>
 
@@ -57,7 +56,7 @@ merge_axes(const TensorAxes &lhs, const Rest &... rest) {
   return merge_axes(lhs, merge_axes(rest...));
 }
 
-template <typename T>
+template<typename T>
 struct TensorElement {
   TensorLinearIndex linear_index{0ul};
   TensorIndex index;
@@ -78,12 +77,11 @@ struct TensorIterator {
 #endif
   using value_type = const TensorElement<T>;
   using difference_type = long int;
-  using pointer = value_type*;
-  using reference = value_type&;
-
+  using pointer = value_type *;
+  using reference = value_type &;
 
   TensorIterator(TensorLinearIndex linear_index, const Tensor<T> *tensor_ptr)
-  : linear_index_(linear_index), tensor_ptr_(tensor_ptr) {
+      : linear_index_(linear_index), tensor_ptr_(tensor_ptr) {
     updateElement();
   }
 
@@ -106,7 +104,7 @@ struct TensorIterator {
 
   bool operator==(const TensorIterator &rhs) const {
     return linear_index_ == rhs.linear_index_ &&
-    tensor_ptr_ == rhs.tensor_ptr_;
+        tensor_ptr_ == rhs.tensor_ptr_;
   }
   bool operator!=(const TensorIterator &rhs) const {
     return !(rhs == *this);
@@ -142,7 +140,6 @@ template<typename T>
 struct Tensor {
   typedef std::decay_t<T> value_type;
   typedef std::function<value_type(const TensorIndex &)> factory_function_type;
-
 
   Tensor(TensorAxes axes, factory_function_type factory_function)
       : axes_(std::move(axes)), factory_function_(factory_function) {
@@ -250,14 +247,15 @@ struct Tensor {
   }
 
   template<typename UnaryFunction>
-  auto applyUnary(UnaryFunction &&unary_function) const {
+  auto foreach(UnaryFunction &&unary_function) const {
     using result_type = std::decay_t<std::invoke_result_t<
         UnaryFunction,
+        const TensorIndex&,
         value_type>>;
     auto new_factory_function = [
         inner = factory_function_,
         outer = unary_function](const TensorIndex &ind) {
-      return outer(inner(ind));
+      return outer(ind, inner(ind));
     };
     return Tensor<result_type>{axes_, std::move(new_factory_function)};
   }
@@ -290,7 +288,7 @@ Tensor(TensorAxes, Function &&) -> Tensor<std::decay_t<std::invoke_result_t<Func
 
 template<typename T>
 auto sqrt(const Tensor<T> &t) {
-  return t.applyUnary([](auto &&v) { return sqrt(v); });
+  return t.foreach([](const TensorIndex &, auto &&v) { return sqrt(v); });
 }
 
 /**
@@ -304,7 +302,7 @@ struct Enumeration {
   template<typename Container>
   Enumeration(std::string name, const Container &c) : name_(std::move(name)) {
     TensorLinearIndex value_index = 0ul;
-    for (auto && v : c) {
+    for (auto &&v : c) {
       index_.emplace(value_index, v);
       inverse_index_.emplace(v, value_index);
       ++value_index;
@@ -344,7 +342,7 @@ struct Enumeration {
  private:
   std::string name_;
   std::map<TensorLinearIndex, value_type> index_;
-  std::unordered_map<value_type , TensorLinearIndex> inverse_index_;
+  std::unordered_map<value_type, TensorLinearIndex> inverse_index_;
 
 };
 
@@ -411,6 +409,73 @@ auto tensorize_f_args(Function &&f, Args &&... args) {
 
 namespace LazyOps {
 
+template<typename T>
+struct ILazyValue;
+
+template<typename ResultType>
+struct Function;
+
+struct LazyArithmeticsTag {};
+
+template<typename T>
+struct ILazyValue {
+  virtual ~ILazyValue() = default;
+  virtual ILazyValue<T> *clone() const = 0;
+  virtual T value() const = 0;
+  virtual std::string getDisplayName() const { return "<some lazy value>"; }
+
+  Function<T> asFunction() const;
+  Function<T> asFunction(const std::string &display_name) const;
+};
+
+template<typename ResultType>
+std::ostream &operator<<(std::ostream &os, const ILazyValue<ResultType> &value) {
+  os << value.getDisplayName();
+  return os;
+}
+
+template<typename ResultType>
+struct Function :
+    public LazyArithmeticsTag,
+    public ILazyValue<ResultType> {
+
+  typedef std::function<ResultType()> FactoryType;
+  typedef ResultType result_type;
+
+  explicit Function(const FactoryType &factory) : factory_(factory) {}
+  Function(const FactoryType &factory, std::string display_name)
+      : factory_(factory), display_name_(std::move(display_name)) {}
+
+  ILazyValue<ResultType> *clone() const final {
+    return new Function<ResultType>(*this);
+  }
+
+  ResultType value() const final {
+    return factory_();
+  }
+
+  std::string getDisplayName() const override {
+    return display_name_;
+  }
+
+  FactoryType factory_;
+  std::string display_name_;
+};
+
+template<typename T>
+Function<T> ILazyValue<T>::asFunction() const {
+  std::shared_ptr<ILazyValue<T>> ptr{clone()};
+  return Function<T>([ptr]() { return ptr->value(); }, ptr->getDisplayName());
+}
+template<typename T>
+Function<T> ILazyValue<T>::asFunction(const std::string& display_name) const {
+  std::shared_ptr<ILazyValue<T>> ptr{clone()};
+  return Function<T>([ptr]() { return ptr->value(); }, display_name);
+}
+
+template<typename T>
+Function<T> toFunction(const ILazyValue<T>& lv) { return lv.asFunction(); }
+
 } // namespace LazyOps
 
 
@@ -419,8 +484,6 @@ namespace CorrelationOps {
 enum class EComponent {
   X, Y
 };
-
-struct LazyArithmeticsTag {};
 
 struct QVec {
   std::string name_;
@@ -453,7 +516,7 @@ std::ostream &operator<<(std::ostream &os, const QVec &vec) {
 }
 
 struct Correlation
-    : public LazyArithmeticsTag {
+    : public LazyOps::LazyArithmeticsTag {
   typedef Qn::DataContainerStatCalculate result_type;
 
   struct CorrelationNotFoundException : public std::exception {};
@@ -504,18 +567,24 @@ std::ostream &operator<<(std::ostream &os, const Correlation &correlation) {
 
 template<typename T>
 struct Value :
-    public LazyArithmeticsTag {
+    public LazyOps::LazyArithmeticsTag,
+    public LazyOps::ILazyValue<T> {
   typedef T result_type;
 
   explicit Value(T value) : value_(value) {}
+
+  LazyOps::ILazyValue<T> *clone() const override {
+    return new Value{value_};
+  }
 
   T value() const {
     return value_;
   }
 
-  friend std::ostream &operator<<(std::ostream &os, const Value &value) {
-    os << value.value_;
-    return os;
+  std::string getDisplayName() const override {
+    std::stringstream stream;
+    stream << "Const(" << value_ << ")";
+    return stream.str();
   }
 
  private:
@@ -523,28 +592,37 @@ struct Value :
 
 };
 
-template<typename Left, typename Right, typename Function>
+template<
+    typename Left,
+    typename Right,
+    typename Function,
+    typename ResultType = std::decay_t<std::invoke_result_t<Function,
+                                                            const typename Left::result_type &,
+                                                            const typename Right::result_type &>>>
 struct BinaryOp :
-    public LazyArithmeticsTag {
-  typedef std::decay_t<
-      std::invoke_result_t<
-          Function,
-          const typename Left::result_type &,
-          const typename Right::result_type &>
-  > result_type;
+    public LazyOps::LazyArithmeticsTag,
+    public LazyOps::ILazyValue<ResultType> {
+
+  typedef ResultType result_type;
 
   BinaryOp(Left lhs, Right rhs, Function function) : lhs(lhs), rhs(rhs), function_(function) {}
   BinaryOp(Left lhs, Right rhs, Function function, std::string op_symbol)
       : lhs(lhs), rhs(rhs), function_(function), symbol_(std::move(op_symbol)) {}
 
+  LazyOps::ILazyValue<ResultType> *clone() const override {
+    return new BinaryOp(*this);
+  }
+
   result_type value() const {
     return function_(lhs.value(), rhs.value());
   }
 
-  friend std::ostream &operator<<(std::ostream &os, const BinaryOp &op) {
-    os << "( " << op.lhs << op.symbol_ << op.rhs << " )";
-    return os;
+  std::string getDisplayName() const override {
+    std::stringstream stream;
+    stream << "( " << lhs << symbol_ << rhs << " )";
+    return stream.str();
   }
+
 
  private:
   Left lhs;
@@ -554,31 +632,36 @@ struct BinaryOp :
 
 };
 
-template<typename Arg, typename Function>
+template<
+    typename Arg,
+    typename Function,
+    typename ResultType = std::decay_t<std::invoke_result_t<Function, const typename Arg::result_type &>>>
 struct UnaryOp :
-    public LazyArithmeticsTag {
-  typedef std::decay_t<
-      std::invoke_result_t<
-          Function,
-          const typename Arg::result_type &>
-  > result_type;
+    public LazyOps::LazyArithmeticsTag,
+    public LazyOps::ILazyValue<ResultType> {
+  typedef ResultType result_type;
 
   UnaryOp(Arg value, Function function) : arg_(value), function_(function) {}
   UnaryOp(Arg arg, Function function, std::string display_name)
       : arg_(arg), function_(function), display_name_(std::move(display_name)) {}
 
+  LazyOps::ILazyValue<ResultType> *clone() const override {
+    return new UnaryOp{*this};
+  }
+
   result_type value() const {
     return function_(arg_.value());
+  }
+
+  std::string getDisplayName() const override {
+    std::stringstream stream;
+    stream << display_name_ << "(" << arg_ << ")";
+    return stream.str();
   }
 
   template<typename Function1>
   auto apply(Function1 &&f) {
     return UnaryOp(*this, std::forward<Function1>(f));
-  }
-
-  friend std::ostream &operator<<(std::ostream &os, const UnaryOp &op) {
-    os << op.display_name_ << "(" << op.arg_ << ")";
-    return os;
   }
 
  private:
@@ -588,10 +671,8 @@ struct UnaryOp :
 
 };
 
-
-
 template<typename ... Args>
-constexpr bool have_lazy_arithmetics_v = (... && std::is_base_of_v<LazyArithmeticsTag, std::decay_t<Args>>);
+constexpr bool have_lazy_arithmetics_v = (... && std::is_base_of_v<LazyOps::LazyArithmeticsTag, std::decay_t<Args>>);
 
 template<
     typename LeftArg,
@@ -648,7 +729,6 @@ TensorOps::Tensor<Correlation> ct(TDirectory *folder, Args &&... args) {
   };
   return TensorOps::tensorize_f_args(function, std::forward<Args>(args)...);
 }
-
 
 } // namespace CorrelationOps
 

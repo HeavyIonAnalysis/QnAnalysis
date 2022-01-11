@@ -13,6 +13,10 @@ auto r1_3sub = [](
     const Enumeration<std::string> &references,
     const Enumeration<EComponent> &components,
     TDirectory *d) {
+  using namespace ::C4::CorrelationOps;
+  using namespace ::C4::TensorOps;
+  using namespace ::C4::LazyOps;
+
   assert(references.size() == 3);
   auto references_1 = references.clone(references.getName() + "_tmp1");
   auto references_2 = references.clone(references.getName() + "_tmp2");
@@ -21,7 +25,12 @@ auto r1_3sub = [](
   auto q_b = qt(references_1, 1u, components);
   auto q_c = qt(references_2, 1u, components);
 
-  auto r1_big_tensor = sqrt(Value(2.0) * ct(d, q_a, q_b) * ct(d, q_a, q_c) / ct(d, q_b, q_c));
+  auto r1_big_tensor = sqrt(Value(2.0) * ct(d, q_a, q_b) * ct(d, q_a, q_c) / ct(d, q_b, q_c))
+      .foreach([=](const TensorIndex &index, const ILazyValue<Qn::DataContainerStatCalculate> &lv) {
+        return lv.asFunction(
+            std::string("R_{1,") + (components(index) == EComponent::X ? "X" : "Y") + "} 3-sub" + "(" + references(index)
+                + ")");
+      });
 
   return Tensor({
                     {references.getName(), references.size()},
@@ -144,6 +153,8 @@ int main() {
       } catch (Correlation::CorrelationNotFoundException &) {
         cout << "Not found. Skipping..." << endl;
       }
+
+
       cout << endl;
     }
     proc_v1_file->Close();
