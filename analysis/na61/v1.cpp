@@ -4,6 +4,7 @@
 
 #include <Correlation.hpp>
 #include <TFile.h>
+#include <optional>
 
 using namespace ::C4::CorrelationOps;
 using namespace ::C4::TensorOps;
@@ -31,7 +32,7 @@ auto r1_3sub = [](
                   auto display_name =
                       std::string("R_{1,") + (components[index] == EComponent::X ? "X" : "Y") + "} 3 subevents " + "("
                           + references[index] + ")";
-                  auto r1_fct = [d] (auto && q1, auto && q2, auto && q3) {
+                  auto r1_fct = [d](auto &&q1, auto &&q2, auto &&q3) {
                     return sqrt(Value(2.0) * ct(d, q1, q2) * ct(d, q3, q1) / ct(d, q2, q3));
                   };
                   if (index.at(references.getName()) == 0) {
@@ -133,9 +134,13 @@ int main() {
   auto r1_3sub_tensor = r1_3sub(enum_psd_reference, enum_sp_component, qq_dir);
   auto r1_4sub_tensor = r1_4sub(enum_4sub_reference, enum_sp_component, qq_dir);
   auto r1_tensor = stack_tensors("resolution_method", {r1_3sub_tensor, r1_4sub_tensor});
-  auto v1_4sub_tensor = Value(2.0) * obs_uq / r1_tensor;
-
   auto enum_resolution = enumerate<std::string>("resolution_method", {"3sub", "4sub_opt2"});
+  auto v1_tensor = (Value(2.0) * obs_uq / r1_tensor)
+      /* eval all */
+      .map([](const TensorIndex &,
+              const C4::LazyOps::ILazyValue<Qn::DataContainerStatCalculate> &lv) -> Qn::DataContainerStatCalculate {
+        return lv.value();
+      });
 
   cout << "Resolution..." << endl;
   {
@@ -166,28 +171,72 @@ int main() {
   cout << "v1 (ALL)..." << endl;
   {
     auto proc_v1_file = TFile::Open("proc_v1.root", "recreate");
-    for (auto &&v1 : v1_4sub_tensor) {
-      auto lazy_result = v1();
-      cout << lazy_result << endl;
-
-      try {
-        auto result = lazy_result.value();
-        result.Print();
-
-        std::stringstream obj_name_stream;
-        obj_name_stream
-            << enum_observable_particle.at(v1.index) << "__"
-            << enum_psd_reference.at(v1.index) << "__"
-            << enum_resolution.at(v1.index) << "__"
-            << "SP_" << enum_sp_component.at(v1.index);
-        auto obj_name = obj_name_stream.str();
-        proc_v1_file->WriteObject(&result, obj_name.c_str());
-      } catch (Correlation::CorrelationNotFoundException &) {
-        cout << "Not found. Skipping..." << endl;
-      }
-
+    for (auto &&v1 : v1_tensor) {
+      auto result = v1();
+      result.Print();
+      std::stringstream obj_name_stream;
+      obj_name_stream
+          << enum_observable_particle.at(v1.index) << "__"
+          << enum_psd_reference.at(v1.index) << "__"
+          << enum_resolution.at(v1.index) << "__"
+          << "SP_" << enum_sp_component.at(v1.index);
+      auto obj_name = obj_name_stream.str();
+      proc_v1_file->WriteObject(&result, obj_name.c_str());
       cout << endl;
     }
+
+    auto combine = [](
+        const Qn::DataContainerStatCalculate &initial,
+        const Qn::DataContainerStatCalculate &v1) -> Qn::DataContainerStatCalculate {
+      if (initial.IsIntegrated()) {
+        return v1;
+      }
+      auto result = initial;
+      auto v1_value = v1;
+      for (decltype(result.size()) i = 0; i < result.size(); ++i) {
+        result[i] = Qn::Merge(result[i], v1_value[i]);
+      }
+      return result;
+    };
+
+    /* combine components */
+    cout << "v1 (combine components)..." << endl;
+    auto v1_combined_components =
+        v1_tensor.accumulate({enum_sp_component.getName()}, Qn::DataContainerStatCalculate(), combine);
+    auto v1_combined_refs =
+        v1_tensor.accumulate({enum_psd_reference.getName()}, Qn::DataContainerStatCalculate(), combine);
+    auto v1_combined_all = v1_tensor.accumulate({
+                                                    enum_psd_reference.getName(),
+                                                    enum_sp_component.getName()},
+                                                Qn::DataContainerStatCalculate(),
+                                                combine);
+
+    for (auto &&v1 : v1_combined_components) {
+      auto value = v1();
+
+      std::stringstream obj_name_stream;
+      obj_name_stream
+          << enum_observable_particle.at(v1.index) << "__"
+          << enum_psd_reference.at(v1.index) << "__"
+          << enum_resolution.at(v1.index) << "__"
+          << "SP_X+Y";
+      auto obj_name = obj_name_stream.str();
+      proc_v1_file->WriteObject(&value, obj_name.c_str());
+    }
+
+    for (auto &&v1 : v1_combined_refs) {
+      auto value = v1();
+
+      std::stringstream obj_name_stream;
+      obj_name_stream
+      << enum_observable_particle.at(v1.index) << "__"
+      << "psdall__"
+      << enum_resolution.at(v1.index) << "__"
+      << "SP_" << enum_sp_component.at(v1.index);;
+      auto obj_name = obj_name_stream.str();
+      proc_v1_file->WriteObject(&value, obj_name.c_str());
+    }
+
     proc_v1_file->Close();
   }
 

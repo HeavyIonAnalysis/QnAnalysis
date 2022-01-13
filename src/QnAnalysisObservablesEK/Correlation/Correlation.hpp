@@ -250,7 +250,7 @@ struct Tensor {
   auto map(UnaryFunction &&unary_function) const {
     using result_type = std::decay_t<std::invoke_result_t<
         UnaryFunction,
-        const TensorIndex&,
+        const TensorIndex &,
         value_type>>;
     auto new_factory_function = [
         inner = factory_function_,
@@ -260,20 +260,50 @@ struct Tensor {
     return Tensor<result_type>{axes_, std::move(new_factory_function)};
   }
 
-  template <typename InitialValue, typename BinaryFunction>
-  Tensor<InitialValue> accumulate(InitialValue && initial_value, BinaryFunction && binary_function) {
+  template<typename InitialValue, typename BinaryFunction>
+  Tensor<InitialValue> accumulate(InitialValue &&initial_value, BinaryFunction &&binary_function) const {
     return {
-      {}, [
-          initial_value = std::forward<InitialValue>(initial_value),
-          binary_function = std::forward<BinaryFunction>(binary_function),
-          tensor = *this] (const TensorIndex&) {
-        auto result = initial_value;
-        for (auto && element : tensor) {
-          result = binary_function(result, element());
+        {}, [
+            initial_value = std::forward<InitialValue>(initial_value),
+            binary_function = std::forward<BinaryFunction>(binary_function),
+            tensor = *this
+        ](const TensorIndex &) {
+          auto result = initial_value;
+          for (auto &&element : tensor) {
+            result = binary_function(result, element());
+          }
+          return result;
         }
-        return result;
-      }
     };
+  }
+
+  template<typename InitialValue, typename BinaryFunction>
+  Tensor<InitialValue> accumulate(const std::vector<std::string> &axes,
+                                  InitialValue &&initial_value,
+                                  BinaryFunction &&binary_function) const {
+    auto result_shape = axes_;
+    TensorAxes subtensor_shape;
+    for (auto &&axis_name : axes) {
+      subtensor_shape.emplace(axis_name, axes_.at(axis_name));
+      result_shape.erase(axis_name);
+    }
+
+    auto aux_tensor = Tensor<Tensor<value_type>>{
+        result_shape,
+        [subtensor_shape, tensor = *this](const TensorIndex &outer_idx) {
+          return Tensor<value_type>(subtensor_shape, [&outer_idx, &tensor](const TensorIndex &inner_idx) {
+            return tensor.at(merge_axes(outer_idx, inner_idx));
+          });
+        }};
+
+    return aux_tensor
+        .map([initial_value = std::forward<InitialValue>(initial_value),
+                 binary_function = std::forward<BinaryFunction>(binary_function)](const TensorIndex&, const Tensor<value_type> &sub_tensor) {
+          return sub_tensor
+            .accumulate(initial_value, binary_function)
+            .at(0ul);
+        });
+
   }
 
   void checkIndex(const TensorIndex &ind) const {
@@ -362,7 +392,7 @@ struct Enumeration {
     return index_.at(index.at(name_));
   }
 
-  auto at(const TensorLinearIndex& ind) const {
+  auto at(const TensorLinearIndex &ind) const {
     return index_.at(ind);
   }
 
@@ -450,25 +480,26 @@ auto tensorize_f_args(Function &&f, Args &&... args) {
   });
 }
 
-template <typename T>
+template<typename T>
 Tensor<T> stack_tensors(const std::string &new_axis_name, std::initializer_list<Tensor<T>> tensors) {
   Enumeration<Tensor<T>> tensors_enumeration = enumerate(new_axis_name, tensors);
   auto axes = tensors_enumeration[0].getAxes();
-  for (auto && [_, tensor] : tensors_enumeration) {
+  for (auto &&[_, tensor] : tensors_enumeration) {
     if (tensor.getAxes() != axes) {
       throw std::runtime_error(std::string(__PRETTY_FUNCTION__) + ": axes must be identical for stacked tensors.");
     }
   }
   if (axes.find(new_axis_name) != axes.end()) {
-    throw std::runtime_error(std::string(__PRETTY_FUNCTION__) + ": axis '" + new_axis_name + "' already exists in tensors");
+    throw std::runtime_error(
+        std::string(__PRETTY_FUNCTION__) + ": axis '" + new_axis_name + "' already exists in tensors");
   }
 
   auto new_axes = merge_axes(axes, {{new_axis_name, tensors_enumeration.size()}});
   return {
-    new_axes,
-    [tensors_enumeration] (const TensorIndex& index) {
-      return tensors_enumeration.at(index).at(index);
-    }
+      new_axes,
+      [tensors_enumeration](const TensorIndex &index) {
+        return tensors_enumeration.at(index).at(index);
+      }
   };
 }
 
@@ -485,7 +516,7 @@ struct Function;
 struct LazyArithmeticsTag {};
 
 template<typename T, typename UnaryFunction>
-auto apply(const ILazyValue<T>& lv, UnaryFunction && unary_function);
+auto apply(const ILazyValue<T> &lv, UnaryFunction &&unary_function);
 
 template<typename T>
 struct ILazyValue {
@@ -497,8 +528,8 @@ struct ILazyValue {
   Function<T> asFunction() const;
   Function<T> asFunction(const std::string &display_name) const;
 
-  template <typename UnaryFunction>
-  auto apply(UnaryFunction && unary_function) const {
+  template<typename UnaryFunction>
+  auto apply(UnaryFunction &&unary_function) const {
     return LazyOps::apply(*this, std::forward<UnaryFunction>(unary_function));
   }
 };
@@ -537,28 +568,29 @@ struct Function :
   std::string display_name_;
 };
 
-
 template<typename T>
 Function<T> ILazyValue<T>::asFunction() const {
   std::shared_ptr<ILazyValue<T>> ptr{clone()};
   return Function<T>([ptr]() { return ptr->value(); }, ptr->getDisplayName());
 }
 template<typename T>
-Function<T> ILazyValue<T>::asFunction(const std::string& display_name) const {
+Function<T> ILazyValue<T>::asFunction(const std::string &display_name) const {
   std::shared_ptr<ILazyValue<T>> ptr{clone()};
   return Function<T>([ptr]() { return ptr->value(); }, display_name);
 }
 
-
 template<typename T>
-Function<T> toFunction(const ILazyValue<T>& lv) { return lv.asFunction(); }
+Function<T> toFunction(const ILazyValue<T> &lv) { return lv.asFunction(); }
 
 template<typename T, typename UnaryFunction>
-auto apply(const ILazyValue<T>& lv, UnaryFunction && unary_function) {
+auto apply(const ILazyValue<T> &lv, UnaryFunction &&unary_function) {
   std::shared_ptr<ILazyValue<T>> lv_ptr{lv.clone()};
   return Function<std::decay_t<std::invoke_result_t<UnaryFunction, T>>>{[
-      lv_ptr = std::move(lv_ptr),
-      fct = std::forward<UnaryFunction>(unary_function)] () {return fct(lv_ptr->value()); }, lv.getDisplayName()};
+                                                                            lv_ptr = std::move(lv_ptr),
+                                                                            fct =
+                                                                            std::forward<UnaryFunction>(unary_function)]() {
+    return fct(lv_ptr->value());
+  }, lv.getDisplayName()};
 }
 
 } // namespace LazyOps
@@ -570,7 +602,7 @@ enum class EComponent {
   X, Y
 };
 
-inline std::ostream& operator<<(std::ostream& os, EComponent value) {
+inline std::ostream &operator<<(std::ostream &os, EComponent value) {
   if (value == EComponent::X)
     return os << "X";
   else if (value == EComponent::Y)
@@ -720,7 +752,6 @@ struct BinaryOp :
     stream << "( " << lhs << symbol_ << rhs << " )";
     return stream.str();
   }
-
 
  private:
   Left lhs;
