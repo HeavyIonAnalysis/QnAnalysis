@@ -291,6 +291,14 @@ struct Tensor {
     return factory_function_;
   }
 
+  bool operator==(const Tensor &rhs) const {
+    return axes_ == rhs.axes_ &&
+        factory_function_ == rhs.factory_function_;
+  }
+  bool operator!=(const Tensor &rhs) const {
+    return !(rhs == *this);
+  }
+
  private:
   std::vector<std::string> ax_names_;
 
@@ -314,13 +322,14 @@ auto sqrt(const Tensor<T> &t) {
 template<typename T>
 struct Enumeration {
   typedef std::decay_t<T> value_type;
+  typedef std::map<TensorLinearIndex, value_type> index_type;
 
   template<typename Container>
   Enumeration(std::string name, const Container &c) : name_(std::move(name)) {
     TensorLinearIndex value_index = 0ul;
     for (auto &&v : c) {
       index_.emplace(value_index, v);
-      inverse_index_.emplace(v, value_index);
+//      inverse_index_.emplace(v, value_index);
       ++value_index;
     }
   }
@@ -353,13 +362,13 @@ struct Enumeration {
     return index_.at(index.at(name_));
   }
 
-  auto at(const TensorLinearIndex& index) const {
-    return index_.at(index);
+  auto at(const TensorLinearIndex& ind) const {
+    return index_.at(ind);
   }
 
-  TensorIndex index(const T &v) const {
-    return {{name_, inverse_index_.at(v)}};
-  }
+//  TensorIndex index(const T &v) const {
+//    return {{name_, inverse_index_.at(v)}};
+//  }
 
   auto clone(const std::string &new_name) const {
     Enumeration<T> result = *this;
@@ -367,10 +376,18 @@ struct Enumeration {
     return result;
   }
 
+  auto begin() {
+    return index_.begin();
+  }
+
+  auto end() {
+    return index_.end();
+  }
+
  private:
   std::string name_;
-  std::map<TensorLinearIndex, value_type> index_;
-  std::unordered_map<value_type, TensorLinearIndex> inverse_index_;
+  index_type index_;
+//  std::unordered_map<value_type, TensorLinearIndex> inverse_index_;
 
 };
 
@@ -431,6 +448,28 @@ auto tensorize_f_args(Function &&f, Args &&... args) {
                                  tensors_tuple);
     return std::apply(function, std::move(args_tuple));
   });
+}
+
+template <typename T>
+Tensor<T> stack_tensors(const std::string &new_axis_name, std::initializer_list<Tensor<T>> tensors) {
+  Enumeration<Tensor<T>> tensors_enumeration = enumerate(new_axis_name, tensors);
+  auto axes = tensors_enumeration[0].getAxes();
+  for (auto && [_, tensor] : tensors_enumeration) {
+    if (tensor.getAxes() != axes) {
+      throw std::runtime_error(std::string(__PRETTY_FUNCTION__) + ": axes must be identical for stacked tensors.");
+    }
+  }
+  if (axes.find(new_axis_name) != axes.end()) {
+    throw std::runtime_error(std::string(__PRETTY_FUNCTION__) + ": axis '" + new_axis_name + "' already exists in tensors");
+  }
+
+  auto new_axes = merge_axes(axes, {{new_axis_name, tensors_enumeration.size()}});
+  return {
+    new_axes,
+    [tensors_enumeration] (const TensorIndex& index) {
+      return tensors_enumeration.at(index).at(index);
+    }
+  };
 }
 
 } // namespace TensorOps

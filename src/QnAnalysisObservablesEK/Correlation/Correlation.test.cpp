@@ -135,6 +135,44 @@ TEST(Tensor, accumulate) {
   EXPECT_FLOAT_EQ(accumulated.at(0), 36.0);
 }
 
+TEST(Tensor, stack) {
+  using namespace ::C4::TensorOps;
+  auto en1 = enumerate("axis", {1,2,3});
+  auto en2 = enumerate("axis", {4,5,6});
+  auto en3 = enumerate("axis", {7,8});
+  auto en4 = enumerate("axis2", {7,8});
+  auto tensor = stack_tensors("new_axis",{
+                              tensorize(en1),
+                              tensorize(en2)
+  });
+  EXPECT_EQ(tensor.getAxes().size(), 2);
+  EXPECT_EQ(tensor.size(), 6);
+
+  for (auto && ele : tensor) {
+    if (ele.index.at("new_axis") == 0){
+      EXPECT_FLOAT_EQ(en1[ele.index], ele());
+    } else if (ele.index.at("new_axis") == 1) {
+      EXPECT_FLOAT_EQ(en2[ele.index], ele());
+    }
+  }
+
+  /* stack with the same axis */
+  EXPECT_ANY_THROW(stack_tensors("axis",{
+    tensorize(en1),
+    tensorize(en2)
+  }));
+
+  /* stack with different shape */
+  EXPECT_ANY_THROW(stack_tensors("new_axis",{
+    tensorize(en1),
+    tensorize(en3)
+  }));
+  EXPECT_ANY_THROW(stack_tensors("new_axis",{
+    tensorize(en1),
+    tensorize(en4)
+  }));
+}
+
 TEST(Tensor, v2) {
   using namespace ::C4::TensorOps;
   using namespace ::C4::CorrelationOps;
@@ -171,16 +209,16 @@ TEST(Tensor, v2) {
     cout << endl;
   }
 
-  auto value = v2_xy.at(make_index(
-      en_obs.index("protons_RESCALED"),
-      en_comp0.index(EComponent::Y),
-      en_comp1.index(EComponent::X),
-      en_comp2.index(EComponent::Y),
-      en_ref1.index("psd1_RECENTERED"),
-      en_ref2.index("psd2_RECENTERED")
-  ));
-  cout << value;
-  cout << endl;
+//  auto value = v2_xy.at(make_index(
+//      en_obs.index("protons_RESCALED"),
+//      en_comp0.index(EComponent::Y),
+//      en_comp1.index(EComponent::X),
+//      en_comp2.index(EComponent::Y),
+//      en_ref1.index("psd1_RECENTERED"),
+//      en_ref2.index("psd2_RECENTERED")
+//  ));
+//  cout << value;
+//  cout << endl;
 
 }
 
@@ -205,7 +243,7 @@ TEST(Tensor, Resolution) {
   auto r1 = r1_3sub(
       enumerate("ref", {"psd1", "psd2", "psd3"}),
       enumerate("comp", {EComponent::X, EComponent::Y}));
-  auto r11 = r1.foreach([](const TensorIndex, auto &&ele) { return ele.value(); });
+  auto r11 = r1.foreach([](const TensorIndex&, auto &&ele) { return ele.value(); });
   for (auto && li : r11) {
     EXPECT_THROW(li(), Correlation::CorrelationNotFoundException);
   }
