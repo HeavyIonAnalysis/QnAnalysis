@@ -243,7 +243,7 @@ TEST(Tensor, Resolution) {
   auto r1 = r1_3sub(
       enumerate("ref", {"psd1", "psd2", "psd3"}),
       enumerate("comp", {EComponent::X, EComponent::Y}));
-  auto r11 = r1.foreach([](const TensorIndex&, auto &&ele) { return ele.value(); });
+  auto r11 = r1.map([](const TensorIndex &, auto &&ele) { return ele.value(); });
   for (auto && li : r11) {
     EXPECT_THROW(li(), Correlation::CorrelationNotFoundException);
   }

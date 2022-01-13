@@ -130,23 +130,11 @@ int main() {
                              qt(enum_observable_particle, 1u, enum_sp_component_inv),
                              qt(enum_psd_reference, 1u, enum_sp_component));
 
-  for (auto &&uq : obs_uq) {
-    auto lazy_result = uq();
-
-    try {
-      auto result = lazy_result.value();
-
-      cout << lazy_result.nameInFile() << endl;
-      result.Print();
-      cout << endl;
-    } catch (Correlation::CorrelationNotFoundException &) {}
-  }
-
-
-
   auto r1_3sub_tensor = r1_3sub(enum_psd_reference, enum_sp_component, qq_dir);
   auto r1_4sub_tensor = r1_4sub(enum_4sub_reference, enum_sp_component, qq_dir);
   auto r1_tensor = stack_tensors("resolution_method", {r1_3sub_tensor, r1_4sub_tensor});
+  auto v1_4sub_tensor = Value(2.0) * obs_uq / r1_tensor;
+
   auto enum_resolution = enumerate<std::string>("resolution_method", {"3sub", "4sub_opt2"});
 
   cout << "Resolution..." << endl;
@@ -177,7 +165,6 @@ int main() {
 
   cout << "v1 (ALL)..." << endl;
   {
-    auto v1_4sub_tensor = Value(2.0) * obs_uq / r1_tensor;
     auto proc_v1_file = TFile::Open("proc_v1.root", "recreate");
     for (auto &&v1 : v1_4sub_tensor) {
       auto lazy_result = v1();
@@ -185,7 +172,6 @@ int main() {
 
       try {
         auto result = lazy_result.value();
-        result = result.Rebin({"Centrality_Centrality_Epsd", 10, 0, 100});
         result.Print();
 
         std::stringstream obj_name_stream;

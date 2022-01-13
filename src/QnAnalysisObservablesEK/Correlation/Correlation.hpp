@@ -247,7 +247,7 @@ struct Tensor {
   }
 
   template<typename UnaryFunction>
-  auto foreach(UnaryFunction &&unary_function) const {
+  auto map(UnaryFunction &&unary_function) const {
     using result_type = std::decay_t<std::invoke_result_t<
         UnaryFunction,
         const TensorIndex&,
@@ -312,7 +312,7 @@ Tensor(TensorAxes, Function &&) -> Tensor<std::decay_t<std::invoke_result_t<Func
 
 template<typename T>
 auto sqrt(const Tensor<T> &t) {
-  return t.foreach([](const TensorIndex &, auto &&v) { return sqrt(v); });
+  return t.map([](const TensorIndex &, auto &&v) { return sqrt(v); });
 }
 
 /**
@@ -484,6 +484,9 @@ struct Function;
 
 struct LazyArithmeticsTag {};
 
+template<typename T, typename UnaryFunction>
+auto apply(const ILazyValue<T>& lv, UnaryFunction && unary_function);
+
 template<typename T>
 struct ILazyValue {
   virtual ~ILazyValue() = default;
@@ -493,6 +496,11 @@ struct ILazyValue {
 
   Function<T> asFunction() const;
   Function<T> asFunction(const std::string &display_name) const;
+
+  template <typename UnaryFunction>
+  auto apply(UnaryFunction && unary_function) const {
+    return LazyOps::apply(*this, std::forward<UnaryFunction>(unary_function));
+  }
 };
 
 template<typename ResultType>
@@ -529,6 +537,7 @@ struct Function :
   std::string display_name_;
 };
 
+
 template<typename T>
 Function<T> ILazyValue<T>::asFunction() const {
   std::shared_ptr<ILazyValue<T>> ptr{clone()};
@@ -540,8 +549,17 @@ Function<T> ILazyValue<T>::asFunction(const std::string& display_name) const {
   return Function<T>([ptr]() { return ptr->value(); }, display_name);
 }
 
+
 template<typename T>
 Function<T> toFunction(const ILazyValue<T>& lv) { return lv.asFunction(); }
+
+template<typename T, typename UnaryFunction>
+auto apply(const ILazyValue<T>& lv, UnaryFunction && unary_function) {
+  std::shared_ptr<ILazyValue<T>> lv_ptr{lv.clone()};
+  return Function<std::decay_t<std::invoke_result_t<UnaryFunction, T>>>{[
+      lv_ptr = std::move(lv_ptr),
+      fct = std::forward<UnaryFunction>(unary_function)] () {return fct(lv_ptr->value()); }, lv.getDisplayName()};
+}
 
 } // namespace LazyOps
 
@@ -591,7 +609,8 @@ std::ostream &operator<<(std::ostream &os, const QVec &vec) {
 }
 
 struct Correlation
-    : public LazyOps::LazyArithmeticsTag {
+    : public LazyOps::LazyArithmeticsTag,
+      public LazyOps::ILazyValue<Qn::DataContainerStatCalculate> {
   typedef Qn::DataContainerStatCalculate result_type;
 
   struct CorrelationNotFoundException : public std::exception {};
@@ -599,7 +618,11 @@ struct Correlation
   Correlation(TDirectory *directory, std::vector<QVec> q_vectors)
       : directory_(directory), q_vectors_(std::move(q_vectors)) {}
 
-  result_type value() const {
+  ILazyValue<Qn::DataContainerStatCalculate> *clone() const override {
+    return new Correlation(*this);
+  }
+
+  result_type value() const override {
     auto collect = directory_->Get<Qn::DataContainerStatCollect>(nameInFile().c_str());
     if (!collect) {
       throw CorrelationNotFoundException();
