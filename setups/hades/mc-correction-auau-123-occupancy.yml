@@ -38,6 +38,21 @@ _axes:
     nb: 14
     lo: 0.2
     hi: 1.6
+  - &axis_tru_theta
+    name: sim_particles_extra/theta
+    nb: 14
+    lo: 0.2
+    hi: 1.6
+  - &axis_rec_uniform_pT
+    name: mdc_vtx_tracks_extra/pT
+    nb: 10
+    lo: 0.0
+    hi: 2.0
+  - &axis_tru_uniform_pT
+    name: sim_particles_extra/pT
+    nb: 10
+    lo: 0.0
+    hi: 2.0
 
 _cuts:
   - &pid_protons_cut
@@ -86,10 +101,10 @@ hades_analysis:
       type: track
       phi:  mdc_vtx_tracks_extra/phi
       weight: Ones
-      norm: none
+      norm: m
       axes:
         - *axis_rec_theta
-        - *axis_rec_protons_pT
+        - *axis_rec_uniform_pT
       cuts-quality: { mdc_vtx_tracks_extra/chi2: {range: [0.0, 100.0]} }
       qa:
         - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
@@ -144,6 +159,21 @@ hades_analysis:
         - *axis_rec_pions_pT
         - *axis_rec_pions_rapidity
         - [*axis_rec_pions_rapidity, *axis_rec_pions_pT]
+    ###########################################################################
+    - name: tru_charged
+      type: track
+      phi:  sim_particles_extra/phi
+      weight: Ones
+      norm: m
+      axes:
+        - *axis_tru_theta
+        - *axis_tru_uniform_pT
+      cuts-charge: { sim_particles_extra/is_charged: {range: [0.0, 100.0]} }
+      qa:
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_tru_protons_pT
+        - *axis_tru_protons_rapidity
+        - [*axis_tru_protons_rapidity, *axis_tru_protons_pT]
     ###########################################################################
     - name: tru_protons
       type: track

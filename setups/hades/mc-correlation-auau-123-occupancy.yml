@@ -7,6 +7,8 @@ _detectors: &detectors
     tags: [ rec_vector ]
   - name: rec_pi_neg
     tags: [ rec_vector ]
+  - name: tru_charged
+    tags: [ tru_vector ]
   - name: tru_protons
     tags: [ tru_vector ]
   - name: tru_pi_pos
