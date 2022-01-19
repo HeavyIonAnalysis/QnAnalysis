@@ -7,6 +7,11 @@ _axes:
   - &axis_pions_pT
     name: mdc_vtx_tracks_extra/pT
     bin-edges: [0, 0.08, 0.10, 0.13, 0.15, 0.18, 0.21, 0.25, 0.32, 0.55, 1.0]
+  - &axis_uniform_pT
+    name: mdc_vtx_tracks_extra/pT
+    nb: 10
+    lo: 0
+    hi: 2.0
   - &axis_protons_rapidity
     name: mdc_vtx_tracks_extra/ycm
     nb: 15
@@ -77,6 +82,7 @@ hades_analysis:
 #        - twist-and-rescale
       axes:
         - *axis_theta
+        - *axis_uniform_pT
       cuts-track-quality: { mdc_vtx_tracks_extra/chi2: {range: [0.0, 100.0]} }
       qa:
         - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
@@ -145,17 +151,16 @@ hades_analysis:
       qa:
         - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
     #############################################################
-    - name: D2
+    - name: p2
       type: track
       phi:  mdc_vtx_tracks_extra/phi
-      weight: Ones
+      weight: mdc_vtx_tracks_extra/efficiency
       norm: m
       corrections:
         - recentering
 #        - twist-and-rescale
       cuts-quality: *good_particle_cuts
-      cuts-pid: { mdc_vtx_tracks_extra/geant_pid: {equals: 45} }
-      cuts-kinematics: { mdc_vtx_tracks_extra/ycm: {range: [-0.25, 0.25]} }
+      cuts-pid: { mdc_vtx_tracks_extra/pid: {equals: 2212} }
       qa:
         - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
   #############################################################

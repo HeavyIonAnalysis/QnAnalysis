@@ -19,7 +19,7 @@ _detectors: &detectors
     tags: [ qn_vector, mdc ]
   - name: pi2
     tags: [ q2_vector ]
-  - name: D2
+  - name: p2
     tags: [ q2_vector ]
 
 _axes:
