@@ -5,7 +5,7 @@ find_package(QnTools QUIET)
 include(FetchContent)
 FetchContent_Declare(QnTools
         GIT_REPOSITORY https://github.com/HeavyIonAnalysis/QnTools.git
-        GIT_TAG "f39fe1fd34d9b01037e28e369a25c9fe03f0b4e4" # PR: Fix bootstrapping error propagation of scaling and pow operations
+        GIT_TAG "f0e2818ce5b10254bcf4985821d86599e3903783"
         UPDATE_DISCONNECTED ${UPDATE_DISCONNECTED}
         )
 
