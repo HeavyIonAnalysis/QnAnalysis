@@ -1,0 +1,104 @@
+_layouts:
+
+_axes:
+  - &axis_rec_protons_pT
+    name: mdc_vtx_tracks_extra/pT
+    bin-edges: [0, 0.3, 0.35, 0.45, 0.5, 0.55, 0.6, 0.7, 0.8, 0.95, 1.5]
+  - &axis_rec_pions_pT
+    name: mdc_vtx_tracks_extra/pT
+    bin-edges: [0, 0.08, 0.10, 0.13, 0.15, 0.18, 0.21, 0.25, 0.32, 0.55, 1.0]
+  - &axis_tru_protons_pT
+    name: sim_particles_extra/pT
+    bin-edges: [0, 0.3, 0.35, 0.45, 0.5, 0.55, 0.6, 0.7, 0.8, 0.95, 1.5]
+  - &axis_tru_pions_pT
+    name: sim_particles_extra/pT
+    bin-edges: [0, 0.08, 0.10, 0.13, 0.15, 0.18, 0.21, 0.25, 0.32, 0.55, 1.0]
+  - &axis_rec_protons_rapidity
+    name: mdc_vtx_tracks_extra/ycm
+    nb: 15
+    lo: -0.75
+    hi: 0.75
+  - &axis_rec_pions_rapidity
+    name: mdc_vtx_tracks_extra/ycm
+    nb: 17
+    lo: -0.65
+    hi: 1.05
+  - &axis_tru_protons_rapidity
+    name: sim_particles_extra/ycm
+    nb: 15
+    lo: -0.75
+    hi: 0.75
+  - &axis_tru_pions_rapidity
+    name: sim_particles_extra/ycm
+    nb: 17
+    lo: -0.65
+    hi: 1.05
+  - &axis_rec_theta
+    name: mdc_vtx_tracks_extra/theta
+    nb: 14
+    lo: 0.2
+    hi: 1.6
+  - &axis_tru_theta
+    name: sim_particles_extra/theta
+    nb: 14
+    lo: 0.2
+    hi: 1.6
+  - &axis_rec_uniform_pT
+    name: mdc_vtx_tracks_extra/pT
+    nb: 10
+    lo: 0.0
+    hi: 2.0
+  - &axis_tru_uniform_pT
+    name: sim_particles_extra/pT
+    nb: 10
+    lo: 0.0
+    hi: 2.0
+
+_cuts:
+  - &pid_protons_cut
+    mdc_vtx_tracks_extra/pid: { equals: 2212 }
+  - &pid_pi_pos_cut
+    mdc_vtx_tracks_extra/pid: { equals: 211 }
+  - &pid_pi_neg_cut
+    mdc_vtx_tracks_extra/pid: { equals: -211 }
+  - &mf_cuts
+    mdc_vtx_tracks_extra/pT: {range: [0.0, 2.0]}
+    mdc_vtx_tracks_extra/rapidity: {range: [1.09, 1.29]}
+  - &mb_cuts
+    mdc_vtx_tracks_extra/pT: {range: [0.0, 2.0]}
+    mdc_vtx_tracks_extra/rapidity: {range: [0.19, 0.39]}
+  - &gen_prim_protons_cut
+    sim_particles_extra/pid: { equals: 2212 }
+    sim_particles_extra/is_primary: { equals: 1 }
+  - &gen_prim_pi_pos_cut
+    sim_particles_extra/pid: { equals: 211 }
+    sim_particles_extra/is_primary: { equals: 1 }
+  - &gen_prim_pi_neg_cut
+    sim_particles_extra/pid: { equals: -211 }
+    sim_particles_extra/is_primary: { equals: 1 }
+  - &good_track_cuts
+    mdc_vtx_tracks_extra/dca_xy: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks_extra/dca_z: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks_extra/chi2: {range: [0.0, 100.0]}
+  - &w1_cuts
+    forward_wall_hits/ring: { range: [1.0, 5.0] }
+    forward_wall_hits/signal: { range: [80.0, 999.0] }
+  - &w2_cuts
+    forward_wall_hits/ring: { range: [6.0, 7.0] }
+    forward_wall_hits/signal: { range: [85.0, 999.0] }
+  - &w3_cuts
+    forward_wall_hits/ring: { range: [8.0, 10.0] }
+    forward_wall_hits/signal: { range: [88.0, 999.0] }
+
+hades_analysis:
+  event-variables:
+    - event_header/selected_tof_rpc_hits_centrality
+  axes:
+    - { name: event_header/selected_tof_rpc_hits_centrality, nb: 8, lo: 0.0, hi: 40 }
+  q-vectors:
+    ###########################################################################
+    - name: psi_rp
+      type: psi
+      phi: sim_header/reaction_plane
+      weight: Ones
+      norm: mag
