@@ -52,6 +52,10 @@ _cuts:
     forward_wall_hits/rnd_sub: { equals: 1 }
     forward_wall_hits/time: { range: [22.681788, 28.352235] }
     forward_wall_hits/signal: { range: [80.0, 999.0] }
+  - &wall_cuts
+    forward_wall_hits/rnd_sub: { equals: 1 }
+    forward_wall_hits/time: { range: [22.681788, 28.352235] }
+    forward_wall_hits/signal: { range: [80.0, 999.0] }
   - &w1_cuts
     forward_wall_hits/ring: { range: [1.0, 5.0] }
     forward_wall_hits/beta: { range: [0.84, 1.0] }
@@ -101,3 +105,13 @@ hades_analysis:
         - recentering
 #        - twist-and-rescale
       cuts: *w3_cuts
+    #############################################################
+    - name: Wall
+      type: track
+      phi:  forward_wall_hits/phi
+      weight: forward_wall_hits/signal
+      norm: m
+      corrections:
+        - recentering
+#        - twist-and-rescale
+      cuts: *wall_cuts
