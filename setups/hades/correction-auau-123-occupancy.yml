@@ -11,8 +11,8 @@ _axes:
     hi: 0.75
   - &axis_protons_c_eff
     name: mdc_vtx_tracks_extra/c_eff
-    nb: 16
-    lo: 0.001
+    nb: 10
+    lo: 0.003
     hi: 0.005
 _cuts:
   - &midrapidity_cuts
@@ -56,6 +56,7 @@ hades_analysis:
       norm: m
       axes:
         - *axis_protons_pT
+        - *axis_protons_rapidity
         - *axis_protons_c_eff
       cuts-pid: *protons_cuts
       cuts-midrapidity: *midrapidity_cuts
