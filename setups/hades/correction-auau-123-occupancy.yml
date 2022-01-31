@@ -12,8 +12,8 @@ _axes:
   - &axis_protons_c_eff
     name: mdc_vtx_tracks_extra/c_eff
     nb: 10
-    lo: 0.003
-    hi: 0.005
+    lo: 0.005
+    hi: 0.007
 _cuts:
   - &midrapidity_cuts
     mdc_vtx_tracks_extra/ycm: { range: [-0.05, 0.05] }
