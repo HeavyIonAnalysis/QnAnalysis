@@ -59,7 +59,6 @@ hades_analysis:
         - *axis_protons_rapidity
         - *axis_protons_c_eff
       cuts-pid: *protons_cuts
-      cuts-midrapidity: *midrapidity_cuts
       cuts-quality: *good_particle_cuts
       qa:
         - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
