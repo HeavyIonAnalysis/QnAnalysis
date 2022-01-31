@@ -33,7 +33,7 @@ _tasks_args:
     query: { tags: { any-in: [ qn_vector ] } }
     query-list: *detectors
     components: *sp_components
-    correction-steps: [ recentered ]
+    correction-steps: [ plain ]
     weight: ones
 
 _tasks:
