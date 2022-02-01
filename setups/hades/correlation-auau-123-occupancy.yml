@@ -1,5 +1,5 @@
 _detectors: &detectors
-  - name: protons
+  - name: pi_neg
     tags: [ un_vector ]
   - name: W1
     tags: [ qn_vector ]
