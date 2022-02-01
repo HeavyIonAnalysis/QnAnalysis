@@ -1,6 +1,9 @@
 _layouts:
 
 _axes:
+  ##############
+  # Protons axes
+  ##############
   - &axis_protons_pT
     name: mdc_vtx_tracks_extra/pT
     bin-edges: [0, 0.3, 0.35, 0.45, 0.5, 0.55, 0.6, 0.7, 0.8, 0.95, 1.5]
@@ -14,11 +17,27 @@ _axes:
     nb: 10
     lo: 0.005
     hi: 0.007
+  ############
+  # Pions axes
+  ############
+  - &axis_pions_pT
+    name: mdc_vtx_tracks_extra/pT
+    bin-edges: [0, 0.08, 0.10, 0.13, 0.15, 0.18, 0.21, 0.25, 0.32, 0.55, 1.0]
+  - &axis_pions_rapidity
+    name: mdc_vtx_tracks_extra/ycm
+    nb: 17
+    lo: -0.65
+    hi: 1.05
+  - &axis_pions_c_eff
+    name: mdc_vtx_tracks_extra/c_eff
+    nb: 10
+    lo: -0.005
+    hi: 0.095
 _cuts:
-  - &midrapidity_cuts
-    mdc_vtx_tracks_extra/ycm: { range: [-0.05, 0.05] }
   - &protons_cuts
     mdc_vtx_tracks_extra/pid: { equals: 2212 }
+  - &pi_neg_cuts
+    mdc_vtx_tracks_extra/pid: { equals: -211 }
   - &good_particle_cuts
     mdc_vtx_tracks_extra/dca_xy: {range: [-10.0, 10.0]}
     mdc_vtx_tracks_extra/dca_z: {range: [-10.0, 10.0]}
@@ -49,22 +68,19 @@ hades_analysis:
     - { name: event_header/selected_tof_rpc_hits_centrality, nb: 8, lo: 0.0, hi: 40 }
   q-vectors:
   #############################################################
-    - name: protons
+    - name: pi_neg
       type: track
       phi:  mdc_vtx_tracks_extra/phi
       weight: mdc_vtx_tracks_extra/occ_weight
       norm: m
       axes:
-        - *axis_protons_pT
-        - *axis_protons_rapidity
-        - *axis_protons_c_eff
-      cuts-pid: *protons_cuts
+        - *axis_pions_pT
+        - *axis_pions_rapidity
+        - *axis_pions_c_eff
       cuts-quality: *good_particle_cuts
+      cuts-pid: *pi_neg_cuts
       qa:
         - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
-        - *axis_protons_pT
-        - *axis_protons_rapidity
-        - [*axis_protons_rapidity, *axis_protons_pT]
   #############################################################
     - name: Mf
       type: track
