@@ -78,6 +78,7 @@ hades_analysis:
       axes:
         - *axis_pions_pT
         - *axis_pions_rapidity
+        - *axis_pions_c_eff
       cuts-quality: *good_particle_cuts
       cuts-pid: *pi_pos_cuts
       qa:
