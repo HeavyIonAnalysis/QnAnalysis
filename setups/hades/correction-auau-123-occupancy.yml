@@ -30,9 +30,9 @@ _axes:
     hi: 1.05
   - &axis_pions_c_eff
     name: mdc_vtx_tracks_extra/c_eff
-    nb: 10
-    lo: 0.07
-    hi: 0.09
+    nb: 5
+    lo: 0.0
+    hi: 0.1
 _cuts:
   - &protons_cuts
     mdc_vtx_tracks_extra/pid: { equals: 2212 }
@@ -68,7 +68,7 @@ hades_analysis:
     - { name: event_header/selected_tof_rpc_hits_centrality, nb: 8, lo: 0.0, hi: 40 }
   q-vectors:
   #############################################################
-    - name: pi_neg
+    - name: pi_pos
       type: track
       phi:  mdc_vtx_tracks_extra/phi
       weight: mdc_vtx_tracks_extra/occ_weight
@@ -76,9 +76,8 @@ hades_analysis:
       axes:
         - *axis_pions_pT
         - *axis_pions_rapidity
-        - *axis_pions_c_eff
       cuts-quality: *good_particle_cuts
-      cuts-pid: *pi_neg_cuts
+      cuts-pid: *pi_pos_cuts
       qa:
         - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
   #############################################################
