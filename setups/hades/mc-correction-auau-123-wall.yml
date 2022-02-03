@@ -1,0 +1,235 @@
+_layouts:
+
+_axes:
+  - &axis_rec_protons_pT
+    name: mdc_vtx_tracks_extra/pT
+    bin-edges: [0, 0.3, 0.35, 0.45, 0.5, 0.55, 0.6, 0.7, 0.8, 0.95, 1.5]
+  - &axis_rec_pions_pT
+    name: mdc_vtx_tracks_extra/pT
+    bin-edges: [0, 0.08, 0.10, 0.13, 0.15, 0.18, 0.21, 0.25, 0.32, 0.55, 1.0]
+  - &axis_tru_protons_pT
+    name: sim_particles_extra/pT
+    bin-edges: [0, 0.3, 0.35, 0.45, 0.5, 0.55, 0.6, 0.7, 0.8, 0.95, 1.5]
+  - &axis_tru_pions_pT
+    name: sim_particles_extra/pT
+    bin-edges: [0, 0.08, 0.10, 0.13, 0.15, 0.18, 0.21, 0.25, 0.32, 0.55, 1.0]
+  - &axis_rec_protons_rapidity
+    name: mdc_vtx_tracks_extra/ycm
+    nb: 15
+    lo: -0.75
+    hi: 0.75
+  - &axis_rec_pions_rapidity
+    name: mdc_vtx_tracks_extra/ycm
+    nb: 17
+    lo: -0.65
+    hi: 1.05
+  - &axis_tru_protons_rapidity
+    name: sim_particles_extra/ycm
+    nb: 15
+    lo: -0.75
+    hi: 0.75
+  - &axis_tru_pions_rapidity
+    name: sim_particles_extra/ycm
+    nb: 17
+    lo: -0.65
+    hi: 1.05
+_cuts:
+  - &pid_protons_cut
+    mdc_vtx_tracks_extra/pid: { equals: 2212 }
+  - &pid_pi_pos_cut
+    mdc_vtx_tracks_extra/pid: { equals: 211 }
+  - &pid_pi_neg_cut
+    mdc_vtx_tracks_extra/pid: { equals: -211 }
+  - &mf_cuts
+    mdc_vtx_tracks_extra/pT: {range: [0.0, 2.0]}
+    mdc_vtx_tracks_extra/rapidity: {range: [1.09, 1.29]}
+  - &mb_cuts
+    mdc_vtx_tracks_extra/pT: {range: [0.0, 2.0]}
+    mdc_vtx_tracks_extra/rapidity: {range: [0.19, 0.39]}
+  - &gen_prim_protons_cut
+    sim_particles_extra/pid: { equals: 2212 }
+    sim_particles_extra/is_primary: { equals: 1 }
+  - &gen_prim_pi_pos_cut
+    sim_particles_extra/pid: { equals: 211 }
+    sim_particles_extra/is_primary: { equals: 1 }
+  - &gen_prim_pi_neg_cut
+    sim_particles_extra/pid: { equals: -211 }
+    sim_particles_extra/is_primary: { equals: 1 }
+  - &good_track_cuts
+    mdc_vtx_tracks_extra/dca_xy: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks_extra/dca_z: {range: [-10.0, 10.0]}
+    mdc_vtx_tracks_extra/chi2: {range: [0.0, 100.0]}
+  - &w1_cuts
+    forward_wall_hits/ring: { range: [1.0, 5.0] }
+    forward_wall_hits/signal: { range: [80.0, 999.0] }
+  - &w2_cuts
+    forward_wall_hits/ring: { range: [6.0, 7.0] }
+    forward_wall_hits/signal: { range: [85.0, 999.0] }
+  - &w3_cuts
+    forward_wall_hits/ring: { range: [8.0, 10.0] }
+    forward_wall_hits/signal: { range: [88.0, 999.0] }
+
+hades_analysis:
+  event-variables:
+    - event_header/selected_tof_rpc_hits_centrality
+  axes:
+    - { name: event_header/selected_tof_rpc_hits_centrality, nb: 12, lo: 0.0, hi: 60 }
+  q-vectors:
+  ###########################################################################
+    - name: rec_protons
+      type: track
+      phi:  mdc_vtx_tracks_extra/phi
+      weight: mdc_vtx_tracks_extra/efficiency
+      norm: m
+      axes:
+        - *axis_rec_protons_pT
+        - *axis_rec_protons_rapidity
+      cuts-pid: *pid_protons_cut
+      cuts-quality: *good_track_cuts
+      qa:
+        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_rec_protons_pT
+        - *axis_rec_protons_rapidity
+        - [*axis_rec_protons_rapidity, *axis_rec_protons_pT]
+  ###########################################################################
+    - name: rec_pi_neg
+      type: track
+      phi:  mdc_vtx_tracks_extra/phi
+      weight: mdc_vtx_tracks_extra/efficiency
+      norm: m
+      axes:
+        - *axis_rec_pions_pT
+        - *axis_rec_pions_rapidity
+      cuts-pid: *pid_pi_neg_cut
+      cuts-quality: *good_track_cuts
+      qa:
+        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_rec_pions_pT
+        - *axis_rec_pions_rapidity
+        - [*axis_rec_pions_rapidity, *axis_rec_pions_pT]
+  ###########################################################################
+    - name: rec_pi_pos
+      type: track
+      phi:  mdc_vtx_tracks_extra/phi
+      weight: mdc_vtx_tracks_extra/efficiency
+      norm: m
+      axes:
+        - *axis_rec_pions_pT
+        - *axis_rec_pions_rapidity
+      cuts-pid: *pid_pi_pos_cut
+      cuts-quality: *good_track_cuts
+      qa:
+        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_rec_pions_pT
+        - *axis_rec_pions_rapidity
+        - [*axis_rec_pions_rapidity, *axis_rec_pions_pT]
+  ###########################################################################
+    - name: tru_protons
+      type: track
+      phi:  sim_particles_extra/phi
+      weight: Ones
+      norm: m
+      axes:
+        - *axis_tru_protons_pT
+        - *axis_tru_protons_rapidity
+      cuts-pid: *gen_prim_protons_cut
+      qa:
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_tru_protons_pT
+        - *axis_tru_protons_rapidity
+        - [*axis_tru_protons_rapidity, *axis_tru_protons_pT]
+  ###########################################################################
+    - name: tru_pi_neg
+      type: track
+      phi:  sim_particles_extra/phi
+      weight: Ones
+      norm: m
+      axes:
+        - *axis_tru_pions_pT
+        - *axis_tru_pions_rapidity
+      cuts-pid: *gen_prim_pi_neg_cut
+      qa:
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_tru_pions_pT
+        - *axis_tru_pions_rapidity
+        - [*axis_tru_pions_rapidity, *axis_tru_pions_pT]
+  ###########################################################################
+    - name: tru_pi_pos
+      type: track
+      phi:  sim_particles_extra/phi
+      weight: Ones
+      norm: m
+      axes:
+        - *axis_tru_pions_pT
+        - *axis_tru_pions_rapidity
+      cuts-pid: *gen_prim_pi_pos_cut
+      qa:
+        - {name: sim_particles_extra/phi, nb: 100, lo: -4., hi: 4.}
+        - *axis_tru_pions_pT
+        - *axis_tru_pions_rapidity
+        - [*axis_tru_pions_rapidity, *axis_tru_pions_pT]
+    ##########################################################################
+    - name: Mf
+      type: track
+      phi:  mdc_vtx_tracks_extra/phi
+      weight: Ones
+      norm: m
+      corrections:
+        - recentering
+      cuts-subevent: *mf_cuts
+      cuts-quality: *good_track_cuts
+      cuts-pid: *pid_protons_cut
+      qa:
+        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+  #############################################################
+    - name: Mb
+      type: track
+      phi:  mdc_vtx_tracks_extra/phi
+      weight: Ones
+      norm: m
+      corrections:
+        - recentering
+      cuts-subevent: *mb_cuts
+      cuts-quality: *good_track_cuts
+      cuts-pid: *pid_protons_cut
+      qa:
+        - {name: mdc_vtx_tracks_extra/phi, nb: 100, lo: -4., hi: 4.}
+  ###########################################################################
+    - name: W1
+      type: track
+      phi:  forward_wall_hits/phi
+      weight: forward_wall_hits/signal
+      norm: m
+      corrections:
+        - recentering
+      cuts-w1: *w1_cuts
+      qa:
+        - {name: forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
+  ###########################################################################
+    - name: W2
+      type: track
+      phi:  forward_wall_hits/phi
+      weight: forward_wall_hits/signal
+      norm: m
+      corrections:
+        - recentering
+      cuts-w2: *w2_cuts
+      qa:
+        - {name: forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
+  ###########################################################################
+    - name: W3
+      type: track
+      phi:  forward_wall_hits/phi
+      weight: forward_wall_hits/signal
+      norm: m
+      corrections:
+        - recentering
+      cuts-w3: *w3_cuts
+      qa:
+        - {name: forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
+  ###########################################################################
+    - name: psi_rp
+      type: psi
+      phi: sim_header/reaction_plane
+      weight: Ones
+      norm: mag

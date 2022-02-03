@@ -1,0 +1,99 @@
+_detectors: &detectors
+# **************************
+# particles vectors
+  - name: rec_protons
+    tags: [ rec_vector ]
+  - name: rec_pi_pos
+    tags: [ rec_vector ]
+  - name: rec_pi_neg
+    tags: [ rec_vector ]
+  - name: tru_protons
+    tags: [ tru_vector ]
+  - name: tru_pi_pos
+    tags: [ tru_vector ]
+  - name: tru_pi_neg
+    tags: [ tru_vector ]
+# **************************
+# reference vectors
+  - name: W1
+    tags: [ qn_vector ]
+  - name: W2
+    tags: [ qn_vector ]
+  - name: W3
+    tags: [ qn_vector ]
+  - name: Mf
+    tags: [ qn_vector ]
+  - name: Mb
+    tags: [ qn_vector ]
+# **************************
+# tru reaction plane
+  - name: psi_rp
+    tags: [ psi_vector ]
+
+_axes:
+  - &centrality
+    name: event_header_selected_tof_rpc_hits_centrality
+    nb: 8
+    lo: 0
+    hi: 40
+
+_components:
+  - &sp_components [ x1,y1 ]
+
+_tasks_args:
+  - &ta_rec
+    query: { tags: { any-in: [ rec_vector ] } }
+    query-list: *detectors
+    components: *sp_components
+    correction-steps: [ plain ]
+    weight: sumw
+  - &ta_tru
+    query: { tags: { any-in: [ tru_vector ] } }
+    query-list: *detectors
+    components: *sp_components
+    correction-steps: [ plain ]
+    weight: sumw
+  - &ta_qn
+    query: { tags: { any-in: [ qn_vector ] } }
+    query-list: *detectors
+    components: *sp_components
+    correction-steps: [ recentered ]
+    weight: ones
+  - &ta_psi
+    query: { tags: { any-in: [ psi_vector ] } }
+    query-list: *detectors
+    components: *sp_components
+    correction-steps: [ plain ]
+    weight: ones
+
+_tasks:
+  - args: [*ta_rec, *ta_qn]
+    n-samples: 100
+    weights-type: observable
+    folder: "/u1Q1/rec"
+    axes: [ *centrality ]
+  - args: [*ta_rec, *ta_psi]
+    n-samples: 100
+    weights-type: observable
+    folder: "/u1Q1/rec"
+    axes: [ *centrality ]
+  - args: [*ta_tru, *ta_qn]
+    n-samples: 100
+    weights-type: observable
+    folder: "/u1Q1/tru"
+    axes: [ *centrality ]
+  - args: [*ta_tru, *ta_psi]
+    n-samples: 100
+    weights-type: observable
+    folder: "/u1Q1/tru"
+    axes: [ *centrality ]
+  - args: [*ta_qn, *ta_qn]
+    n-samples: 100
+    weights-type: reference
+    folder: "/Q1Q1/"
+    axes: [ *centrality ]
+  - args: [*ta_qn, *ta_psi]
+    n-samples: 100
+    weights-type: reference
+    folder: "/Q1Q1/"
+    axes: [ *centrality ]
