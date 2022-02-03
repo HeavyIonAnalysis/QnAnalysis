@@ -30,7 +30,7 @@ _axes:
     hi: 1.05
   - &axis_pions_c_eff
     name: mdc_vtx_tracks_extra/c_eff
-    nb: 5
+    nb: 10
     lo: 0.0
     hi: 0.1
 _cuts:
