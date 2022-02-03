@@ -60,14 +60,14 @@ _cuts:
     mdc_vtx_tracks_extra/dca_z: {range: [-10.0, 10.0]}
     mdc_vtx_tracks_extra/chi2: {range: [0.0, 100.0]}
   - &w1_cuts
-    forward_wall_hits/ring: { range: [1.0, 5.0] }
-    forward_wall_hits/signal: { range: [80.0, 999.0] }
+    reconstructed_forward_wall_hits/ring: { range: [1.0, 5.0] }
+    reconstructed_forward_wall_hits/signal: { range: [80.0, 999.0] }
   - &w2_cuts
-    forward_wall_hits/ring: { range: [6.0, 7.0] }
-    forward_wall_hits/signal: { range: [85.0, 999.0] }
+    reconstructed_forward_wall_hits/ring: { range: [6.0, 7.0] }
+    reconstructed_forward_wall_hits/signal: { range: [85.0, 999.0] }
   - &w3_cuts
-    forward_wall_hits/ring: { range: [8.0, 10.0] }
-    forward_wall_hits/signal: { range: [88.0, 999.0] }
+    reconstructed_forward_wall_hits/ring: { range: [8.0, 10.0] }
+    reconstructed_forward_wall_hits/signal: { range: [88.0, 999.0] }
 
 hades_analysis:
   event-variables:
@@ -197,36 +197,36 @@ hades_analysis:
   ###########################################################################
     - name: W1
       type: track
-      phi: forward_wall_hits/phi
-      weight: forward_wall_hits/signal
+      phi: reconstructed_forward_wall_hits/phi
+      weight: reconstructed_forward_wall_hits/signal
       norm: m
       corrections:
         - recentering
       cuts-w1: *w1_cuts
       qa:
-        - {name: forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: reconstructed_forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
   ###########################################################################
     - name: W2
       type: track
-      phi: forward_wall_hits/phi
-      weight: forward_wall_hits/signal
+      phi: reconstructed_forward_wall_hits/phi
+      weight: reconstructed_forward_wall_hits/signal
       norm: m
       corrections:
         - recentering
       cuts-w2: *w2_cuts
       qa:
-        - {name: forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: reconstructed_forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
   ###########################################################################
     - name: W3
       type: track
-      phi: forward_wall_hits/phi
-      weight: forward_wall_hits/signal
+      phi: reconstructed_forward_wall_hits/phi
+      weight: reconstructed_forward_wall_hits/signal
       norm: m
       corrections:
         - recentering
       cuts-w3: *w3_cuts
       qa:
-        - {name: forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
+        - {name: reconstructed_forward_wall_hits/phi, nb: 100, lo: -4., hi: 4.}
   ###########################################################################
     - name: psi_rp
       type: psi
