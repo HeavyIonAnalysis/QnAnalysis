@@ -57,7 +57,7 @@ _tasks_args:
     query: { tags: { any-in: [ qn_vector ] } }
     query-list: *detectors
     components: *sp_components
-    correction-steps: [ recentered ]
+    correction-steps: [ plain ]
     weight: ones
   - &ta_psi
     query: { tags: { any-in: [ psi_vector ] } }
