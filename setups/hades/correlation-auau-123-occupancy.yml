@@ -1,4 +1,8 @@
 _detectors: &detectors
+  - name: protons
+    tags: [ un_vector ]
+  - name: pi_neg
+    tags: [ un_vector ]
   - name: pi_pos
     tags: [ un_vector ]
   - name: W1
