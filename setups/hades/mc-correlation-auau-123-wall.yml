@@ -90,10 +90,10 @@ _tasks:
   - args: [*ta_qn, *ta_qn]
     n-samples: 100
     weights-type: reference
-    folder: "/Q1Q1/"
+    folder: "/Q1Q1"
     axes: [ *centrality ]
   - args: [*ta_qn, *ta_psi]
     n-samples: 100
     weights-type: reference
-    folder: "/Q1Q1/"
+    folder: "/Q1Q1"
     axes: [ *centrality ]
