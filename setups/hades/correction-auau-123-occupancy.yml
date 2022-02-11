@@ -15,8 +15,8 @@ _axes:
   - &axis_protons_c_eff
     name: mdc_vtx_tracks_extra/c_eff
     nb: 10
-    lo: -0.0005
-    hi: 0.0095
+    lo: -0.00025
+    hi: 0.00475
   ############
   # Pions axes
   ############
@@ -31,8 +31,8 @@ _axes:
   - &axis_pions_c_eff
     name: mdc_vtx_tracks_extra/c_eff
     nb: 10
-    lo: -0.005
-    hi: 0.095
+    lo: -0.0175
+    hi: 0.0475
 _cuts:
   - &protons_cuts
     mdc_vtx_tracks_extra/pid: { equals: 2212 }
