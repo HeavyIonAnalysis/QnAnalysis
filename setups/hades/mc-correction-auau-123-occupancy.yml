@@ -115,7 +115,7 @@ hades_analysis:
     - name: rec_protons
       type: track
       phi:  mdc_vtx_tracks_extra/phi
-      weight: mdc_vtx_tracks_extra/occ_weight
+      weight: mdc_vtx_tracks_extra/efficiency
       norm: m
       axes:
         - *axis_rec_protons_pT
