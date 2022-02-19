@@ -1,0 +1,67 @@
+_detectors: &detectors
+  - name: rec_protons
+    tags: [ rec_vector ]
+  - name: tru_protons
+    tags: [ tru_vector ]
+  - name: psi_rp
+    tags: [ psi_vector ]
+
+_axes:
+  - &centrality
+    name: event_header_selected_tof_rpc_hits_centrality
+    nb: 8
+    lo: 0
+    hi: 40
+
+_components:
+  - &sp_components [ x1,y1 ]
+  - &sp2_components [ x2,y2 ]
+
+_tasks_args:
+  - &ta_rec
+    query: { tags: { any-in: [ rec_vector ] } }
+    query-list: *detectors
+    components: *sp_components
+    correction-steps: [ plain ]
+    weight: sumw
+  - &ta_rec2
+    query: { tags: { any-in: [ rec_vector ] } }
+    query-list: *detectors
+    components: *sp2_components
+    correction-steps: [ plain ]
+    weight: sumw
+  - &ta_tru
+    query: { tags: { any-in: [ tru_vector ] } }
+    query-list: *detectors
+    components: *sp_components
+    correction-steps: [ plain ]
+  - &ta_tru2
+    query: { tags: { any-in: [ tru_vector ] } }
+    query-list: *detectors
+    components: *sp2_components
+    correction-steps: [ plain ]
+    weight: sumw
+  - &ta_psi
+    query: { tags: { any-in: [ psi_vector ] } }
+    query-list: *detectors
+    components: *sp_components
+    correction-steps: [ plain ]
+    weight: ones
+  - &ta_psi2
+    query: { tags: { any-in: [ psi_vector ] } }
+    query-list: *detectors
+    components: *sp2_components
+    correction-steps: [ plain ]
+    weight: ones
+
+_tasks:
+  - args: [*ta_rec, *ta_psi]
+    n-samples: 100
+    weights-type: observable
+    folder: "/u1Q1/rec"
+    axes: [ *centrality ]
+  - args: [*ta_tru, *ta_psi]
+    n-samples: 100
+    weights-type: observable
+    folder: "/u1Q1/tru"
+    axes: [ *centrality ]
