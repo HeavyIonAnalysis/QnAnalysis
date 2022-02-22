@@ -200,42 +200,50 @@ class CorrelationTaskRunner {
    * @brief Takes task config and initializes IO
    * @tparam Arity
    * @tparam NAxis
-   * @param t
+   * @param correlation_task
    * @return
    */
   template<size_t Arity, size_t NAxis>
-  std::shared_ptr<CorrelationTaskInitialized> InitializeTask(const CorrelationTask &t) {
+  std::shared_ptr<CorrelationTaskInitialized> InitializeTask(const CorrelationTask &correlation_task) {
     using Qn::Correlation::UseWeights;
+
+    auto task_arity = correlation_task.arguments.size();
+    auto n_axes = correlation_task.axes.size();
+
+    assert(
+        n_axes == NAxis &&
+        task_arity == Arity
+        );
+
     /* this is a function pointer */
 //    const auto GetActionRegistry = ::Qn::Analysis::Correlate::Action::GetActionRegistry<Arity>;
 
     /* Qn::MakeAxes() */
     std::vector<Qn::AxisD> axes_qn;
-    std::transform(t.axes.begin(), t.axes.end(),
+    std::transform(correlation_task.axes.begin(), correlation_task.axes.end(),
                    std::back_inserter(axes_qn), ToQnAxis);
     auto axes_config = MakeAxisConfig(axes_qn, std::make_index_sequence<NAxis>());
 
     /* weights */
-    auto use_weights = t.weight_type == EQnWeight(EQnWeight::OBSERVABLE) ? UseWeights::Yes : UseWeights::No;
+    auto use_weights = correlation_task.weight_type == EQnWeight(EQnWeight::OBSERVABLE) ? UseWeights::Yes : UseWeights::No;
 //    auto weight_function_name = t.weights_function;
 //    auto weight_function = GetActionRegistry().Get(weight_function_name);
 
     auto result = std::make_shared<CorrelationTaskInitialized>();
     /* init RDataFrame */
     auto df = GetRDF();
-    auto df_sampled = Qn::Correlation::Resample(*df, t.n_samples);
+    auto df_sampled = Qn::Correlation::Resample(*df, correlation_task.n_samples);
 
-    result->output_folder = fs::path(t.output_folder);
+    result->output_folder = fs::path(correlation_task.output_folder);
     if (result->output_folder.is_relative()) {
       throw std::runtime_error("Output folder must be an absolute path");
     }
 
-    for (auto &correlation : GetTaskCombinations(t)) {
-
+    for (auto &correlation : GetTaskCombinations(correlation_task)) {
       auto args_list = correlation.args_list;
       std::array<std::string, Arity> args_list_array;
-      std::copy(std::begin(correlation.argument_names), std::end(correlation.argument_names),
-                std::begin(args_list_array));
+      std::copy(begin(correlation.argument_names), end(correlation.argument_names), begin(args_list_array));
+
 
       try {
         auto booked_action = Qn::MakeAverageHelper(Qn::Correlation::MakeCorrelationAction(
@@ -245,7 +253,7 @@ class CorrelationTaskRunner {
             use_weights,
             args_list_array,
             axes_config,
-            t.n_samples)).BookMe(df_sampled);
+            correlation_task.n_samples)).BookMe(df_sampled);
 
         correlation.result_ptr = booked_action;
 
