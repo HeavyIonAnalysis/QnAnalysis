@@ -237,6 +237,9 @@ class CorrelationTaskRunner {
       std::array<std::string, Arity> args_list_array;
       copy(begin(correlation.argument_names), end(correlation.argument_names), begin(args_list_array));
 
+      if (any_of(begin(args_list_array), end(args_list_array), [] (const std::string& arg) { return arg.empty(); })) {
+        throw std::runtime_error("Empty arg");
+      };
 
       try {
         auto booked_action = Qn::MakeAverageHelper(Qn::Correlation::MakeCorrelationAction(
