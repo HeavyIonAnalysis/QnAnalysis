@@ -241,8 +241,8 @@ class CorrelationTaskRunner {
       try {
         auto booked_action = Qn::MakeAverageHelper(Qn::Correlation::MakeCorrelationAction(
             correlation.meta_key,
-            BuildFunction(GetQVectorComponentFct, correlation, std::make_index_sequence<Arity>()),
-            BuildFunction(GetQVectorWeightFct, correlation, std::make_index_sequence<Arity>()),
+            std::function{BuildFunction(GetQVectorComponentFct, correlation, std::make_index_sequence<Arity>())},
+            std::function{BuildFunction(GetQVectorWeightFct, correlation, std::make_index_sequence<Arity>())},
             use_weights,
             args_list_array,
             axes_config,
