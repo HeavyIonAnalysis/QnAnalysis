@@ -123,7 +123,7 @@ std::shared_ptr<TTree> CorrelationTaskRunner::GetTree() {
     auto tree_deleter = [input_file](TTree *t) -> void {
       delete input_file;
     };
-    return std::shared_ptr<TTree>(tree_ptr, tree_deleter);
+    return {tree_ptr, tree_deleter};
   }
   throw std::runtime_error("Unknown input file extension " + input_file_name_.extension().string());
 }
@@ -142,10 +142,13 @@ std::shared_ptr<ROOT::RDataFrame> CorrelationTaskRunner::GetRDF() {
 }
 
 Qn::AxisD CorrelationTaskRunner::ToQnAxis(const AxisConfig &c) {
+  if (c.variable.empty()) {
+    throw std::runtime_error("Variable name cannot be empty in axis specification");
+  }
   if (c.type == AxisConfig::RANGE) {
-    return Qn::AxisD(c.variable, c.nb, c.lo, c.hi);
+    return {c.variable, c.nb, c.lo, c.hi};
   } else if (c.type == AxisConfig::BIN_EDGES) {
-    return Qn::AxisD(c.variable, c.bin_edges);
+    return {c.variable, c.bin_edges};
   }
   __builtin_unreachable();
 }

@@ -207,21 +207,12 @@ class CorrelationTaskRunner {
   std::shared_ptr<CorrelationTaskInitialized> InitializeTask(const CorrelationTask &correlation_task) {
     using Qn::Correlation::UseWeights;
 
-    auto task_arity = correlation_task.arguments.size();
-    auto n_axes = correlation_task.axes.size();
-
-    assert(
-        n_axes == NAxis &&
-        task_arity == Arity
-        );
-
     /* this is a function pointer */
 //    const auto GetActionRegistry = ::Qn::Analysis::Correlate::Action::GetActionRegistry<Arity>;
 
     /* Qn::MakeAxes() */
     std::vector<Qn::AxisD> axes_qn;
-    std::transform(correlation_task.axes.begin(), correlation_task.axes.end(),
-                   std::back_inserter(axes_qn), ToQnAxis);
+    transform(begin(correlation_task.axes), end(correlation_task.axes), back_inserter(axes_qn), ToQnAxis);
     auto axes_config = MakeAxisConfig(axes_qn, std::make_index_sequence<NAxis>());
 
     /* weights */
@@ -234,6 +225,8 @@ class CorrelationTaskRunner {
     auto df = GetRDF();
     auto df_sampled = Qn::Correlation::Resample(*df, correlation_task.n_samples);
 
+
+
     result->output_folder = fs::path(correlation_task.output_folder);
     if (result->output_folder.is_relative()) {
       throw std::runtime_error("Output folder must be an absolute path");
@@ -242,7 +235,7 @@ class CorrelationTaskRunner {
     for (auto &correlation : GetTaskCombinations(correlation_task)) {
       auto args_list = correlation.args_list;
       std::array<std::string, Arity> args_list_array;
-      std::copy(begin(correlation.argument_names), end(correlation.argument_names), begin(args_list_array));
+      copy(begin(correlation.argument_names), end(correlation.argument_names), begin(args_list_array));
 
 
       try {
