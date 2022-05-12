@@ -10,13 +10,15 @@ set(SOURCES
 add_library(QnAnalysisBase SHARED ${SOURCES} G__QnAnalysisBase.cxx)
 target_include_directories(QnAnalysisBase PUBLIC $<BUILD_INTERFACE:${QnAnalysis_SOURCE_DIR}>)
 message("QnAnalysis_SOURCE_DIR = ${QnAnalysis_SOURCE_DIR}")
-include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${QnAnalysis_SOURCE_DIR})
+message("AnalysisTree_BINARY_DIR = ${AnalysisTree_BINARY_DIR}")
+include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${QnAnalysis_SOURCE_DIR} ${AnalysisTree_BINARY_DIR}/include)
 
 string(REPLACE ".cpp" ".hpp" HEADERS "${SOURCES}")
 list(TRANSFORM HEADERS PREPEND QnAnalysisBase/)
 ROOT_GENERATE_DICTIONARY(G__QnAnalysisBase ${HEADERS} 
     LINKDEF QnAnalysisBaseLinkDef.hpp
     OPTIONS -I${QnAnalysis_SOURCE_DIR}
+    OPTIONS -I${AnalysisTree_BINARY_DIR}/include
     )
 
 target_link_libraries(QnAnalysisBase
