@@ -1,6 +1,6 @@
 
 set(CMAKE_CXX_STANDARD 17)
-
+link_directories(${QnTools_LIBS_DIR})
 
 try_compile(
         HAS_STD_FILESYSTEM ${CMAKE_BINARY_DIR}
@@ -20,6 +20,8 @@ find_package(Boost REQUIRED COMPONENTS program_options)
 set(QnAnalysis_SETUPS_DIR ${CMAKE_SOURCE_DIR}/setups)
 
 configure_file(BuildOptions.hpp.in BuildOptions.hpp)
+
+include_directories(${QnTools_INCLUDE_DIR}/QnTools)
 
 add_executable(QnAnalysisCorrelate CorrelationMain.cpp CorrelationTaskRunner.cpp)
 target_link_libraries(QnAnalysisCorrelate
@@ -44,3 +46,20 @@ if (QnAnalysis_BUILD_TESTS)
     target_include_directories(QnAnalysisCorrelate_UnitTests PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
     gtest_add_tests(TARGET QnAnalysisCorrelate_UnitTests)
 endif ()
+
+install(TARGETS QnAnalysisCorrelate EXPORT QnAnalysisCorrelateTargets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include
+        )
+
+set(PCM_FILE_NAME libQnAnalysisCorrelate)
+
+install(
+        FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/${PCM_FILE_NAME}_rdict.pcm"
+        DESTINATION
+        lib
+        OPTIONAL
+)

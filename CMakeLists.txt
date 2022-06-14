@@ -1,3 +1,5 @@
+message("--- QnAnalysis CMakeLists start")
+
 cmake_minimum_required(VERSION 3.12)
 project(QnAnalysis CXX)
 set(CMAKE_CXX_STANDARD 17)
@@ -27,6 +29,7 @@ set(EXTERNAL_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/external)
 
 set(QnAnalysis_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+include(FetchContent)
 include(cmake_modules/YamlCpp.cmake)
 include(cmake_modules/Root.cmake)
 #include(cmake_modules/Cuts.cmake)
@@ -86,3 +89,4 @@ install(FILES
         COMPONENT
         Devel
         )
+message("--- QnAnalysis CMakeLists finish")

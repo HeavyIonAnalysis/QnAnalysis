@@ -1,5 +1,3 @@
-
-
 if (QNTOOLS_ROOT)
     message("-- Uing external QnTools from ${QNTOOLS_ROOT}")
     set(CMAKE_PREFIX_PATH ${QNTOOLS_ROOT} ${CMAKE_PREFIX_PATH})
@@ -27,3 +25,4 @@ else()
     list(APPEND PROJECT_INCLUDE_DIRECTORIES ${QnToolsCorrection_INCLUDE_DIRS})
 
 endif(QNTOOLS_ROOT)
+

@@ -4,6 +4,8 @@ set(SOURCES
 
 string(REPLACE ".cpp" ".hpp" HEADERS "${SOURCES}")
 
+link_directories(${QnTools_LIBS_DIR})
+
 add_executable(QnAnalysisCorrect ${SOURCES}
 #        G__QnAnalysisCorrect.cxx
         )
@@ -26,7 +28,7 @@ install(
         FILES
         ${HEADERS}
         DESTINATION
-        include
+        include/QnAnalysisCorrect
         COMPONENT
         Devel
 )
@@ -40,7 +42,3 @@ install(
         lib
         OPTIONAL
 )
-
-
-
-

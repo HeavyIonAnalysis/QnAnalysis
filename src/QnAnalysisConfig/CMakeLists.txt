@@ -1,6 +1,8 @@
+link_directories(${QnTools_LIBS_DIR})
 add_library(QnAnalysisConfig STATIC Convert.cpp Config.cpp)
 target_include_directories(QnAnalysisConfig PUBLIC
         $<BUILD_INTERFACE:${QnAnalysis_SOURCE_DIR}>>
+        ${AnalysisTree_BINARY_DIR}/include
         )
 target_link_libraries(QnAnalysisConfig PUBLIC
         QnAnalysisBase
