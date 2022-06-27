@@ -9,10 +9,10 @@ set(AnalysisTree_BUILD_EXAMPLES OFF)
 
 include(FetchContent)
 FetchContent_Declare(AnalysisTree
-#         GIT_REPOSITORY  "https://github.com/lubynets/AnalysisTree.git"
-#         GIT_TAG         "target_fix"
-        GIT_REPOSITORY  "https://github.com/HeavyIonAnalysis/AnalysisTree.git"
-        GIT_TAG         "master"
+        GIT_REPOSITORY  "https://github.com/lubynets/AnalysisTree.git"
+        GIT_TAG         "at_version_install"
+#         GIT_REPOSITORY  "https://github.com/HeavyIonAnalysis/AnalysisTree.git"
+#         GIT_TAG         "master"
         UPDATE_DISCONNECTED ${UPDATE_DISCONNECTED}
         )
 
