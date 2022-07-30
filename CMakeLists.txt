@@ -1,5 +1,3 @@
-message("--- QnAnalysis CMakeLists start")
-
 cmake_minimum_required(VERSION 3.12)
 project(QnAnalysis CXX)
 set(CMAKE_CXX_STANDARD 17)
@@ -89,4 +87,3 @@ install(FILES
         COMPONENT
         Devel
         )
-message("--- QnAnalysis CMakeLists finish")

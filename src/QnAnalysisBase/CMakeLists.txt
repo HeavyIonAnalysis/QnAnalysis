@@ -1,14 +1,3 @@
-# find_package(AnalysisTree QUIET)
-# find_package(QnTools QUIET)
-
-if(QnTools_FOUND)
-message("--- QnTools_LIBRARY_DIR = ${QnTools_LIBRARY_DIR}")
-else()
-message("--- QnTools NOT FOUND")
-endif()
-
-message("--- PROJECT_LINK_DIRECTORIES = ${PROJECT_LINK_DIRECTORIES}")
-
 set(SOURCES
         Axis.cpp
         Cut.cpp

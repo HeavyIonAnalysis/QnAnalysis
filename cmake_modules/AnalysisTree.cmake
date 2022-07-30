@@ -1,6 +1,3 @@
-message("-- QnAnalysis::AnalysisTree.cmake start")
-
-
 find_package(AnalysisTree QUIET)
 if(NOT AnalysisTree_FOUND)
 message("-- AT NOT found")
@@ -30,5 +27,3 @@ list(APPEND PROJECT_INCLUDE_DIRECTORIES ${AnalysisTreeInfra_INCLUDE_DIR})
 else()
 message("-- AT found")
 endif()
-
-message("-- QnAnalysis::AnalysisTree.cmake finish")
