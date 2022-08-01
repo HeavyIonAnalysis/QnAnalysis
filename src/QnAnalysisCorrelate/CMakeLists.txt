@@ -29,7 +29,7 @@ target_link_libraries(QnAnalysisCorrelate
             # link Boost::filesystem if it was found
             $<$<BOOL:${HAS_BOOST_FILESYSTEM}>:Boost::filesystem>
         PUBLIC
-        QnToolsDataFrame Boost::program_options yaml-cpp)
+        QnTools::DataFrame Boost::program_options yaml-cpp)
 target_compile_definitions(QnAnalysisCorrelate
         PRIVATE
             $<$<BOOL:${HAS_STD_FILESYSTEM}>:HAS_STD_FILESYSTEM>
@@ -40,7 +40,7 @@ target_include_directories(QnAnalysisCorrelate PRIVATE ${CMAKE_CURRENT_BINARY_DI
 if (QnAnalysis_BUILD_TESTS)
     include(GoogleTest)
     add_executable(QnAnalysisCorrelate_UnitTests Config.test.cpp Utils.test.cpp)
-    target_link_libraries(QnAnalysisCorrelate_UnitTests PRIVATE gtest_main yaml-cpp QnToolsDataFrame)
+    target_link_libraries(QnAnalysisCorrelate_UnitTests PRIVATE gtest_main yaml-cpp QnTools::DataFrame)
     target_include_directories(QnAnalysisCorrelate_UnitTests PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
     gtest_add_tests(TARGET QnAnalysisCorrelate_UnitTests)
 endif ()

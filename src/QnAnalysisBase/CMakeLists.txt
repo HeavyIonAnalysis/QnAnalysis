@@ -9,8 +9,6 @@ set(SOURCES
 
 add_library(QnAnalysisBase SHARED ${SOURCES} G__QnAnalysisBase.cxx)
 target_include_directories(QnAnalysisBase PUBLIC $<BUILD_INTERFACE:${QnAnalysis_SOURCE_DIR}>)
-message("QnAnalysis_SOURCE_DIR = ${QnAnalysis_SOURCE_DIR}")
-message("AnalysisTree_BINARY_DIR = ${AnalysisTree_BINARY_DIR}")
 include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${QnAnalysis_SOURCE_DIR} ${AnalysisTree_BINARY_DIR}/include)
 
 string(REPLACE ".cpp" ".hpp" HEADERS "${SOURCES}")
@@ -26,8 +24,8 @@ target_link_libraries(QnAnalysisBase
         AnalysisTreeInfra
         $<TARGET_NAME_IF_EXISTS:AnalysisTreeInfraVersion1>
         AnalysisTreeBase
-        QnToolsBase
-        QnToolsCorrection
+        QnTools::Base
+        QnTools::Correction
         ROOT::Core
         )
 

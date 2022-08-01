@@ -3,6 +3,7 @@ find_package(Boost REQUIRED COMPONENTS regex)
 
 add_subdirectory(gse)
 
+
 ROOT_GENERATE_DICTIONARY(
         G__QnToolsExtension
         ${CMAKE_CURRENT_SOURCE_DIR}/QnSystematicError.hpp
@@ -12,14 +13,14 @@ ROOT_GENERATE_DICTIONARY(
 add_library(QnToolsExtension SHARED QnSystematicError.cpp QnDv1Dy.cpp G__QnToolsExtension.cxx)
 target_link_libraries(QnToolsExtension PUBLIC
         ${ROOT_LIBRARIES}
-        QnToolsBase
+        QnTools::Base
         gse
         )
 
 add_library(QnAnalysisObservables INTERFACE)
 target_include_directories(QnAnalysisObservables INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(QnAnalysisObservables INTERFACE
-        QnToolsBase
+        QnTools::Base
         QnToolsExtension
         QnAnalysisTools
         gse

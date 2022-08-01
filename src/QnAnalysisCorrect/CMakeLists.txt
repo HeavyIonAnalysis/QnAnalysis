@@ -13,7 +13,7 @@ include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${QnAnalysis_SOURCE_DIR})
 #        LINKDEF QnAnalysisCorrectLinkDef.hpp)
 target_include_directories(QnAnalysisCorrect
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${QnAnalysis_SOURCE_DIR} ${PROJECT_INCLUDE_DIRECTORIES})
-target_link_libraries(QnAnalysisCorrect PUBLIC QnAnalysisBase QnAnalysisConfig QnToolsBase at_task_main)
+target_link_libraries(QnAnalysisCorrect PUBLIC QnAnalysisBase QnAnalysisConfig at_task_main)
 
 install(TARGETS QnAnalysisCorrect EXPORT QnAnalysisCorrectTargets
         LIBRARY DESTINATION lib
