@@ -6,8 +6,6 @@ set(SOURCES
         Variable.cpp
         Histogram.cpp)
         
-link_directories(${QnTools_LIBS_DIR})
-
 add_library(QnAnalysisBase SHARED ${SOURCES} G__QnAnalysisBase.cxx)
 target_include_directories(QnAnalysisBase PUBLIC $<BUILD_INTERFACE:${QnAnalysis_SOURCE_DIR}>)
 include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${QnAnalysis_SOURCE_DIR} ${AnalysisTree_BINARY_DIR}/include)
@@ -43,7 +41,7 @@ install(
         FILES
         ${HEADERS}
         DESTINATION
-        include/QnAnalysisBase
+        include/QnAnalysis
         COMPONENT
         Devel
 )

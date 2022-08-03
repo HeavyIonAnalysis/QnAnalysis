@@ -1,6 +1,5 @@
 
 set(CMAKE_CXX_STANDARD 17)
-link_directories(${QnTools_LIBS_DIR})
 
 try_compile(
         HAS_STD_FILESYSTEM ${CMAKE_BINARY_DIR}
