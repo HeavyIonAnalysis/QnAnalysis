@@ -185,8 +185,7 @@ Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis:
     std::regex re_var(R"((\{\{[\w_]+/[\w_]+\}\}))");
     std::smatch match_results;
     std::string::difference_type replacement_offset{0};
-    auto expr_string_it = cbegin(expression_string);
-    while (std::regex_search(expr_string_it, cend(expression_string), match_results, re_var)) {
+    while (std::regex_search(cbegin(expression_string_parsed), cend(expression_string_parsed), match_results, re_var)) {
       std::string var_match = match_results.str(1);
       auto var_name = var_match.substr(2, var_match.length()-4);
       auto var_name_it = find(cbegin(variables_list), cend(variables_list), var_name);
@@ -197,14 +196,9 @@ Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis:
 
       std::string var_replacement("x[");
       var_replacement.append(std::to_string(var_id)).append("]");
-      auto replacement_start = distance(cbegin(expression_string), expr_string_it) + match_results.position(1) + replacement_offset;
+      auto replacement_start = match_results.position(1);
       expression_string_parsed.replace(replacement_start, var_match.length(), var_replacement);
-      expr_string_it += var_match.length();
       replacement_offset += var_replacement.length() - var_match.length();
-
-      if (expr_string_it == cend(expression_string)) {
-        break;
-      }
     }
 
     TFormula expression_formula("", expression_string_parsed.c_str(), false, true);
