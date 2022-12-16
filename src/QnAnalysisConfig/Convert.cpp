@@ -201,6 +201,10 @@ Qn::Analysis::Base::Cut Qn::Analysis::Config::Utils::Convert(const Qn::Analysis:
       replacement_offset += var_replacement.length() - var_match.length();
     }
 
+    std::cout << "Cut YAML formula\t" << expression_string;
+    std::cout << "converted into\n";
+    std::cout << "Cut TFormula\t" << expression_string_parsed << "\n";
+
     TFormula expression_formula("", expression_string_parsed.c_str(), false, true);
     if (!expression_formula.IsValid()) {
       throw std::runtime_error("Expression '" + expression_string_parsed + "' is not valid");
