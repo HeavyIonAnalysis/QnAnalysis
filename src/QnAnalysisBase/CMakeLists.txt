@@ -5,8 +5,7 @@ set(SOURCES
         AnalysisSetup.cpp
         Variable.cpp
         Histogram.cpp)
-
-
+        
 add_library(QnAnalysisBase SHARED ${SOURCES} G__QnAnalysisBase.cxx)
 target_include_directories(QnAnalysisBase PUBLIC $<BUILD_INTERFACE:${QnAnalysis_SOURCE_DIR}>)
 include_directories(${PROJECT_INCLUDE_DIRECTORIES} ${QnAnalysis_SOURCE_DIR} ${AnalysisTree_BINARY_DIR}/include)
@@ -18,6 +17,8 @@ ROOT_GENERATE_DICTIONARY(G__QnAnalysisBase ${HEADERS}
     OPTIONS -I${QnAnalysis_SOURCE_DIR}
     OPTIONS -I${AnalysisTree_BINARY_DIR}/include
     )
+
+list(TRANSFORM HEADERS REPLACE "QnAnalysisBase/" "")
 
 target_link_libraries(QnAnalysisBase
         PUBLIC
@@ -40,7 +41,7 @@ install(
         FILES
         ${HEADERS}
         DESTINATION
-        include
+        include/QnAnalysis
         COMPONENT
         Devel
 )

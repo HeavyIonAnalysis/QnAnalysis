@@ -26,7 +26,7 @@ install(
         FILES
         ${HEADERS}
         DESTINATION
-        include
+        include/QnAnalysis
         COMPONENT
         Devel
 )
@@ -40,7 +40,3 @@ install(
         lib
         OPTIONAL
 )
-
-
-
-

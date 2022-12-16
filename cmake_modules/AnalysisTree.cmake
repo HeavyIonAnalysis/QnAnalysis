@@ -1,13 +1,14 @@
-
 find_package(AnalysisTree QUIET)
-
+if(NOT AnalysisTree_FOUND)
+message("-- AT NOT found")
 
 set(AnalysisTree_BUILD_EXAMPLES OFF)
+set(AnalysisTree_BUILD_INFRA_1 ON)
 
 include(FetchContent)
 FetchContent_Declare(AnalysisTree
         GIT_REPOSITORY  "https://github.com/HeavyIonAnalysis/AnalysisTree.git"
-        GIT_TAG         "v2.2.3"
+        GIT_TAG         "v2.3.0"
         UPDATE_DISCONNECTED ${UPDATE_DISCONNECTED}
         )
 
@@ -21,3 +22,7 @@ get_target_property(AnalysisTreeBase_INCLUDE_DIR AnalysisTreeBase INCLUDE_DIRECT
 list(APPEND PROJECT_INCLUDE_DIRECTORIES ${AnalysisTreeBase_INCLUDE_DIR})
 get_target_property(AnalysisTreeInfra_INCLUDE_DIR AnalysisTreeInfra INCLUDE_DIRECTORIES)
 list(APPEND PROJECT_INCLUDE_DIRECTORIES ${AnalysisTreeInfra_INCLUDE_DIR})
+
+else()
+message("-- AT found")
+endif()

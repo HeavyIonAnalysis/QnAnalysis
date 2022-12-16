@@ -3,7 +3,6 @@ find_package(Boost REQUIRED COMPONENTS regex)
 
 add_subdirectory(gse)
 
-
 ROOT_GENERATE_DICTIONARY(
         G__QnToolsExtension
         ${CMAKE_CURRENT_SOURCE_DIR}/QnSystematicError.hpp
