@@ -3,11 +3,12 @@ if(NOT AnalysisTree_FOUND)
 message("-- AT NOT found")
 
 set(AnalysisTree_BUILD_EXAMPLES OFF)
+set(AnalysisTree_BUILD_INFRA_1 ON)
 
 include(FetchContent)
 FetchContent_Declare(AnalysisTree
         GIT_REPOSITORY  "https://github.com/HeavyIonAnalysis/AnalysisTree.git"
-        GIT_TAG         "master"
+        GIT_TAG         "v2.3.0"
         UPDATE_DISCONNECTED ${UPDATE_DISCONNECTED}
         )
 
