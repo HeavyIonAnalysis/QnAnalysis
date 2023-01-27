@@ -1,9 +1,9 @@
 find_package(AnalysisTree QUIET)
 if(NOT AnalysisTree_FOUND)
-message("-- AT NOT found")
+message("-- AnalysisTree not found, will be built automatically")
 
-set(AnalysisTree_BUILD_EXAMPLES OFF)
-set(AnalysisTree_BUILD_INFRA_1 ON)
+set(AnalysisTree_BUILD_EXAMPLES OFF CACHE INTERNAL "")
+set(AnalysisTree_BUILD_INFRA_1 ON CACHE INTERNAL "")
 
 include(FetchContent)
 FetchContent_Declare(AnalysisTree
@@ -24,5 +24,5 @@ get_target_property(AnalysisTreeInfra_INCLUDE_DIR AnalysisTreeInfra INCLUDE_DIRE
 list(APPEND PROJECT_INCLUDE_DIRECTORIES ${AnalysisTreeInfra_INCLUDE_DIR})
 
 else()
-message("-- AT found")
+message("-- AnalysisTree found")
 endif()
