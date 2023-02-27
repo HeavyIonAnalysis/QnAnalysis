@@ -284,6 +284,6 @@ CorrelationTaskRunner::QVectorWeightFct CorrelationTaskRunner::GetQVectorWeightF
 }
 
 CorrelationTaskRunner::~CorrelationTaskRunner() {
-  if(df_sampled_) delete df_sampled_;
+  if(df_sampled_!=nullptr) delete df_sampled_;
 }
 

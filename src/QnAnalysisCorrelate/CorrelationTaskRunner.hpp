@@ -133,7 +133,7 @@ class CorrelationTaskRunner {
 
   int n_samples_{0};
   std::shared_ptr<ROOT::RDataFrame> df_;
-  ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>* df_sampled_;
+  ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>* df_sampled_{nullptr};
 
   static std::vector<Correlation> GetTaskCombinations(const CorrelationTask &args);
 

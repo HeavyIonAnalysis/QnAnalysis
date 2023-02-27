@@ -47,6 +47,7 @@ Correlation options:
   -i [ --input-file ] arg          Name of the input ROOT file (or .list file)
   -i [ --input-tree ] arg (=tree)  Name of the input tree
   -o [ --output-file ] arg         Name of the output ROOT file
+  --n-samples arg (=50)            Number of bootstrap samples
 ```
 
 `--input-file` is either a ROOT file (.root) or list of ROOT files (*.list). 
@@ -133,7 +134,6 @@ User provides list of tasks to evaluate.
 A task consists of:
 - Task arguments
 - Task action 
-- Number of samples for bootstrapping
 - Event axes
 - Folder in the output file
 
@@ -219,7 +219,6 @@ args:
     query-list: *detectors
     components: [x1,y1,cos1,sin1]
     correction-steps: [ recentered ]
-n-samples: 50
 weights-type: reference
 folder: "/QQ/test"
 axes: [ *centrality ]

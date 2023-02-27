@@ -325,6 +325,12 @@ struct convert<Qn::Analysis::Correlate::CorrelationTask> {
     using namespace Qn::Analysis::Correlate;
     task.arguments = node["args"].as<std::vector<CorrelationTaskArgument>>();
 //    task.actions = node["actions"].as<std::vector<std::string>>();
+    if(node["n-samples"]) {
+      std::string message = "n-samples is not task's property, but a global number.\n";
+      message.append("Must be set as a command line argument --n-samples.\n");
+      message.append("See PR #58 https://github.com/HeavyIonAnalysis/QnAnalysis/pull/58");
+      throw std::runtime_error(message.c_str());
+    }
     task.axes = node["axes"].as<std::vector<AxisConfig>>();
     task.weight_type = node["weights-type"].as<Enum<EQnWeight>>();
 //    if (task.weight_type == EQnWeight(EQnWeight::OBSERVABLE)) {
