@@ -28,12 +28,15 @@ boost::program_options::options_description Qn::Analysis::Correlate::Correlation
       ("configuration-name", value(&configuration_node_name_)->required(), "Name of YAML node")
       ("input-file,i", value(&input_file_name_)->required(), "Name of the input ROOT file (or .list file)")
       ("input-tree,i", value(&input_tree_)->default_value("tree"), "Name of the input tree")
-      ("output-file,o", value(&output_file_)->required(), "Name of the output ROOT file");
+      ("output-file,o", value(&output_file_)->required(), "Name of the output ROOT file")
+      ("n-samples", value(&n_samples_)->default_value(50), "Number of bootstrap samples");
 
   return desc;
 }
 
 void Qn::Analysis::Correlate::CorrelationTaskRunner::Initialize() {
+  df_ = GetRDF();
+  df_sampled_ = new ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>(Qn::Correlation::Resample(*df_, n_samples_));
   LookupConfiguration();
   InitializeTasks();
 }
@@ -278,5 +281,9 @@ CorrelationTaskRunner::QVectorWeightFct CorrelationTaskRunner::GetQVectorWeightF
   } else {
     throw bad_qvector_weight();
   }
+}
+
+CorrelationTaskRunner::~CorrelationTaskRunner() {
+  if(df_sampled_!=nullptr) delete df_sampled_;
 }
 
