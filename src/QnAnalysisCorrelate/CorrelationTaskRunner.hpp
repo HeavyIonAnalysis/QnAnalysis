@@ -123,11 +123,17 @@ class CorrelationTaskRunner {
 
   void Run();
 
+  ~CorrelationTaskRunner();
+
  private:
   std::shared_ptr<TTree> GetTree();
   std::shared_ptr<ROOT::RDataFrame> GetRDF();
   void LookupConfiguration();
   bool LoadConfiguration(const fs::path &path);
+
+  int n_samples_{0};
+  std::shared_ptr<ROOT::RDataFrame> df_;
+  ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>* df_sampled_;
 
   static std::vector<Correlation> GetTaskCombinations(const CorrelationTask &args);
 
@@ -221,9 +227,6 @@ class CorrelationTaskRunner {
 //    auto weight_function = GetActionRegistry().Get(weight_function_name);
 
     auto result = std::make_shared<CorrelationTaskInitialized>();
-    /* init RDataFrame */
-    auto df = GetRDF();
-    auto df_sampled = Qn::Correlation::Resample(*df, t.n_samples);
 
     result->output_folder = fs::path(t.output_folder);
     if (result->output_folder.is_relative()) {
@@ -245,7 +248,7 @@ class CorrelationTaskRunner {
             use_weights,
             args_list_array,
             axes_config,
-            t.n_samples)).BookMe(df_sampled);
+            n_samples_)).BookMe(*df_sampled_);
 
         correlation.result_ptr = booked_action;
 

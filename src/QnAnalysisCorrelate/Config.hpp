@@ -153,7 +153,6 @@ struct CorrelationTask {
   std::vector<AxisConfig> axes;
   EQnWeight weight_type{EQnWeight::REFERENCE};
   std::string weights_function;
-  int n_samples{0};
   std::string output_folder;
 };
 
@@ -326,7 +325,6 @@ struct convert<Qn::Analysis::Correlate::CorrelationTask> {
     using namespace Qn::Analysis::Correlate;
     task.arguments = node["args"].as<std::vector<CorrelationTaskArgument>>();
 //    task.actions = node["actions"].as<std::vector<std::string>>();
-    task.n_samples = node["n-samples"].as<int>();
     task.axes = node["axes"].as<std::vector<AxisConfig>>();
     task.weight_type = node["weights-type"].as<Enum<EQnWeight>>();
 //    if (task.weight_type == EQnWeight(EQnWeight::OBSERVABLE)) {
