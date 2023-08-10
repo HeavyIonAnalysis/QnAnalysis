@@ -65,6 +65,8 @@ set(ConfigPackageLocation lib/cmake/QnAnalysis)
 set(QnAnalysis_INCLUDE_DIR "include")
 set(QnAnalysis_LIBRARY_DIR "lib")
 
+configure_file(QnAnalysisConfig.sh.in ${CMAKE_BINARY_DIR}/QnAnalysisConfig.sh)
+
 configure_package_config_file(
         QnAnalysisConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/QnAnalysis/QnAnalysisConfig.cmake
         INSTALL_DESTINATION ${ConfigPackageLocation}
@@ -83,6 +85,14 @@ install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/QnAnalysis/QnAnalysisConfigVersion.cmake"
         DESTINATION
         ${ConfigPackageLocation}
+        COMPONENT
+        Devel
+        )
+
+install(FILES
+        ${CMAKE_BINARY_DIR}/QnAnalysisConfig.sh
+        DESTINATION
+        bin
         COMPONENT
         Devel
         )

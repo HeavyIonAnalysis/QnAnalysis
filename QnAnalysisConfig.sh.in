@@ -1,0 +1,11 @@
+source ${ROOT_BINDIR}/thisroot.sh
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${CMAKE_INSTALL_PREFIX}/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${BOOST_ROOT}/lib
+
+export ROOT_INCLUDE_PATH=${CMAKE_INSTALL_PREFIX}/include
+export ROOT_INCLUDE_PATH=${CMAKE_INSTALL_PREFIX}/include/AnalysisTree
+export ROOT_INCLUDE_PATH=${CMAKE_INSTALL_PREFIX}/include/AnalysisTree/infra-1.0
+export ROOT_INCLUDE_PATH=${CMAKE_INSTALL_PREFIX}/include/AnalysisTreeCutsRegistry
+export ROOT_INCLUDE_PATH=${CMAKE_INSTALL_PREFIX}/include/QnAnalysis
+export ROOT_INCLUDE_PATH=${CMAKE_INSTALL_PREFIX}/include/QnTools
