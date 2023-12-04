@@ -4,8 +4,8 @@ message("-- AnalysisTree not found, will be built automatically")
 
 set(AnalysisTree_BUILD_EXAMPLES OFF CACHE INTERNAL "")
 set(AnalysisTree_BUILD_INFRA_1 ON CACHE INTERNAL "")
-set(AnalysisTreeQA_BUNDLED_AT_VERSION "v2.3.2" CACHE STRING "Bundled AnalysisTree version")
-set(AnalysisTreeQA_BUNDLED_AT_GIT_SHALLOW ON CACHE BOOL "Use CMake GIT_SHALLOW option")
+set(QnAnalysis_BUNDLED_AT_VERSION "v2.3.2" CACHE STRING "Bundled AnalysisTree version")
+set(QnAnalysis_BUNDLED_AT_GIT_SHALLOW ON CACHE BOOL "Use CMake GIT_SHALLOW option")
 
 include(FetchContent)
 FetchContent_Declare(AnalysisTree
