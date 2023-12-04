@@ -4,11 +4,14 @@ message("-- AnalysisTree not found, will be built automatically")
 
 set(AnalysisTree_BUILD_EXAMPLES OFF CACHE INTERNAL "")
 set(AnalysisTree_BUILD_INFRA_1 ON CACHE INTERNAL "")
+set(AnalysisTreeQA_BUNDLED_AT_VERSION "v2.3.2" CACHE STRING "Bundled AnalysisTree version")
+set(AnalysisTreeQA_BUNDLED_AT_GIT_SHALLOW ON CACHE BOOL "Use CMake GIT_SHALLOW option")
 
 include(FetchContent)
 FetchContent_Declare(AnalysisTree
         GIT_REPOSITORY  "https://github.com/HeavyIonAnalysis/AnalysisTree.git"
-        GIT_TAG         "v2.3.0"
+        GIT_TAG         ${AnalysisTreeQA_BUNDLED_AT_VERSION}
+        GIT_SHALLOW     ${AnalysisTreeQA_BUNDLED_AT_GIT_SHALLOW}
         UPDATE_DISCONNECTED ${UPDATE_DISCONNECTED}
         )
 
