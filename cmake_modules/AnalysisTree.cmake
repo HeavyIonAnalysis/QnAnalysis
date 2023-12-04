@@ -10,8 +10,8 @@ set(QnAnalysis_BUNDLED_AT_GIT_SHALLOW ON CACHE BOOL "Use CMake GIT_SHALLOW optio
 include(FetchContent)
 FetchContent_Declare(AnalysisTree
         GIT_REPOSITORY  "https://github.com/HeavyIonAnalysis/AnalysisTree.git"
-        GIT_TAG         ${AnalysisTreeQA_BUNDLED_AT_VERSION}
-        GIT_SHALLOW     ${AnalysisTreeQA_BUNDLED_AT_GIT_SHALLOW}
+        GIT_TAG         ${QnAnalysis_BUNDLED_AT_VERSION}
+        GIT_SHALLOW     ${QnAnalysis_BUNDLED_AT_GIT_SHALLOW}
         UPDATE_DISCONNECTED ${UPDATE_DISCONNECTED}
         )
 
