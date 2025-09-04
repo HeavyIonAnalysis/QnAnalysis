@@ -1,6 +1,6 @@
 FetchContent_Declare(ATTaskSkeleton
-        GIT_REPOSITORY https://github.com/lubynets/AnalysisTreeTaskSkeleton.git
-        GIT_TAG "at_cuts_hash"
+        GIT_REPOSITORY https://github.com/HeavyionAnalysis/AnalysisTreeTaskSkeleton.git
+        GIT_TAG "master"
         GIT_SHALLOW ON
         UPDATE_DISCONNECTED ${UPDATE_DISCONNECTED}
         )
