@@ -3,7 +3,7 @@ if(NOT QnTools_FOUND)
     message("-- QnTools not found, will be built automatically")
 
     set(QnAnalysis_BUNDLED_QNT_URL "https://github.com/HeavyIonAnalysis/QnTools.git" CACHE STRING "Bundled QnTools URL")
-    set(QnAnalysis_BUNDLED_QNT_VERSION "7789d40de12a8936fb0bac67ad7313c345177a20" CACHE STRING "Bundled QnTools version")
+    set(QnAnalysis_BUNDLED_QNT_VERSION "e171555314fc3608f45cf3e1763f8650b33a5e2a" CACHE STRING "Bundled QnTools version")
     set(QnAnalysis_BUNDLED_QNT_GIT_SHALLOW ON CACHE BOOL "Use CMake GIT_SHALLOW option")
 
     include(FetchContent)
